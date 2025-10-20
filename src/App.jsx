@@ -6,13 +6,13 @@ export default function App() {
   const [visualizations, setVisualizations] = useState([]);
 
   useEffect(() => {
-    fetch("data/writings.json")
+    fetch("/src/data/writings.json")
       .then(res => res.json())
       .then(setWritings);
-    fetch("data/infographics.json")
+    fetch("/src/data/infographics.json")
       .then(res => res.json())
       .then(setInfographics);
-    fetch("data/visualizations.json")
+    fetch("/src/data/visualizations.json")
       .then(res => res.json())
       .then(setVisualizations);
   }, []);
@@ -26,7 +26,6 @@ export default function App() {
           <div><strong>Luokka:</strong> {writing.category}</div>
           <div><strong>Avainsanat:</strong> {writing.keywords}</div>
           <div dangerouslySetInnerHTML={{ __html: writing.content_html }} />
-          {/* Infografiikat, jos writing.id löytyy infographics-tiedostosta */}
           <div>
             <strong>Infografiikka:</strong>
             <ul>
@@ -41,7 +40,6 @@ export default function App() {
               }
             </ul>
           </div>
-          {/* Visualisoinnit, jos writing.id löytyy visualizations-tiedostosta */}
           <div>
             <strong>Visualisoinnit:</strong>
             <ul>
