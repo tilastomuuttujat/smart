@@ -1,0 +1,39 @@
+## 98 Älykäs palveluintegraatio säästää miljardeja
+
+Suomessa noin kymmenesosa väestöstä käyttää 80 prosenttia sosiaali- ja terveyspalvelujen kustannuksista. Joukossa on vakavasti sairaita vastasyntyneitä, nuoria mielenterveyspalvelujen käyttäjiä, työikäisiä monisairaita sekä paljon hoivaa tarvitsevia ikääntyneitä. Heitä yhdistää kuitenkin se, että palveluja kertyy monesta lähteestä ja kustannukset kasvavat suuriksi.
+
+Suurkuluttajien palvelujen kehittäminen ei ole vain inhimillinen kysymys, se on välttämätöntä julkisen talouden kestävyyden kannalta. Paremmin toimivat ja kohdennetut palvelut, voivat hillitä kustannusten kasvua miljardeilla euroilla vuosittain.
+
+ÄLYKKÄÄT TOTEUTUSTAVAT
+
+Perinteinen ratkaisu on ollut järjestelmien laaja integraatio, mutta se on hidasta, kallista ja monelle asiakkaalle tarpeetonta, sillä 70% suomalaisista käyttää pääosin vain yhtä palvelua. Parempi vaihtoehto on rakentaa **älykäs suurkuluttajien järjestelmä**, joka tunnistaa automaattisesti henkilöt, joiden palvelut ja etuudet kasaantuvat.
+
+Tekoäly ja tietojärjestelmät voivat koostaa tilannekuvan eri rekistereistä, kuinka usein asiakas käyttää päivystystä, mitä etuuksia hän saa Kelasta, onko ulosottoja tai pitkiä työttömyysjaksoja ja millaisia sosiaalipalveluja hänellä on. Järjestelmä ei tuota vain raporttia, vaan ehdottaa konkreettista **palvelupolkua**, jossa määritellään looginen ensimmäinen taho, esimerkiksi perusterveydenhuolto, sosiaalipalvelut tai työllisyyspalvelu. Tämä taho ottaa vastuulleen asiakkaan kokonaisvaltaisen ohjauksen ja seurannan. Moniammatillinen tiimi liittyy tarvittaessa asiakkaan tueksi ja laatii yhdessä yhden yhteisen suunnitelman.
+
+YHTEENSOVITETTU RAHOITUS
+
+Älykäs järjestelmä ei yksin riitä. Jos rahat ovat erillään eri viranomaisten budjeteissa, kukaan ei kanna vastuuta kokonaisuudesta. Yhteensovitettu rahoitus ratkaisee tämän ongelman. Samasta potista voidaan kattaa sote-palvelut, sosiaalipalvelut ja etuudet. Näin panostus esimerkiksi kuntoutukseen tai intensiiviseen palveluohjaukseen ei tunnu kustannuksena yhdelle toimijalle, vaan säästö näkyy kaikille.
+
+MILLOIN INTEGRAATIO AUTTAA, MILLOIN EI
+
+* **16-vuotias nuori** odottaa ilman integraatiota kuukausia psykiatrian jonossa, koulu keskeytyy ja lastensuojelu käynnistyy. Älykäs tunnistus poimii nuoren riskitilanteen ajoissa ja moniammatillinen tuki käynnistyy heti. Nuori pääsee terapiaan, koulu jatkuu ja syrjäytyminen vältetään.  
+* **23-vuotias työtön** saa vain satunnaisen työllisyypalvelun kontaktin (1 h / 3 kk). Tilannekuva paljastaa pitkäaikaisen masennuksen, katkenneet opinnot ja toimeentulotuen. Integroitu palvelu yhdistää mielenterveysavun, opintopolun ja työnhaun. Nuori palaa työelämään parissa vuodessa.  
+* **52-vuotias monisairas työntekijä** jää ilman integraatiota sairauspäivärahalle ja lopulta työkyvyttömyyseläkkeelle. Tilannekuva nostaa esiin varhaisen kuntoutuksen ja osa-aikatyön mahdollisuuden. Eläke lykkääntyy, verotulot kasvavat.  
+* **77-vuotias yksin asuvan naisen** toistuvat kaatumiset ja päivystyskäynnit johtavat ilman integraatiota nopeaan siirtymiseen ympärivuorokautiseen hoivaan. Tilannekuva nostaa esiin riskit ja palvelupolkuun liitetään fysioterapia, kotihoidon tuki ja osallistuminen seniorikerhoon. Päivystyskäynnit vähenevät ja laitoshoito lykkääntyy useilla vuosilla.  
+* **Mikään järjestelmä ei voi auttaa kaikkia**, jos ihmiset kieltäytyvät palveluista tai eivät sitoudu hoitoon. Sosiaalisesti täysin eristäytyneet, joita ei saada osallisuustoimintaan mukaan. Hyvin korkean iän (85+) ryhmät, joille ympärivuorokautinen hoiva on jo välttämätöntä. Tilanteet, joissa ongelmat johtuvat pääosin yhteiskunnan ulkopuolisista tekijöistä (esim. rikollisuus, paperittomuus).
+
+MYÖS OSALLISUUS OSANA PALVELUINTEGRAATIOTA
+
+Palveluintegraation ei pidä olla vain hoitoa, hoivaa ja etuuksia. **Osallisuus** on se voima, joka antaa ihmiselle aktiivisen roolin. Nuorelle se voi tarkoittaa harrastusta ja vertaistukea, työikäiselle osallistumista yhdistystoimintaan tai kuntouttavaan työhön, ikääntyneelle arjen yhteisöllisiä kohtaamisia. Osallisuus vahvistaa mielenterveyttä ja toimintakykyä, ja tekee palveluista vaikuttavampia.
+
+MITÄ HYÖTYÄ JULKISELLE TALOUDELLE?
+
+* **Lyhyellä aikavälillä** 2–3 mrd € säästöt vuosittain päällekkäisten palvelujen poistamisesta ja päivystysten vähentämisestä.  
+* **Keskipitkällä aikavälillä** työkyvyn palauttaminen ja syrjäytymisen ehkäisy tuovat 1–2 mrd € lisää hyötyjä vuodessa.  
+* **Pitkällä aikavälillä** sote-menojen kasvun hidastuminen voi merkitä kymmenien miljardien kumulatiivisia säästöjä ja pienempää kestävyysvajetta.
+
+Suurkuluttajille suunnattu älykäs palvelujärjestelmä, jota tukee yhteensovitettu rahoitus ja osallisuus, on sekä inhimillisesti että taloudellisesti välttämätön.
+
+Se ei tarkoita, että kaikille rakennetaan raskas integraatio, vaan että juuri niille, joiden kustannukset ja ongelmat kasautuvat, tarjotaan oikea-aikainen ja kokonaisvaltainen tuki.
+
+Tämä on tie, jolla voidaan samanaikaisesti vahvistaa **ihmisten hyvinvointia ja julkisen talouden kestävyyttä**.
