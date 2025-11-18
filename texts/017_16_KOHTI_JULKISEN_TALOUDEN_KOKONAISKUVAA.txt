@@ -1,0 +1,75 @@
+## 16 KOHTI JULKISEN TALOUDEN KOKONAISKUVAA
+
+Suomen julkinen talous on kulkenut itsenäisyyden ajan läpi suurten aaltojen. Kriisit, väestömuutokset, rakenteelliset uudistukset ja resurssien hallinta ovat jättäneet jälkensä, ja jokainen vuosikymmen näyttää oman painotuksensa. Kun tarkastellaan kuvaajien kolmea pääulottuvuutta, demokratiaa, rakenteita ja resursseja, hahmottuu kertomus jatkuvasta jännitteestä kasvun ja rasitusten välillä.
+
+1920–40-LUKU: HEIKKO RESURSSIPOHJA, VAHVA VÄESTÖPOHJA
+
+Itsenäisyyden alkuvuosina valtion resurssit olivat heikot. Talous ja panostukset olivat miinuksella, veropohja kapea ja instituutiot vasta rakentumassa. Väestöpohja oli kuitenkin vahva. Korkea syntyvyys, nuori ikärakenne ja voimakas koheesio loivat tulevaisuuden uskoa. Demokratia haki muotoaan, mutta poliittinen päätöksenteko kärsi sodista ja talouden epävakaudesta.
+
+1950–70-LUKU: HYVINVOINTIVALTION RAKENTAMISEN KULTAKAUSI
+
+Sodan jälkeen kuvaajissa näkyy selvä käänne. Demokratia vahvistuu, päätöksenteko löytää rytminsä ja sosiaaliturva laajenee. Peruskoulu-uudistus ja peruspalvelujen kehittäminen nostavat rakenteet nousuun. Väestöpohja pysyy vielä vahvana suurten ikäluokkien ansiosta, ja työmarkkinat vakautuvat vahvan kolmikannan varaan. Tämä on julkisen talouden kestävyyden huippukausi, vaikka rahoituspohjassa on jo nähtävissä ensimmäisiä repeämiä.
+
+1980–90-LUKU: MURROS JA KRIISI
+
+Kuvaajien perusteella 1980–90-luku on käännepiste. Talous kasvaa hetken, mutta rahoituspohja heikkenee nopeasti. Väestöpohja alkaa rapautua, kun syntyvyys laskee ja väestö ikääntyy. Työmarkkinoiden kohtaanto-ongelmat nousevat esiin, ja rakenteellinen työttömyys jää pysyväksi. Demokratian uudistusvoima hiipuu, sillä vahvat eturyhmät pitävät kiinni saavutetuista eduista. 1990-luvun lama tekee tästä kaudesta selkeän negatiivisen aallon.
+
+2000–2010-LUKU: PANOSTUSTEN NOUSU, MUTTA RAHOITUKSEN KRIISI
+
+Uudella vuosituhannella koulutus-, tutkimus-, TKI \-panostukset näkyvät selkeänä nousuna. Samalla talouden perusta pysyy kohtuullisen vakaana. Kuitenkin resurssien toinen puoli, rahoituspohja, on selvästi heikentynyt. Veropohjan rapautuminen, velkaantuminen ja yksityistämiset näkyvät negatiivisina arvoina. Väestöpohja jatkaa laskuaan, ja sote-menot sekä eläkepaineet kasvavat. Koheesio ja peruspalvelut pysyvät kohtuullisella tasolla, mutta eivät riitä paikkaamaan väestö- ja rahoituskriisiä.
+
+2020-LUKU JA ETEENPÄIN: JÄNNITE KASVAA
+
+Kuvaajien perusteella nykyhetki on selkeän murroksen aika. Väestöpohjan heikkeneminen, resurssien rahoitusvaje ja demokratian uudistuskyvyn puute kasaavat painetta. Panostukset ja talouden vahvuudet antavat toivoa, mutta yksinään ne eivät riitä. Keskeinen kysymys on, pystyykö Suomi kääntämään väestö- ja työmarkkinakehityksen siten, että rahoituspohja säilyy ja palvelut voidaan turvata?
+
+JOHTOPÄÄTÖS
+
+Kuvaajien kertoma tarina on selkeä. **Hyvinvointivaltion vahvuudet** rakentuivat 1950–70-luvuilla. **Heikkoudet** syntyivät väestö- ja rahoituskehityksen kautta 1980-luvulta alkaen. **Nykyhetki** on tasapainoilua. Panostuksia tehdään, mutta resurssien pohja vuotaa.
+
+Julkisen talouden kestävyys ei siis ole yhden sektorin ongelma. Se on dynamiikka, jossa demokratia, rakenteet ja resurssit joko vahvistavat tai syövät toisiaan. Kestävän tulevaisuuden ratkaisut vaativat, että nämä kolme ulottuvuutta pelaavat samaan suuntaan, ei toisiaan vastaan.
+
+KUINKA ARVIOINTI TEHTIIN?
+
+Arvio perustuu **pitkän aikavälin yhteiskunnallisten trendien ja politiikkavalintojen tarkasteluun** vuosikymmenittäin. Menetelmä on yksinkertaistettu, mutta sen voima on siinä, että se yhdistää eri ilmiöt samaan asteikkoon (0–100), jolloin voidaan vertailla, miten eri tekijät kuormittavat tai tukevat julkisen talouden kestävyyttä. Arviot ovat osittain subjektiivisia, ja siten suuntaa antavia. Graafiset kuvaajat esittävät eri tekijöiden poikkeamaa keskiarvosta.
+
+**Kolme aaltoa**
+
+* **Demokratia**: päätöksenteon kyky ja legitimiteetti.  
+* **Rakenteet**: väestöpohja, peruspalvelut ja yhteiskunnallinen koheesio.  
+* **Resurssit**: rahoituspohja, panostukset ja talouden kantokyky.
+
+**Arviointiasteikko (0–100)**
+
+* 100 \= paras mahdollinen tilanne julkisen talouden kestävyyden kannalta.  
+* 0 \= kriittinen tila, joka uhkaa rakenteellista kestävyyttä.
+
+**Aineisto**
+
+* Historialliset trendit (syntymät, kuolemat, muuttoliike).  
+* Tilastot (BKT, työllisyysaste, velkasuhde).  
+* Politiikkapäätökset (reformit, sopeutukset, elvytykset).  
+* Kansainväliset shokit (sodat, lama, pandemia, finanssikriisi).
+
+ESIMERKKEJÄ ERI AALLOISTA
+
+DEMOKRATIA
+
+* 1930-luku: sisäpoliittinen epävakaus ja lama → pisteet laskivat, koska päätöksenteko oli halvaantunutta.  
+* 1990-luku: EU-jäsenyys ja perustuslain uudistus → pisteet nousivat, sillä demokratia kykeni vastaamaan kriisiin.
+
+**Rakenteet**
+
+* 1950-luku: suuret ikäluokat ja maastamuutto Ruotsiin → pisteet nousivat työikäisen väestön kasvun ansiosta, vaikka osa työvoimasta siirtyi ulkomaille.  
+* 2020-luku: alhainen syntyvyys ja hoivavelka → pisteet laskivat merkittävästi.
+
+**Resurssit**
+
+* 1970-luku: öljykriisi ja nopea velkaantuminen → pisteet laskivat.  
+* 2000-luku: valtionvelan lasku ja teknologian nousu → resurssit vahvistuivat.  
+* 2020-luku: pandemia, Ukrainan sota ja velkakello → pisteet heikkenivät jyrkästi.
+
+MIKSI KOLME AALTOA?
+
+**Demokratia** kertoo, pystytäänkö vaikeita päätöksiä tekemään. **Rakenteet** näyttävät, millä väestö- ja palvelupohjalla talous lepää. **Resurssit** kertovat, onko käytettävissä rahoitus ja taloudellinen kapasiteetti.
+
+Kun nämä kolme aaltoa asetetaan rinnakkain, nähdään, että julkisen talouden kestävyys ei riipu vain yhdestä tekijästä, vaan aaltojen yhteispelistä. Usein kriisi syntyy, kun kaikki kolme painuvat samaan aikaan alas (esim. 1990-luvun lama, 2020-luvun velkakierre).
