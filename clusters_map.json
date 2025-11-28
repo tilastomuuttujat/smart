@@ -1,0 +1,22 @@
+{
+  "superclusters": {
+    "0": "Rakenne, järjestelmä ja talouden kokonaiskuva",
+    "1": "Arvot, oletukset ja talousajattelun kieli",
+    "2": "Yhteisö, luottamus ja osallistuminen",
+    "3": "Pitkän aikavälin muutos, kestävyys ja kehityssuunnat"
+  },
+  "clusters": {
+    "0": "Kulttuurinen talouslogiikka ja käyttäytyminen",
+    "1": "Tekniset järjestelmät ja asiantuntijatieto",
+    "2": "Talouden rajat ja resurssien jakautuminen",
+    "3": "Rahoitusvirrat ja järjestelmäpaineet",
+    "4": "Julkisen talouden ydinrakenne",
+    "5": "Normit, kieli ja käsitteet talousajattelussa",
+    "6": "Arvot, oletukset ja päätöksenteon logiikka",
+    "7": "Digitalisaatio ja työmarkkinoiden uusi rakenne",
+    "8": "Luottamus, vuorovaikutus ja yhteinen toimijuus",
+    "9": "Kehitys, innovaatiot ja pitkän aikavälin mallit",
+    "10": "Demokratian ja vastuun kysymykset",
+    "11": "Yhteiskunnan hahmotus ja tulkinnan vaikeus"
+  }
+}
