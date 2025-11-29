@@ -1308,7 +1308,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const SWIPE_X = 60;
   const MAX_Y   = 35;
 
+  // ------------------------------------------
   // Poista valinta
+  // ------------------------------------------
   function clearSelection() {
     if (selectedParagraph) {
       selectedParagraph.classList.remove("p-selected-quote");
@@ -1320,7 +1322,41 @@ document.addEventListener("DOMContentLoaded", () => {
     selectedParagraph = null;
   }
 
+  // ------------------------------------------
+  // Lähetys Google Sheetiin
+  // ------------------------------------------
+  async function sendFeedbackToGoogle(quote, message, email) {
+
+    const payload = {
+      quote: quote,
+      message: message,
+      email: email,
+      url: window.location.href
+    };
+
+    try {
+      await fetch(
+        "https://script.google.com/macros/s/AKfycbxR-F3qMEHGnRNuFjaPNMtA_iL4VleMOxqTFFymqDce_XMxdGY1nAB5GiF42oXEQhgI/exec",
+        {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        }
+      );
+
+      // no-cors ei anna vastausta → oletetaan OK
+      return true;
+
+    } catch (err) {
+      console.error("Google Sheets error:", err);
+      return false;
+    }
+  }
+
+  // ------------------------------------------
   // Luo kommenttilaatikko kappaleen alle
+  // ------------------------------------------
   function createCommentBox(belowEl) {
     const box = document.createElement("div");
     box.className = "inline-comment-box";
@@ -1335,7 +1371,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       <div class="inline-comment-actions">
         <button class="cancel">Peruuta</button>
-        <button class="send">Jatka →</button>
+        <button class="send">Lähetä</button>
       </div>
     `;
 
@@ -1344,8 +1380,8 @@ document.addEventListener("DOMContentLoaded", () => {
       clearSelection();
     });
 
-    // Lähetä → avaa GitHub Issue Form
-    box.querySelector(".send").addEventListener("click", () => {
+    // Lähetä → Google Sheetsiin
+    box.querySelector(".send").addEventListener("click", async () => {
       const message = box.querySelector("#ic-text").value.trim();
       const email   = box.querySelector("#ic-email").value.trim();
       const quote   = selectedParagraph.textContent.trim();
@@ -1355,21 +1391,10 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      const url      = window.location.href;
-      const chapter  = BookModule?.getCurrentChapter()?.title || "Tuntematon luku";
-      const today    = new Date().toISOString().slice(0,10);
+      const ok = await sendFeedbackToGoogle(quote, message, email);
 
-      // Muodosta esitäytetty Issue Form -linkki
-      const issueURL =
-        "https://github.com/tilastomuuttujat/smart/issues/new?template=feedback.yml"
-        + "&quote="   + encodeURIComponent(quote)
-        + "&comment=" + encodeURIComponent(message)
-        + "&email="   + encodeURIComponent(email)
-        + "&url="     + encodeURIComponent(url)
-        + "&chapter=" + encodeURIComponent(chapter)
-        + "&date="    + encodeURIComponent(today);
-
-      window.open(issueURL, "_blank");
+      if (ok) alert("Kiitos palautteesta!");
+      else alert("Lähetys epäonnistui.");
 
       clearSelection();
     });
@@ -1378,7 +1403,9 @@ document.addEventListener("DOMContentLoaded", () => {
     return box;
   }
 
+  // ------------------------------------------
   // Swipe-logiikka
+  // ------------------------------------------
   chapterEl.addEventListener("pointerdown", (e) => {
     const p = e.target.closest("p");
     if (!p) return;
@@ -1412,6 +1439,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 </script>
+
 
 
 <div id="debug-box"
