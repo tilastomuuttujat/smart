@@ -555,7 +555,6 @@ mark.search-hit-active{
   overscroll-behavior-x: none;
 }
 
-
   </style>
 
   <!-- Moduulit -->
@@ -1382,4 +1381,84 @@ document.addEventListener("DOMContentLoaded", () => {
 
     tracking = true;
     startX = e.clientX;
-    startY = e
+    startY = e.clientY;
+  }, { passive:true });
+
+  chapter.addEventListener("pointerup", (e) => {
+    if (!tracking) return;
+    tracking = false;
+
+    const p = e.target.closest("p");
+    if (!p) return;
+
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+
+    if (Math.abs(dy) > MAX_Y) return;   // ei pystyliikkeitä
+    if (dx <= SWIPE_X) return;          // ei tarpeeksi oikealle
+
+    // Poista aiempi valinta
+    clearSelection();
+
+    // Merkitään tämä kappale kommentoitavaksi
+    selectedParagraph = p;
+    p.classList.add("p-selected-quote");   // ← HIMMENNYS + pieni fontti
+
+    // Luo kommenttilaatikko alle
+    currentBox = createInlineCommentBox(p);
+
+  }, { passive:true });
+
+  // -----------------------------------------------------
+  // GitHub Issue -lähetys
+  // -----------------------------------------------------
+  window.sendFeedbackToGithub = async function (quote, message, email) {
+    const repoOwner = "tilastomuuttujat";
+    const repoName  = "smart";
+
+    const bodyText =
+      (email ? `**Email:** ${email}\n\n` : "") +
+      `**Siteerattu kappale:**\n${quote}\n\n` +
+      `**Viesti:**\n${message}\n\n` +
+      `URL: ${window.location.href}`;
+
+    try {
+      const response = await fetch(
+        `https://api.github.com/repos/${repoOwner}/${repoName}/issues`,
+        {
+          method: "POST",
+          headers: {
+            "Accept": "application/vnd.github+json",
+            "Authorization": "Bearer ${COMMENT_TOKEN}"   // ← täytetään GitHub Actionsissa
+          },
+          body: JSON.stringify({
+            title: "Kappalepalaute",
+            body: bodyText
+          })
+        }
+      );
+
+      return response.ok;
+
+    } catch (err) {
+      console.error("GitHub feedback error:", err);
+      return false;
+    }
+  };
+
+});
+</script>
+
+
+<div id="debug-box"
+     style="position:fixed;bottom:6px;left:6px;
+            padding:4px 8px;font-size:11px;
+            background:rgba(0,0,0,0.65);color:#fff;
+            border-radius:8px;z-index:9999;">
+  debug: alku
+</div>
+
+
+
+</body>
+</html>
