@@ -1,0 +1,31 @@
+name: Handle comments
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  process-comment:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+    - name: Check out
+      uses: actions/checkout@v3
+
+    - name: Save comment to file
+      run: |
+        mkdir -p _data/comments
+        echo "${{ github.event.issue.body }}" > "_data/comments/comment-$(date +%s).json"
+
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v5
+      with:
+        token: ${{ secrets.COMMENT_TOKEN }}
+        commit-message: "Add comment"
+        branch: "comments-${{ github.run_id }}"
+        title: "New comment"
+        body: "Automated comment import"
+        base: "main"
