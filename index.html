@@ -449,6 +449,98 @@ mark.search-hit-active{
   background: #e7dac6;
 }
 
+/* Kelluva kommenttipainike */
+#feedbackFab {
+  position: fixed;
+  bottom: 28px;
+  right: 22px;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: #d0b48c;
+  color: white;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  z-index: 400;
+  cursor: pointer;
+  opacity: 0.85;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+#feedbackFab:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/* Popup-tausta */
+#feedbackPopup {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: none;
+  z-index: 450;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Varsinainen lomake */
+#feedbackBox {
+  background: #fffdf7;
+  width: 90%;
+  max-width: 380px;
+  padding: 18px 20px;
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.3);
+  color: #2b251f;
+}
+
+#feedbackBox h3 {
+  margin-top: 0;
+}
+
+#feedbackBox label {
+  display: block;
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+#feedbackBox input,
+#feedbackBox textarea {
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  border-radius: 8px;
+  border: 1px solid #c8b89d;
+  font-size: 15px;
+  background: #fff;
+}
+
+#feedbackBox textarea {
+  min-height: 120px;
+}
+
+#feedbackBox .actions {
+  margin-top: 14px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+#feedbackBox button {
+  background: #d0b48c;
+  border: none;
+  padding: 9px 16px;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+#feedbackBox button#fbCancel {
+  background: #aaa;
+}
 
   </style>
 
@@ -1175,44 +1267,30 @@ if (isSearchVisible()){
 })();
 </script>
 <script>
-async function sendCommentToGitHub(comment, name) {
-  const payload = {
-    comment,
-    name,
-    timestamp: Date.now()
-  };
+document.getElementById("feedbackFab").addEventListener("click", () => {
+  document.getElementById("feedbackPopup").style.display = "flex";
+});
 
-  const resp = await fetch("https://api.github.com/repos/harrikayhko/YOUR_REPO_NAME/issues", {
-    method: "POST",
-    headers: {
-      "Accept": "application/vnd.github+json",
-      "Authorization": "Bearer {{TOKEN}}"
-    },
-    body: JSON.stringify({
-      title: `Comment ${Date.now()}`,
-      body: JSON.stringify(payload, null, 2)
-    })
-  });
+document.getElementById("fbCancel").addEventListener("click", () => {
+  document.getElementById("feedbackPopup").style.display = "none";
+});
 
-  return resp.ok;
-}
+document.getElementById("fbSend").addEventListener("click", () => {
+  const email = document.getElementById("fbEmail").value.trim();
+  const msg   = document.getElementById("fbMessage").value.trim();
 
-document.getElementById("commentForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  if (document.getElementById("hp").value !== "") return;
-
-  const comment = document.getElementById("commentText").value.trim();
-  const name = document.getElementById("commentName").value.trim();
-  
-  document.getElementById("commentStatus").textContent = "Lähetetään...";
-
-  const ok = await sendCommentToGitHub(comment, name);
-  if (ok) {
-    document.getElementById("commentStatus").textContent = "Kiitos kommentista! 💛";
-  } else {
-    document.getElementById("commentStatus").textContent = "Virhe lähetyksessä.";
+  if (!msg) {
+    alert("Kirjoita viesti ennen lähettämistä.");
+    return;
   }
+
+  // Tämä vain näyttää ilmoituksen.
+  // GitHub Issue -lähetys lisätään seuraavassa vaiheessa.
+  alert("Palaute vastaanotettu! (GitHub-lähetys tulee seuraavaksi)");
+
+  document.getElementById("feedbackPopup").style.display = "none";
+  document.getElementById("fbMessage").value = "";
+  document.getElementById("fbEmail").value = "";
 });
 </script>
 
@@ -1228,14 +1306,26 @@ document.getElementById("commentForm").addEventListener("submit", async (e) => {
   <div id="tk-suggest-popover-header">Tämä saattaisi kiinnostaa</div>
   <div id="tk-suggest-popover-body"></div>
 </div>
-<form id="commentForm">
-  <textarea id="commentText" placeholder="Kommentti"></textarea>
-  <input type="text" id="commentName" placeholder="Nimesi (valinnainen)">
-  <input type="text" id="hp" style="display:none"> <!-- honeypot -->
-  <button type="submit">Lähetä kommentti</button>
-</form>
+<!-- Kelluva kommenttipainike -->
+<div id="feedbackFab">💬</div>
 
-<div id="commentStatus"></div>
+<!-- Kommenttilomake-popup -->
+<div id="feedbackPopup">
+  <div id="feedbackBox">
+    <h3>Anna palaute</h3>
+
+    <label>Sähköpostisi (valinnainen)</label>
+    <input id="fbEmail" type="email" placeholder="name@example.com">
+
+    <label>Viesti</label>
+    <textarea id="fbMessage" placeholder="Kirjoita kommentti..."></textarea>
+
+    <div class="actions">
+      <button id="fbCancel">Peruuta</button>
+      <button id="fbSend">Lähetä</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
