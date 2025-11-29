@@ -462,15 +462,53 @@ mark.search-hit-active{
   transition: all 0.25s ease; 
 }
 
-
-/*
+/* Kappaleen hehkutus kun pyyhkäistään */
 .p-selected-quote {
-  background: linear-gradient(to right, #f7efe4 0%, transparent 70%);
-  border-left: 3px solid #d0b48c;
-  padding-left: 10px;
+  opacity: 0.45;
+  font-size: 0.92em;
+  transition: opacity 0.2s, font-size 0.2s;
 }
-*/
 
+/* Kompakti kommenttilaatikko */
+.inline-comment-box {
+  width: 100%;
+  max-width: 680px;
+  margin: 12px auto 22px;
+  padding: 0;
+  background: none;
+  border: none;
+}
+
+.inline-comment-box textarea,
+.inline-comment-box input {
+  width: 100%;
+  padding: 10px 12px;
+  margin-top: 6px;
+  background: rgba(0,0,0,0.04);
+  border: none;
+  border-bottom: 1px solid #cfc8be;
+  border-radius: 6px;
+  font-size: 15px;
+  color: #2a2520;
+}
+
+.inline-comment-actions {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.inline-comment-actions button {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid #d0b48c;
+  background: rgba(208,180,140,0.07);
+  color: #5c4c38;
+}
+
+
+    
 /* Kommenttilaatikkorunko */
 .inline-comment-box {
   width: 100%;               /* ei leveämpi kuin tekstialue */
@@ -491,20 +529,6 @@ mark.search-hit-active{
   margin-bottom: 10px;
 }
 
-/* Syötekentät (textarea + email) */
-.inline-comment-box textarea,
-.inline-comment-box input {
-  width: 100%;
-  padding: 10px 12px;
-  margin-top: 6px;
-  background: rgba(0,0,0,0.04);  /* aavistuksen tummempi kuin tausta */
-  border: none;                  /* ei boxia */
-  border-bottom: 1px solid #cfc8be;
-  border-radius: 6px;
-  font-size: 15px;
-  color: #2a2520;
-  outline: none;
-}
 
 /* Vain textarea kasvaa */
 .inline-comment-box textarea {
@@ -520,26 +544,7 @@ mark.search-hit-active{
   opacity: 0.65;
 }
 
-/* Painikkeet */
-.inline-comment-actions {
-  display: flex;
-  justify-content: flex-end;
-  width: 100%;
-  gap: 10px;
-  margin-top: 8px;
-  transform: translateX(22px);   /* fyysinen siirto */
-}
 
-
-.inline-comment-actions button {
-  padding: 6px 14px;
-  border-radius: 6px;
-  border: 1px solid #d0b48c;
-  background: rgba(208,180,140,0.07);
-  color: #5c4c38;
-  font-size: 13px;
-  cursor: pointer;
-}
 
 .inline-comment-actions button.cancel {
   border-color: #bbb;
@@ -1291,77 +1296,99 @@ document.addEventListener("click", (e) => {
 <script>
 document.addEventListener("DOMContentLoaded", () => {
 
+  const chapterEl = document.getElementById("chapterContainer");
+
   let startX = 0;
   let startY = 0;
   let tracking = false;
 
-  const SWIPE_X = 55;
-  const MAX_Y   = 30;
-
-  const chapter = document.getElementById("chapterContainer");
   let selectedParagraph = null;
   let currentBox = null;
 
-  /* ------------- apufunktio --------------- */
-  function clearCommentBox() {
+  const SWIPE_X = 60;
+  const MAX_Y   = 35;
+
+  // Poista valinta
+  function clearSelection() {
     if (selectedParagraph) {
       selectedParagraph.classList.remove("p-selected-quote");
-      selectedParagraph = null;
     }
     if (currentBox) {
       currentBox.remove();
       currentBox = null;
     }
+    selectedParagraph = null;
   }
 
-  /* ------------- Luo kommenttikenttä --------------- */
-  function createCommentBox(targetP) {
+  // Luo kommenttilaatikko kappaleen alle
+  function createCommentBox(belowEl) {
     const box = document.createElement("div");
     box.className = "inline-comment-box";
 
     box.innerHTML = `
-      <textarea class="ic-text"
+      <textarea id="ic-text"
         placeholder="Kommentoi tätä kappaletta…"></textarea>
 
-      <input class="ic-email" type="email"
+      <input id="ic-email"
+        type="email"
         placeholder="Sähköpostisi (valinnainen)">
 
       <div class="inline-comment-actions">
         <button class="cancel">Peruuta</button>
-        <button class="send">Lähetä</button>
+        <button class="send">Jatka →</button>
       </div>
     `;
 
-    box.querySelector(".cancel").onclick = clearCommentBox;
+    // Peruuta
+    box.querySelector(".cancel").addEventListener("click", () => {
+      clearSelection();
+    });
 
-    box.querySelector(".send").onclick = async () => {
-      const msg   = box.querySelector(".ic-text").value.trim();
-      const email = box.querySelector(".ic-email").value.trim();
-      const quote = targetP.textContent.trim();
+    // Lähetä → avaa GitHub Issue Form
+    box.querySelector(".send").addEventListener("click", () => {
+      const message = box.querySelector("#ic-text").value.trim();
+      const email   = box.querySelector("#ic-email").value.trim();
+      const quote   = selectedParagraph.textContent.trim();
 
-      if (!msg) { alert("Kirjoita kommentti."); return; }
+      if (!message) {
+        alert("Kirjoita kommentti.");
+        return;
+      }
 
-      const ok = await sendFeedbackToGithub(quote, msg, email);
-      alert(ok ? "Kiitos palautteesta!" : "Lähetys epäonnistui.");
-      clearCommentBox();
-    };
+      const url      = window.location.href;
+      const chapter  = BookModule?.getCurrentChapter()?.title || "Tuntematon luku";
+      const today    = new Date().toISOString().slice(0,10);
 
-    targetP.insertAdjacentElement("afterend", box);
+      // Muodosta esitäytetty Issue Form -linkki
+      const issueURL =
+        "https://github.com/tilastomuuttujat/smart/issues/new?template=feedback.yml"
+        + "&quote="   + encodeURIComponent(quote)
+        + "&comment=" + encodeURIComponent(message)
+        + "&email="   + encodeURIComponent(email)
+        + "&url="     + encodeURIComponent(url)
+        + "&chapter=" + encodeURIComponent(chapter)
+        + "&date="    + encodeURIComponent(today);
+
+      window.open(issueURL, "_blank");
+
+      clearSelection();
+    });
+
+    belowEl.insertAdjacentElement("afterend", box);
     return box;
   }
 
-  /* ------------- pointerdown --------------- */
-  chapter.addEventListener("pointerdown", (e) => {
+  // Swipe-logiikka
+  chapterEl.addEventListener("pointerdown", (e) => {
     const p = e.target.closest("p");
     if (!p) return;
 
     tracking = true;
     startX = e.clientX;
     startY = e.clientY;
-  }, {passive:true});
+  }, { passive:true });
 
-  /* ------------- pointerup --------------- */
-  chapter.addEventListener("pointerup", (e) => {
+  chapterEl.addEventListener("pointerup", (e) => {
     if (!tracking) return;
     tracking = false;
 
@@ -1371,52 +1398,21 @@ document.addEventListener("DOMContentLoaded", () => {
     const dx = e.clientX - startX;
     const dy = e.clientY - startY;
 
-    if (Math.abs(dy) > MAX_Y) return;  // liian pystysuuntainen → scroll
-    if (dx > SWIPE_X) {
-      // SWIPE RIGHT → avaa kommenttikenttä
-      clearCommentBox();
-      selectedParagraph = p;
-      p.classList.add("p-selected-quote");
-      currentBox = createCommentBox(p);
-    } else if (dx < -SWIPE_X) {
-      // SWIPE LEFT → sulje kommenttikenttä
-      clearCommentBox();
-    }
+    if (Math.abs(dy) > MAX_Y) return;
+    if (dx <= SWIPE_X) return;
 
-  }, {passive:true});
+    clearSelection();
 
-  /* ------------- GitHub-lähetys --------------- */
-window.sendFeedbackToGithub = async function (quote, message, email) {
+    selectedParagraph = p;
+    p.classList.add("p-selected-quote");
 
-  const bodyText =
-    (email ? `Email: ${email}\n\n` : "") +
-    `Kappale:\n${quote}\n\n` +
-    `Viesti:\n${message}\n\n` +
-    `URL: ${location.href}`;
+    currentBox = createCommentBox(p);
 
-  const response = await fetch(
-    "https://api.github.com/repos/tilastomuuttujat/smart/dispatches",
-    {
-      method: "POST",
-      headers: {
-        "Accept": "application/vnd.github+json",
-        "Authorization": "Bearer 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",
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        event_type: "feedback",
-        client_payload: {
-          body: bodyText
-        }
-      })
-    }
-  );
-
-  return response.ok;
-};
+  }, { passive:true });
 
 });
 </script>
+
 
 <div id="debug-box"
      style="position:fixed;bottom:6px;left:6px;
