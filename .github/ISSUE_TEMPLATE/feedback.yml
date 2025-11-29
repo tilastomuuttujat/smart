@@ -1,0 +1,52 @@
+name: Lukijapalaute
+description: Kommentoi kirjan kappaletta tai sivua
+title: "Kappalepalaute"
+labels: ["feedback"]
+body:
+  - type: textarea
+    id: quote
+    attributes:
+      label: Siteerattu kappale
+      description: Tämä kappale poimittiin automaattisesti sivulta.
+      render: markdown
+    validations:
+      required: true
+
+  - type: textarea
+    id: comment
+    attributes:
+      label: Kommenttisi
+      description: Kirjoita palautteesi tai huomiosi.
+    validations:
+      required: true
+
+  - type: input
+    id: email
+    attributes:
+      label: Sähköpostisi (valinnainen)
+      placeholder: name@example.com
+    validations:
+      required: false
+
+  - type: input
+    id: url
+    attributes:
+      label: Sivun osoite
+      placeholder: https://domaini/...
+    validations:
+      required: true
+
+  - type: input
+    id: chapter
+    attributes:
+      label: Luku
+      placeholder: Esimerkiksi "02 Johdanto"
+    validations:
+      required: true
+
+  - type: input
+    id: date
+    attributes:
+      label: Päivämäärä
+    validations:
+      required: true
