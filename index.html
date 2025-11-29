@@ -1174,6 +1174,47 @@ if (isSearchVisible()){
 
 })();
 </script>
+<script>
+async function sendCommentToGitHub(comment, name) {
+  const payload = {
+    comment,
+    name,
+    timestamp: Date.now()
+  };
+
+  const resp = await fetch("https://api.github.com/repos/harrikayhko/YOUR_REPO_NAME/issues", {
+    method: "POST",
+    headers: {
+      "Accept": "application/vnd.github+json",
+      "Authorization": "Bearer {{TOKEN}}"
+    },
+    body: JSON.stringify({
+      title: `Comment ${Date.now()}`,
+      body: JSON.stringify(payload, null, 2)
+    })
+  });
+
+  return resp.ok;
+}
+
+document.getElementById("commentForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  if (document.getElementById("hp").value !== "") return;
+
+  const comment = document.getElementById("commentText").value.trim();
+  const name = document.getElementById("commentName").value.trim();
+  
+  document.getElementById("commentStatus").textContent = "Lähetetään...";
+
+  const ok = await sendCommentToGitHub(comment, name);
+  if (ok) {
+    document.getElementById("commentStatus").textContent = "Kiitos kommentista! 💛";
+  } else {
+    document.getElementById("commentStatus").textContent = "Virhe lähetyksessä.";
+  }
+});
+</script>
 
 <div id="debug-box"
      style="position:fixed;bottom:6px;left:6px;
@@ -1187,6 +1228,14 @@ if (isSearchVisible()){
   <div id="tk-suggest-popover-header">Tämä saattaisi kiinnostaa</div>
   <div id="tk-suggest-popover-body"></div>
 </div>
+<form id="commentForm">
+  <textarea id="commentText" placeholder="Kommentti"></textarea>
+  <input type="text" id="commentName" placeholder="Nimesi (valinnainen)">
+  <input type="text" id="hp" style="display:none"> <!-- honeypot -->
+  <button type="submit">Lähetä kommentti</button>
+</form>
+
+<div id="commentStatus"></div>
 
 </body>
 </html>
