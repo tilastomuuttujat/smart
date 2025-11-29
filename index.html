@@ -452,33 +452,36 @@ mark.search-hit-active{
 }
 
 
-/* Kappale, jota kommentoidaan */
+/* -----------------------------------------------------------
+   KAPPALE, JOTA KOMMENTOIDAAN
+----------------------------------------------------------- */
 .p-selected-quote {
   opacity: 0.55;
   font-size: 0.92em;
   line-height: 1.45;
   padding-left: 12px;
   border-left: 3px solid #d0b48c;
-  transition: all 0.25s ease; 
+  transition: all 0.25s ease;
 }
 
-/* Kappaleen hehkutus kun pyyhkäistään */
-.p-selected-quote {
-  opacity: 0.45;
-  font-size: 0.92em;
-  transition: opacity 0.2s, font-size 0.2s;
-}
 
-/* Kompakti kommenttilaatikko */
+/* -----------------------------------------------------------
+   KOMMENTTILAATIKKO (kappaleen alle)
+----------------------------------------------------------- */
 .inline-comment-box {
   width: 100%;
-  max-width: 680px;
-  margin: 12px auto 22px;
-  padding: 0;
+  max-width: 550px;
+  margin: 12px 0 18px 0;
+  padding-left: 0;
   background: none;
   border: none;
+  margin-left: 12px; /* sama linja kuin p-selected-quote */
 }
 
+
+/* -----------------------------------------------------------
+   SYÖTEKENTÄT: textarea ja email
+----------------------------------------------------------- */
 .inline-comment-box textarea,
 .inline-comment-box input {
   width: 100%;
@@ -490,13 +493,36 @@ mark.search-hit-active{
   border-radius: 6px;
   font-size: 15px;
   color: #2a2520;
+  outline: none;
 }
 
+/* Tekstialue kasvaa */
+.inline-comment-box textarea {
+  min-height: 90px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+/* Placeholder-tekstit */
+.inline-comment-box textarea::placeholder,
+.inline-comment-box input::placeholder {
+  color: #9b9288;
+  opacity: 0.65;
+}
+
+
+/* -----------------------------------------------------------
+   PAINIKKEET
+----------------------------------------------------------- */
 .inline-comment-actions {
-  margin-top: 10px;
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
+  width: 100%;
+  gap: 10px;
+  margin-top: 8px;
+
+  /* siirto oikealle tasaukseen */
+  transform: translateX(22px);
 }
 
 .inline-comment-actions button {
@@ -505,46 +531,9 @@ mark.search-hit-active{
   border: 1px solid #d0b48c;
   background: rgba(208,180,140,0.07);
   color: #5c4c38;
+  font-size: 13px;
+  cursor: pointer;
 }
-
-
-    
-/* Kommenttilaatikkorunko */
-.inline-comment-box {
-  width: 100%;               /* ei leveämpi kuin tekstialue */
-  max-width: 550px;          /* sama kuin chapterContainer */
-  margin: 12px 0 18px 0;    /* keskitetty kuten tekstikin */
-  padding-left: 0;
-  background: none;
-  border: none;
-  margin-left: 12px;
-}
-
-/* Siteerattu kappale */
-#inlineCommentQuote {
-  font-size: 14px;
-  color: #6d665b;
-  padding-left: 12px;
-  border-left: 3px solid #d0b48c;
-  margin-bottom: 10px;
-}
-
-
-/* Vain textarea kasvaa */
-.inline-comment-box textarea {
-  min-height: 90px;
-  line-height: 1.5;
-  resize: vertical;
-}
-
-/* Placeholderit – hillityt */
-.inline-comment-box textarea::placeholder,
-.inline-comment-box input::placeholder {
-  color: #9b9288;
-  opacity: 0.65;
-}
-
-
 
 .inline-comment-actions button.cancel {
   border-color: #bbb;
@@ -552,12 +541,81 @@ mark.search-hit-active{
   color: #777;
 }
 
-#scrollContainer, #chapterContainer {
+.ic-inline-thanks {
+  padding: 10px 12px;
+  margin: 6px 0 14px 12px;
+  background: rgba(208,180,140,0.12);
+  border-left: 3px solid #d0b48c;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #4a4239;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.ic-inline-thanks.show {
+  opacity: 1;
+}
+
+
+/* -----------------------------------------------------------
+   SWIPE ALUEEN SKROLLAUS (tärkeä: estää vaakasuuntaheijahtelu)
+----------------------------------------------------------- */
+#scrollContainer,
+#chapterContainer {
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
+  touch-action: pan-y;       /* sallii vain pystysuunnan */
   overscroll-behavior-x: none;
+}
+
+/* -----------------------------------------------------------
+   KIITOS-PALAUTTEESTA – tekstialueen tyylinen viesti
+   (tätä käytetään vain tekstialueen sisällä)
+----------------------------------------------------------- */
+.ic-area-wrapper textarea {
+  width: 100%;
+  min-height: 90px;
+  padding: 10px 12px;
+  background: rgba(0,0,0,0.04);
+  border: none;
+  border-bottom: 1px solid #cfc8be;
+  border-radius: 6px;
+  font-size: 15px;
+  color: #2a2520;
+  outline: none;
+  resize: vertical;
+}
+
+.ic-area-wrapper .ic-success-msg {
+  padding: 10px 12px;
+  background: rgba(0,0,0,0.03);
+  border-left: 3px solid #d0b48c;
+  border-radius: 4px;
+  font-size: 15px;
+  color: #4a4239;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+
+/* -----------------------------------------------------------
+   YLÄREUNAN KIITOS-BANNERI (Lähetä → sulkemisen jälkeen)
+----------------------------------------------------------- */
+#global-thanks-banner {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 18px;
+  background: rgba(0,0,0,0.08);
+  border-left: 3px solid #d0b48c;
+  border-radius: 6px;
+  font-size: 15px;
+  color: #4a4239;
+  z-index: 99999;
+  opacity: 0;
+  pointer-events: none;
 }
 
   </style>
@@ -1305,11 +1363,12 @@ document.addEventListener("DOMContentLoaded", () => {
   let selectedParagraph = null;
   let currentBox = null;
 
-  const SWIPE_X = 60;
-  const MAX_Y   = 35;
+  const SWIPE_OPEN  = 60;
+  const SWIPE_CLOSE = -60;
+  const MAX_Y = 35;
 
   // ------------------------------------------
-  // Poista valinta
+  // Sulje kommentointi
   // ------------------------------------------
   function clearSelection() {
     if (selectedParagraph) {
@@ -1326,14 +1385,12 @@ document.addEventListener("DOMContentLoaded", () => {
   // Lähetys Google Sheetiin
   // ------------------------------------------
   async function sendFeedbackToGoogle(quote, message, email) {
-
     const payload = {
-      quote: quote,
-      message: message,
-      email: email,
+      quote,
+      message,
+      email,
       url: window.location.href
     };
-
     try {
       await fetch(
         "https://script.google.com/macros/s/AKfycbxR-F3qMEHGnRNuFjaPNMtA_iL4VleMOxqTFFymqDce_XMxdGY1nAB5GiF42oXEQhgI/exec",
@@ -1344,30 +1401,46 @@ document.addEventListener("DOMContentLoaded", () => {
           body: JSON.stringify(payload)
         }
       );
-
-      // no-cors ei anna vastausta → oletetaan OK
       return true;
-
-    } catch (err) {
-      console.error("Google Sheets error:", err);
+    } catch(e){
+      console.error(e);
       return false;
     }
   }
 
   // ------------------------------------------
-  // Luo kommenttilaatikko kappaleen alle
+  // Paikallinen kiitospalkki (kommenttilaatikon tilalle)
+  // ------------------------------------------
+  function showInlineThanks(belowEl) {
+    const thanks = document.createElement("div");
+    thanks.className = "ic-inline-thanks";
+    thanks.textContent = "✓ Kiitos palautteesta!";
+
+    belowEl.insertAdjacentElement("afterend", thanks);
+
+    requestAnimationFrame(() => {
+      thanks.classList.add("show");
+    });
+
+    setTimeout(() => {
+      thanks.classList.remove("show");
+      setTimeout(() => thanks.remove(), 200);
+    }, 3000);
+  }
+
+  // ------------------------------------------
+  // Luo kommenttilaatikko
   // ------------------------------------------
   function createCommentBox(belowEl) {
     const box = document.createElement("div");
     box.className = "inline-comment-box";
 
     box.innerHTML = `
-      <textarea id="ic-text"
-        placeholder="Kommentoi tätä kappaletta…"></textarea>
+      <div class="ic-area-wrapper">
+        <textarea id="ic-text" placeholder="Kommentoi tätä kappaletta…"></textarea>
+      </div>
 
-      <input id="ic-email"
-        type="email"
-        placeholder="Sähköpostisi (valinnainen)">
+      <input id="ic-email" type="email" placeholder="Sähköpostisi (valinnainen)">
 
       <div class="inline-comment-actions">
         <button class="cancel">Peruuta</button>
@@ -1380,41 +1453,45 @@ document.addEventListener("DOMContentLoaded", () => {
       clearSelection();
     });
 
-    // Lähetä → Google Sheetsiin
-    box.querySelector(".send").addEventListener("click", async () => {
-      const message = box.querySelector("#ic-text").value.trim();
-      const email   = box.querySelector("#ic-email").value.trim();
-      const quote   = selectedParagraph.textContent.trim();
+// Lähetä → sulkee heti + näyttää kiitoksen paikallisesti
+box.querySelector(".send").addEventListener("click", async () => {
+  const msg   = box.querySelector("#ic-text").value.trim();
+  const email = box.querySelector("#ic-email").value.trim();
+  const quote = selectedParagraph.textContent.trim();
 
-      if (!message) {
-        alert("Kirjoita kommentti.");
-        return;
-      }
+  if (!msg) return;
 
-      const ok = await sendFeedbackToGoogle(quote, message, email);
+  // tallennetaan sijainti kiitospalkkia varten
+  const anchor = selectedParagraph;
 
-      if (ok) alert("Kiitos palautteesta!");
-      else alert("Lähetys epäonnistui.");
+  clearSelection();
 
-      clearSelection();
-    });
+  // kiitos-viesti siihen kohtaan missä laatikko oli
+  showInlineThanks(anchor);
+
+  // lähetys taustalla
+  sendFeedbackToGoogle(quote, msg, email);
+});
+
 
     belowEl.insertAdjacentElement("afterend", box);
     return box;
   }
 
   // ------------------------------------------
-  // Swipe-logiikka
+  // Pointer down
   // ------------------------------------------
   chapterEl.addEventListener("pointerdown", (e) => {
     const p = e.target.closest("p");
     if (!p) return;
-
     tracking = true;
     startX = e.clientX;
     startY = e.clientY;
   }, { passive:true });
 
+  // ------------------------------------------
+  // Pointer up
+  // ------------------------------------------
   chapterEl.addEventListener("pointerup", (e) => {
     if (!tracking) return;
     tracking = false;
@@ -1426,15 +1503,20 @@ document.addEventListener("DOMContentLoaded", () => {
     const dy = e.clientY - startY;
 
     if (Math.abs(dy) > MAX_Y) return;
-    if (dx <= SWIPE_X) return;
 
-    clearSelection();
+    // ---- VASEMMALLE: sulje ----
+    if (dx < SWIPE_CLOSE) {
+      clearSelection();
+      return;
+    }
 
-    selectedParagraph = p;
-    p.classList.add("p-selected-quote");
-
-    currentBox = createCommentBox(p);
-
+    // ---- OIKEALLE: avaa ----
+    if (dx > SWIPE_OPEN) {
+      clearSelection();
+      selectedParagraph = p;
+      p.classList.add("p-selected-quote");
+      currentBox = createCommentBox(p);
+    }
   }, { passive:true });
 
 });
@@ -1450,9 +1532,8 @@ document.addEventListener("DOMContentLoaded", () => {
   debug: alku
 </div>
 
+<div id="global-thanks-banner">Kiitos palautteesta!</div>
 
 
 </body>
 </html>
-
-
