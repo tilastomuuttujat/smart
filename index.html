@@ -1267,6 +1267,9 @@ if (isSearchVisible()){
 })();
 </script>
 <script>
+// -----------------------------
+// 1) Popupin avaus / sulku
+// -----------------------------
 document.getElementById("feedbackFab").addEventListener("click", () => {
   document.getElementById("feedbackPopup").style.display = "flex";
 });
@@ -1275,7 +1278,58 @@ document.getElementById("fbCancel").addEventListener("click", () => {
   document.getElementById("feedbackPopup").style.display = "none";
 });
 
-document.getElementById("fbSend").addEventListener("click", () => {
+
+// -----------------------------
+// 2) Issue-lähetys GitHubiin
+// -----------------------------
+async function sendFeedbackToGithub(message, email) {
+  const repoOwner = "tilastomuuttujat";
+  const repoName  = "smart";
+  const issueTitle = "Lukijapalaute";
+
+  // Lasketaan scroll-prosentti
+  const scrollPercent = Math.round(
+    (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100
+  );
+
+  // Rakennetaan Issue-body
+  const bodyText =
+    (email ? `**Email:** ${email}\n\n` : "") +
+    `**Viesti:**\n${message}\n\n` +
+    `**Lisätieto:**\n` +
+    `Scroll: ${scrollPercent}%\n` +
+    `URL: ${window.location.href}\n`;
+
+  // GitHub Issues API
+  const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/issues`;
+
+  // 🔥 Huom: Token lisätään GitHub Actionsin aikana
+  try {
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: {
+        "Accept": "application/vnd.github+json",
+        "Authorization": "Bearer ${COMMENT_TOKEN}",   // korvataan Actionsissa
+      },
+      body: JSON.stringify({
+        title: issueTitle,
+        body: bodyText
+      })
+    });
+
+    return response.ok;
+
+  } catch (err) {
+    console.error("GitHub feedback error:", err);
+    return false;
+  }
+}
+
+
+// -----------------------------
+// 3) "Lähetä"-painike
+// -----------------------------
+document.getElementById("fbSend").addEventListener("click", async () => {
   const email = document.getElementById("fbEmail").value.trim();
   const msg   = document.getElementById("fbMessage").value.trim();
 
@@ -1284,10 +1338,16 @@ document.getElementById("fbSend").addEventListener("click", () => {
     return;
   }
 
-  // Tämä vain näyttää ilmoituksen.
-  // GitHub Issue -lähetys lisätään seuraavassa vaiheessa.
-  alert("Palaute vastaanotettu! (GitHub-lähetys tulee seuraavaksi)");
+  // Lähetä Issue GitHubiin
+  const ok = await sendFeedbackToGithub(msg, email);
 
+  if (ok) {
+    alert("Palaute lähetetty! Kiitos.");
+  } else {
+    alert("Lähetys epäonnistui. Tarkista internet-yhteys.");
+  }
+
+  // Popup kiinni
   document.getElementById("feedbackPopup").style.display = "none";
   document.getElementById("fbMessage").value = "";
   document.getElementById("fbEmail").value = "";
