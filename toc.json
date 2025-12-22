@@ -1,0 +1,99 @@
+{
+  "meta": {
+    "title": "Sisällysluettelo",
+    "description": "Lukupolut, jotka auttavat hahmottamaan kokonaisuuden eri näkökulmista",
+    "version": "1.0"
+  },
+
+  "paths": [
+    {
+      "id": "system_overview",
+      "title": "Kokonaisuuden ymmärtäminen",
+      "description": "Rakenteet, mittarit ja järjestelmän itseään ylläpitävä logiikka",
+      "frameworks": [
+        "systemic_compass",
+        "metrics_politics",
+        "anticipatory_risk"
+      ],
+      "chapters": [
+        "001",
+        "002",
+        "003",
+        "006"
+      ]
+    },
+
+    {
+      "id": "everyday_life",
+      "title": "Ihmisten arki",
+      "description": "Miten päätökset tuntuvat ja missä kuormitus kasautuu",
+      "frameworks": [
+        "experiential",
+        "ethical_reflection"
+      ],
+      "chapters": [
+        "004",
+        "007",
+        "009"
+      ]
+    },
+
+    {
+      "id": "power_and_responsibility",
+      "title": "Valta ja vastuu",
+      "description": "Kuka päättää, kuka hyötyy ja kuka välttelee vastuuta",
+      "frameworks": [
+        "power_structure",
+        "systemic_compass"
+      ],
+      "chapters": [
+        "003",
+        "006",
+        "010"
+      ]
+    },
+
+    {
+      "id": "narrative_and_language",
+      "title": "Kertomus ja kieli",
+      "description": "Miten tarina rakentuu ja miten se ohjaa tulkintaa",
+      "frameworks": [
+        "narrative"
+      ],
+      "chapters": [
+        "002",
+        "005",
+        "008"
+      ]
+    },
+
+    {
+      "id": "risk_and_breakpoints",
+      "title": "Murtumakohdat ja riskit",
+      "description": "Missä järjestelmä voi mennä rikki ja miksi",
+      "frameworks": [
+        "anticipatory_risk",
+        "metrics_politics"
+      ],
+      "chapters": [
+        "006",
+        "009",
+        "011"
+      ]
+    },
+
+    {
+      "id": "ethical_questions",
+      "title": "Arvot ja rajat",
+      "description": "Mitä pidämme hyväksyttävänä ja kenen kustannuksella",
+      "frameworks": [
+        "ethical_reflection"
+      ],
+      "chapters": [
+        "007",
+        "010",
+        "012"
+      ]
+    }
+  ]
+}

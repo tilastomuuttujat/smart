@@ -1,0 +1,43 @@
+{
+  "core_presets": {
+    "what_we_know": {
+      "id": "what_we_know",
+      "title": "Mitä tiedämme",
+      "focus": ["MI1", "MI3"],
+      "sdof": ["structure", "dynamics"],
+      "tone": "analytical"
+    },
+
+    "what_we_do": {
+      "id": "what_we_do",
+      "title": "Mitä oikeasti tehdään",
+      "focus": ["MI5", "MI6"],
+      "sdof": ["outcomes", "feedback"],
+      "tone": "critical"
+    },
+
+    "what_is_hidden": {
+      "id": "what_is_hidden",
+      "title": "Mitä jää piiloon",
+      "focus": ["MI8", "MI10"],
+      "sdof": [],
+      "tone": "revealing"
+    },
+
+    "what_it_costs": {
+      "id": "what_it_costs",
+      "title": "Mitä tämä maksaa",
+      "focus": ["MI6"],
+      "sdof": ["outcomes"],
+      "tone": "economic"
+    },
+
+    "where_it_leads": {
+      "id": "where_it_leads",
+      "title": "Mihin tämä johtaa",
+      "focus": ["MI9", "MI11"],
+      "sdof": [],
+      "tone": "anticipatory"
+    }
+  }
+}

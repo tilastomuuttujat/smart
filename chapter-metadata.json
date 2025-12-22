@@ -1,0 +1,58 @@
+{
+  "chapter": "001",
+  "title": "Tasapainon menetys ja sen hiljainen palauttaminen",
+
+  "core_thesis": "Suomen kriisi ei ole hallinnollinen eikä taloudellinen, vaan järjestelmien välisen yhteisen rytmin katkeaminen.",
+
+  "supporting_arguments": [
+    "Hallinnollinen tehokkuus peittää inhimillisen ja ekologisen kulumisen",
+    "Mittarit kuvaavat mennyttä menestystä, eivät tulevaa kestävyyttä",
+    "Luottamus siirtyy instituutioista ihmisten välisiin suhteisiin"
+  ],
+
+  "key_concepts": [
+    "kestävyys",
+    "järjestelmien rytmi",
+    "luottamus",
+    "mittarit",
+    "reflektiivisyys"
+  ],
+
+  "dimensions": {
+    "structural": "strong",
+    "experiential": "strong",
+    "metrics": "medium",
+    "power": "implicit",
+    "narrative": "implicit",
+    "anticipatory": "medium",
+    "ethical": "implicit"
+  },
+
+  "dominant_tensions": [
+    "tehokkuus vs merkitys",
+    "mittaaminen vs kokemus",
+    "vakauttaminen vs uudistuminen"
+  ],
+
+  "observed_impacts": [
+    "työuupumus",
+    "luottamuksen ohentuminen",
+    "ekologinen ylikuormitus"
+  ],
+
+  "open_questions": [
+    "Miten järjestelmät voivat oppia itseään koskevaa tietoa",
+    "Kuka vastaa järjestelmien yhteensovittamisesta"
+  ],
+
+  "mi_series": {
+    "description": "Kuvaus ilmiöstä ja sen oireista",
+    "interpretation": "Tulkinta järjestelmien välisen rytmin katkeamisesta",
+    "hypothesis": "Riski siirtymisestä kompensoivaan tilaan",
+    "counter_matrix": [
+      "Mitä jää näkymättömiin mittareissa",
+      "Kenen kokemus puuttuu"
+    ],
+    "reflection": "Kriisi on reflektiivinen, ei hallinnollinen"
+  }
+}

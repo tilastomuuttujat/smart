@@ -1,0 +1,100 @@
+[
+  {
+    "term": "rakenteellinen eriarvoisuus",
+    "stats": 1.9,
+    "textPower": 0.8,
+    "embedding": 0.75,
+    "miFit": 0.9
+  },
+  {
+    "term": "mittaripolitiikka",
+    "stats": 1.6,
+    "textPower": 0.9,
+    "embedding": 0.85,
+    "miFit": 0.85
+  },
+  {
+    "term": "kompensaatiotalous",
+    "stats": 2.1,
+    "textPower": 0.7,
+    "embedding": 0.8,
+    "miFit": 0.9
+  },
+  {
+    "term": "hoivavelka",
+    "stats": 1.8,
+    "textPower": 0.65,
+    "embedding": 0.7,
+    "miFit": 0.85
+  },
+  {
+    "term": "rakenteellinen vinouma",
+    "stats": 1.5,
+    "textPower": 0.85,
+    "embedding": 0.8,
+    "miFit": 0.8
+  },
+  {
+    "term": "OECD:n luottamusmittaukset",
+    "stats": 1.4,
+    "textPower": 0.7,
+    "embedding": 0.9,
+    "miFit": 0.8
+  },
+  {
+    "term": "materiaalijalanjälki",
+    "stats": 2.2,
+    "textPower": 0.9,
+    "embedding": 0.85,
+    "miFit": 0.95
+  },
+  {
+    "term": "työuupumustilastot",
+    "stats": 1.7,
+    "textPower": 0.95,
+    "embedding": 0.8,
+    "miFit": 0.75
+  },
+  {
+    "term": "arvo- ja asennetutkimus",
+    "stats": 1.3,
+    "textPower": 0.8,
+    "embedding": 0.85,
+    "miFit": 0.8
+  },
+  {
+    "term": "kokemusperäinen kuormitus",
+    "stats": 1.2,
+    "textPower": 0.9,
+    "embedding": 0.8,
+    "miFit": 0.75
+  },
+  {
+    "term": "hiilineutraalius 2035",
+    "stats": 1.8,
+    "textPower": 0.6,
+    "embedding": 0.7,
+    "miFit": 0.9
+  },
+  {
+    "term": "reflektiivinen kriisi",
+    "stats": 2.5,
+    "textPower": 1.0,
+    "embedding": 0.95,
+    "miFit": 1.0
+  },
+  {
+    "term": "järjestelmien rytmi",
+    "stats": 1.5,
+    "textPower": 0.8,
+    "embedding": 0.9,
+    "miFit": 0.85
+  },
+  {
+    "term": "sosiaalinen osallisuus",
+    "stats": 1.4,
+    "textPower": 0.75,
+    "embedding": 0.8,
+    "miFit": 0.7
+  }
+]

@@ -1,0 +1,117 @@
+{
+  "core_frameworks": [
+    {
+      "id": "systemic_compass",
+      "title": "Kuka hyötyy tästä",
+      "prompt": "Kuka hyötyy tästä kokonaisuudesta",
+      "description": "Tämä kehys tarkastelee kokonaisuutta rakenteiden ja etujen näkökulmasta.\nSe tekee näkyväksi, miten hyödyt, kustannukset ja valta jakautuvat eri toimijoiden välillä ja miksi nykyinen järjestelmä ylläpitää itseään.\n\nLukiessa huomio kiinnittyy siihen, ketkä voittavat, ketkä häviävät ja millaiset rakenteet tekevät tästä jaosta pysyvän.",
+      "purpose": "Rakenteiden, dynamiikkojen ja seurausten jäsentäminen hyötyjen ja kustannusten näkökulmasta.",
+      "modes": ["describe", "interpret", "hypothesis"],
+      "textMap": {
+        "describe": ["text-describe"],
+        "interpret": ["text-interpret"],
+        "hypothesis": ["text-hypothesis"]
+      },
+      "chapter_hints": {
+        "001": "Luvussa hahmottuu, miten hallinnollinen tehokkuus ja kansainvälinen menestys hyödyttävät järjestelmän vakautta, samalla kun kustannukset siirtyvät inhimilliseen jaksamiseen ja tulevaisuuden korjausvelkaan. Teksti näyttää, miksi nykyinen rakenne kykenee ylläpitämään itseään, vaikka sen perusta ohenee.",
+        "002": "Luku tekee näkyväksi, miten julkisen talouden rakenteet alkavat hyödyttää omaa jatkuvuuttaan. Rakenne säilyttää toimintakykynsä mittaamalla ja hallitsemalla riskiä, vaikka alkuperäinen hyöty – ihmisten turvaaminen ja osallisuus – etääntyy."
+      },
+      "modules": ["starfield", "wordcloud", "timeline", "counter_matrix", "reflection"]
+    },
+
+    {
+      "id": "metrics_politics",
+      "title": "Miksi tätä mitataan näin",
+      "prompt": "Miksi tätä mitataan näin",
+      "description": "Tämä kehys paljastaa mittareiden ja arviointitapojen taustalla olevat valinnat.\nSe näyttää, miten luvut, indikaattorit ja tavoitteet ohjaavat päätöksiä ja samalla rajaavat sitä, mitä pidetään tärkeänä tai merkityksellisenä.\n\nLukija oppii näkemään mittarit poliittisina ja normatiivisina välineinä, ei neutraaleina faktoina.",
+      "purpose": "Mittareiden, indikaattorien ja arviointitapojen poliittisten valintojen näkyväksi tekeminen.",
+      "modes": ["measured", "unmeasured", "distorted"],
+      "textMap": {
+        "measured": ["text-describe"],
+        "unmeasured": ["text-interpret"],
+        "distorted": ["text-hypothesis"]
+      },
+      "chapter_hints": {
+        "001": "Luku osoittaa, miten kansainväliset vertailut ja mittarit kuvaavat mennyttä menestystä, mutta eivät tulevaa kestävyyttä. Mittaaminen ohjaa huomiota pois rakenteellisista ja inhimillisistä riskeistä ja tekee ekologisista rajoista toissijaisia.",
+        "002": "Luku avaa systeemisen sokeuden mekanismin: se, mitä voidaan mitata, alkaa määrittää todellisuutta. Menokehykset, tuottavuus ja suoritteet ohjaavat päätöksiä samalla, kun luottamus, merkitys ja oikeudenmukaisuus jäävät mittaamattomiksi."
+      },
+      "modules": ["wordcloud", "counter_matrix", "reflection"]
+    },
+
+    {
+      "id": "experiential",
+      "title": "Kuka kantaa suurimman kuorman",
+      "prompt": "Kuka kantaa suurimman kuorman",
+      "description": "Tämä kehys siirtää huomion rakenteista ihmisten arkeen.\nSe tarkastelee, keihin päätösten seuraukset kohdistuvat konkreettisesti ja millaista kuormitusta järjestelmä tuottaa yksilöille ja yhteisöille.\n\nLukiessa korostuvat kokemukset, sopeutuminen ja se, mikä jää usein näkymättömiin tilastoissa ja puheessa.",
+      "purpose": "Yksilön ja arjen kokemusten tarkastelu rakenteellisten ratkaisujen seurauksena.",
+      "modes": ["lived", "coping", "invisible"],
+      "textMap": {
+        "lived": ["text-describe"],
+        "coping": ["text-interpret"],
+        "invisible": ["text-hypothesis"]
+      },
+      "chapter_hints": {
+        "001": "Luvussa korostuu, miten sopeutuminen siirtyy yksilöiden vastuulle. Työuupumus, yksinäisyys ja osallisuuden heikkeneminen kasaantuvat, mutta jäävät helposti näkymättömiin toimivien rakenteiden varjoon.",
+        "002": "Luku näyttää, miten riskin siirtäminen ja hallinta etäännyttävät järjestelmää ihmisistä. Vastuun siirtyessä rakenteisiin yksilön kokemus merkityksestä ja osallisuudesta heikkenee, vaikka järjestelmä näyttää toimivalta."
+      },
+      "modules": ["wordcloud", "reflection"]
+    },
+
+    {
+      "id": "narrative",
+      "title": "Kuka tämän tarinan kertoo",
+      "prompt": "Kuka tämän tarinan kertoo",
+      "description": "Tämä kehys analysoi kertomusta itseään.\nSe tekee näkyväksi, kenen ääni kuuluu, millainen näkökulma hallitsee ja mitä jätetään kertomatta tai sivuun.\n\nLukija hahmottaa, miten tarinan rakenne, kieli ja painotukset ohjaavat tulkintaa ja käsitystä todellisuudesta.",
+      "purpose": "Kerronnan, toimijoiden ja näkökulmien analyysi.",
+      "modes": ["actors", "conflict", "turning_points"],
+      "textMap": {
+        "actors": ["text-describe"],
+        "conflict": ["text-interpret"],
+        "turning_points": ["text-hypothesis"]
+      },
+      "chapter_hints": {
+        "001": "Teksti rakentaa kertomusta hallinnollisesta ja tilastollisesta menestyksestä, jossa inhimillinen kokemus jää taustalle. Kieli ja painotukset luovat kuvan toimivasta mutta väsyvästä yhteiskunnasta.",
+        "002": "Luvussa kertomus siirtyy tekniseen ja systeemiseen kieleen. Rakenne puhuu itsestään neutraalina välttämättömyytenä, jolloin poliittiset ja eettiset valinnat näyttäytyvät luonnollisina."
+      },
+      "modules": ["timeline", "reflection"]
+    },
+
+    {
+      "id": "anticipatory_risk",
+      "title": "Missä tämä voi mennä rikki",
+      "prompt": "Missä tämä voi mennä rikki",
+      "description": "Tämä kehys katsoo nykyhetken yli.\nSe tarkastelee heikkoja signaaleja, murtumakohtia ja epälineaarisia riskejä, jotka voivat muuttaa kehityksen suuntaa yllättävästi.\n\nLukiessa huomio kohdistuu haavoittuvuuksiin, ennakoimattomiin seurauksiin ja siihen, mitä tapahtuu, jos oletukset eivät pidäkään paikkaansa.",
+      "purpose": "Heikkojen signaalien, murtumakohtien ja epälineaaristen riskien tarkastelu.",
+      "modes": ["signals", "scenarios", "ruptures"],
+      "textMap": {
+        "signals": ["text-describe"],
+        "scenarios": ["text-interpret"],
+        "ruptures": ["text-hypothesis"]
+      },
+      "chapter_hints": {
+        "001": "Luku nostaa esiin järjestelmien välisen rytmihäiriön heikkona signaalina. Huoltosuhteen heikkeneminen, luottamuksen ohentuminen ja ekologinen kuormitus kasaantuvat riskeiksi.",
+        "002": "Luku tunnistaa murtumakohdan riskin: kun rakenne menettää kykynsä nähdä itseään, korjausliikkeet viivästyvät ja kriisit muuttuvat äkillisiksi ja kalliiksi."
+      },
+      "modules": ["timeline", "counter_matrix", "reflection"]
+    },
+
+    {
+      "id": "power_structure",
+      "title": "Kuka välttelee vastuuta",
+      "prompt": "Kuka välttelee vastuuta",
+      "description": "Tämä kehys paljastaa vallan ja vastuun suhteet.\nSe tarkastelee, kuka tekee päätökset, miten vastuu jakautuu ja millä tavoin sitä siirretään, hajautetaan tai tehdään näkymättömäksi.\n\nLukija oppii tunnistamaan tilanteet, joissa vastuu katoaa rakenteisiin, prosesseihin tai kieleen.",
+      "purpose": "Vallan, vastuun ja päätöksenteon näkyvien ja näkymättömien muotojen erittely.",
+      "modes": ["visible_power", "structural_power", "invisible_power"],
+      "textMap": {
+        "visible_power": ["text-describe"],
+        "structural_power": ["text-interpret"],
+        "invisible_power": ["text-hypothesis"]
+      },
+      "chapter_hints": {
+        "001": "Luvussa näkyy, miten vastuu hajautuu normien, rahoituslogiikan ja prosessien väliin. Ristiriidat esitetään teknisinä ongelmina.",
+        "002": "Luku paljastaa vastuun katoamisen rakenteelliseen logiikkaan. Päätökset näyttäytyvät järjestelmän pakkoina, jolloin poliittinen vastuu muuttuu hallinnolliseksi välttämättömyydeksi."
+      },
+      "modules": ["structure_map", "counter_matrix", "reflection"]
+    }
+  ]
+}

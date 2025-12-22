@@ -1,1539 +1,749 @@
 <!DOCTYPE html>
 <html lang="fi">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Tähtikirja 2025 – lukutila</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kosketa – moduloitu lukutila</title>
 
   <style>
-html,body{
-  margin:0;
-  padding:0;
-  height:100%;
-  background:#f3eee4; /* tausta jää voimaan */
-  font:16px/1.6 system-ui,-apple-system,Segoe UI;
-  -webkit-user-select:none;
-  user-select:none;
-  overflow:hidden;
-}
-
-/* ------------------------------------------
-   PERUSRUNKO – ei enää "korttia", teksti suoraan taustalla
------------------------------------------- */
-#app{
-  display:flex;
-  height:100%;
-  width:100%;
-  justify-content:flex-start;  /* ei keskitystä laatikoksi */
-  align-items:stretch;
-  padding:0;                   /* ei kehysreunaa */
-}
-
-#readerShell{
-  position:relative;
-  flex:1;
-  max-width:none;              /* täysi leveys */
-  background:transparent;      /* ei omaa alustaa */
-  backdrop-filter:none;
-  border-radius:0;
-  overflow:hidden;
-  box-shadow:none;
-  display:flex;
-  flex-direction:column;
-}
-
-
-    #scrollContainer{
-      flex:1;
-      overflow-y:auto;
-      -webkit-overflow-scrolling:touch;
-      padding:26px 28px;
-    }
-
-    #chapterContainer{
-      max-width:680px;
-      margin:0 auto;
-    }
-
-    /* ------------------------------------------
-       HAKUPALKKI
-    ------------------------------------------ */
-    #searchBar{
-      position:fixed;
-      top:12px;
-      left:50%;
-      transform:translateX(-50%);
-      display:none;
-      gap:6px;
-      padding:6px 12px;
-      border-radius:999px;
-      background:white;
-      box-shadow:0 8px 30px rgba(0,0,0,0.15);
-      z-index:120;
-    }
-    #searchInput{
-      border:none;
-      outline:none;
-      background:transparent;
-      min-width:150px;
-      font-size:14px;
-    }
-    #searchCount{
-      font-size:11px;
-      color:#777;
-      min-width:40px;
-      text-align:center;
-    }
-
-    /* ------------------------------------------
-       HAKEMISTO (TOC)
-    ------------------------------------------ */
-/* HAKEMISTO (TOC) – oikean laidan sivupaneeli */
-#tocOverlay{
-  position:fixed;
-  inset:0;
-  display:none;                 /* oletuksena piilossa */
-  justify-content:flex-end;
-  z-index:130;
-  pointer-events:none;          /* ei blokkaa tekstin scrollia */
-  background:transparent;       /* ei tummenna koko ruutua */
-}
-
-/* Kun näkyvissä, lisätään luokka .toc-visible JS:stä */
-#tocOverlay.toc-visible{
-  display:flex;
-}
-
-#tocPanel{
-  width:min(380px,40vw);
-  height:100%;
-  background:#fff6e9;
-  padding:14px;
-  display:flex;
-  flex-direction:column;
-  box-shadow:-6px 0 22px rgba(0,0,0,0.25);
-  pointer-events:auto;          /* paneelin sisällä voi klikata */
-  transform:translateX(100%);   /* aluksi ulkona ruudusta */
-  transition:transform 0.25s ease-out;
-}
-
-/* Kun overlay on näkyvissä, paneeli liukuu esiin */
-#tocOverlay.toc-visible #tocPanel{
-  transform:translateX(0);
-}
-
-/* Hakusanakorostus */
-mark.search-hit{
-  background: #ffe96a;
-  padding: 0 1px;
-  border-radius: 2px;
-}
-
-/* Aktiivinen osuma (johon nyt on scrollattu) */
-mark.search-hit-active{
-  outline: 2px solid #d0b48c;
-  box-shadow: 0 0 0 2px rgba(208,180,140,0.45);
-}
-
-    #tocList{
-      list-style:none;
-      padding:0;
-      margin:0;
-      overflow:auto;
-      flex:0.35;
-    }
-    #tocList li{
-      padding:6px 8px;
-      margin-bottom:2px;
-      border-radius:10px;
-      cursor:pointer;
-    }
-    #tocList li:hover{
-      background:rgba(0,0,0,0.08);
-    }
-    #tocList li.active{
-      background:rgba(0,0,0,0.12);
-      font-weight:600;
-    }
-
-    #tocPreview{
-      flex:0.65;
-      overflow:auto;
-      border-top:1px solid rgba(0,0,0,0.1);
-      margin-top:8px;
-      padding-top:8px;
-    }
-
-    /* ------------------------------------------
-       KARTTA-OVERLAY
-    ------------------------------------------ */
-    #map-overlay{
-      position:fixed;
-      inset:0;
-      background:rgba(0,0,0,0.02);
-      display:none;
-      z-index:200;
-      pointer-events:none;           /* overlay ei blokkaa kosketuksia */
-    }
-
-    #map-sheet{
-      position:absolute;
-      left:0; right:0;
-      bottom:-400px;
-      height:400px;
-      background:#fff;
-      border-radius:22px 22px 0 0;
-      box-shadow:0 -6px 25px rgba(0,0,0,0.25);
-      padding:18px;
-      display:flex;
-      flex-direction:column;
-      transition:bottom 0.25s ease-out;
-      pointer-events:auto;           /* vain arkki ottaa tapahtumat */
-    }
-
-    #map-sheet.open{
-      bottom:0;
-    }
-
-    #map-buttons{
-      display:flex;
-      gap:12px;
-      padding-bottom:14px;
-      border-bottom:1px solid #ddd;
-    }
-
-    #map-buttons button{
-      flex:1;
-      padding:10px;
-      border:none;
-      border-radius:10px;
-      font-size:15px;
-      background:#f0f0f0;
-    }
-    #map-buttons button.active{
-      background:#d0b48c;
-      color:white;
-      font-weight:600;
-    }
-
-    #map-zone{
-      position:relative;
-      flex:1;
-      overflow:hidden;
-      border-radius:14px;
-      background:#111;
-    }
-
-    #sammal2d-container,
-    #maasto2d-container,
-    #taivas3d-container{
-      position:absolute;
-      inset:0;
-      display:none;
+    :root {
+      --bg-main: #f3eee4;
+      --bg-panel: #2f5d85;
+      --text-main: #222;
+      --text-invert: #fff;
+      --accent: #d0b48c;
+      --accent-soft: rgba(208,180,140,0.25);
+      --border-soft: rgba(255,255,255,0.15);
+      --topbar-height: 52px;
+      --toc-width: 280px;
+      --content-width: 400px;
+      --content-padding-x: 20px;
     }
     
-    
-    /* Siirrä 3D-taivaskarttaa hieman vasemmalle */
-#taivas3d-container canvas {
-  transform: translateX(-240px);  /* säädä esim. -40 → -120 px */
+    .aside-content {
+    animation: fadeIn 0.5s ease;
 }
 
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+    body {
+      margin: 0;
+      background: var(--bg-main);
+      font: 16px/1.6 system-ui;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      color: var(--text-main);
+    }
     
+    mark.highlight {
+    background-color: #ffeb3b; /* Kirkas keltainen */
+    color: #000;
+    padding: 0 2px;
+    border-radius: 2px;
+}
+
+    /* =========================
+       YLÄPALKKI
+    ========================= */
+    #topbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: var(--topbar-height);
+      background: #1e1e1e;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 15px;
+      z-index: 10000;
+      box-sizing: border-box;
+    }
+
+    .nav-group,
+    .view-toggle {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .view-toggle {
+      background: #333;
+      padding: 4px;
+      border-radius: 8px;
+    }
+
+    .view-btn {
+      background: transparent;
+      color: #aaa;
+      border: none;
+      padding: 4px 12px;
+      font-size: 0.7rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      cursor: pointer;
+      border-radius: 6px;
+    }
+
+    .view-btn.active {
+      background: var(--bg-panel);
+      color: #fff;
+    }
     
-    /* Kun paneli auki, kartat eivät mene panelin alle */
-#map-zone.panel-open #sammal2d-container,
-#map-zone.panel-open #maasto2d-container,
-#map-zone.panel-open #taivas3d-container{
-  right:260px;  /* sama leveys kuin #map-panel */
+    body.view-analysis #panel::before {
+  content: "Analyysi";
+  padding: 14px 18px;
+  font-weight: bold;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+body.view-narrative #panel {
+  display: none;
+}
+
+.chapter {
+  scroll-margin-top: 70px;
+  left-margin: 20px;
+}
+
+/* Lisää tämä CSS:ään, jos haluat hallita pystysuuntaista jakoa */
+#narrativePanel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.aside-quote-box {
+    order: 1; /* Quote ylimpänä */
+    flex: 0 0 auto; /* Vie vain tarvittavan tilan */
+}
+
+#mosaic-container {
+    order: 2; /* Kuva sen alla */
+    flex: 1;  /* Täyttää lopun tilan pystysuunnassa */
+}
+/* =========================
+   ANALYYSINÄKYMÄ
+========================= */
+
+
+body.view-analysis #textArea,
+body.view-reflection #textArea {
+  justify-self: center;
 }
 
 
-    #maasto2d-container{
-      pointer-events:none;
-    }
 
-    /* ------------------------------------------
-       YHTEINEN PANELI KAIKILLE KARTOILLE
-    ------------------------------------------ */
-    #map-panel{
-      position:absolute;
-      top:0;
-      right:0;
-      width:260px;
-      height:100%;
-      background:rgba(255,255,255,0.96);
-      color:#222;
-      font-size:13px;
-      padding:10px 12px;
-      box-shadow:-4px 0 18px rgba(0,0,0,0.18);
-      display:none;          /* näytetään JS:llä */
-      overflow-y:auto;
-    }
 
-    #map-panel h3{
-      margin:0 0 6px;
-      font-size:13px;
-      text-transform:uppercase;
-      letter-spacing:0.12em;
-      color:#666;
-    }
-
-    .panel-section{
-      margin-bottom:8px;
-    }
-
-    .panel-section strong{
-      font-weight:600;
-    }
-
-    .panel-list{
-      margin:4px 0 0;
-      padding-left:16px;
-    }
-
-    .panel-list li{
-      margin-bottom:2px;
-    }
-
-    /* MI-pillit tekstissä */
-    .mi-inline-pill{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-width:1.5em;
-      height:1.5em;
-      margin-left:0.25em;
-      border-radius:999px;
-      font-size:0.72em;
-      font-weight:700;
-      padding:0 0.4em;
-      background:#222;
-      color:#ffecc5;
-      border:1px solid #ffe3b0;
-      vertical-align:baseline;
-    }
-
-    /* riskivärit (varalla myöhempään käyttöön) */
-    .mi-risk-high   { background:#7c1212; color:#ffe6d0; }
-    .mi-risk-medium { background:#7c5a12; color:#fff0d0; }
-    .mi-risk-low    { background:#0f6631; color:#e9ffe0; }
-
-    /* halutessasi: korostus koko tekstille, jossa MI-ankkuri on */
-    .mi-anchor-high   { box-shadow:0 0 0 2px rgba(124,18,18,0.2); }
-    .mi-anchor-medium { box-shadow:0 0 0 2px rgba(124,90,18,0.18); }
-    .mi-anchor-low    { box-shadow:0 0 0 2px rgba(15,102,49,0.18); }
-
-    /* MI-numero tekstissä */
-    .mi-anchor-badge{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      width:1.4em;
-      height:1.4em;
-      margin-right:0.25em;
-      border-radius:999px;
-      font-size:0.75rem;
-      font-weight:600;
-      background:#222018;
-      color:#ffecc5;
-      border:1px solid #d0b48c;
-    }
-
-    .mi-anchor-wrapper{
-      position:relative;
-    }
-.search-hit{
-  background: yellow;
-  color: black;
+/* TOC piilossa analyysissä ja reflektiossa */
+body.view-analysis #tocPanel,
+body.view-reflection #tocPanel {
+  display: none;
 }
 
-.chapter-visuals {
+/* Analyysipaneeli näkyviin */
+body.view-analysis #panel,
+body.view-reflection #panel {
+  display: flex;
+  flex-direction: column;
+  background: #2f5d85;
+  color: var(--text-invert);
+}
+
+    /* =========================
+       PÄÄALUE
+    ========================= */
+#main {
+  flex: 1;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  margin: 16px 0 22px;
+
+  /* VASEN = teksti, OIKEA = TOC tai analyysipaneeli */
+  grid-template-columns: 1fr var(--toc-width);
+
+  margin-top: var(--topbar-height);
+  height: calc(100vh - var(--topbar-height));
 }
 
-/* Yksittäinen ikkuna */
-.chapter-visuals .visual-slot {
-  position: relative;
-  min-height: 150px;
-  border-radius: 12px;
-  background: rgba(0,0,0,0.22);
+
+#textArea {
+  justify-self: start; 
+  align-self: start; 
+
+  width: 90%;
+  max-width: 1200px;
+
+  /* 🔑 LISÄÄ NÄMÄ: */
+  height: calc(100vh - var(--topbar-height)); /* Täyttää tilan yläpalkin alta */
+  overflow-y: auto;                            /* Sallii skrollauksen elementin sisällä */
+  scroll-behavior: smooth;                     /* Pehmeä siirtyminen luvusta toiseen */
+
+  margin-left: 10%;
+  margin-top: 0px; /* Poista ylimääräinen marginaali, jotta skrollaus on tarkka */
+  margin-right: 0;
+
+  padding: 30px var(--content-padding-x); /* Täsmäytetty koodin CONTAINER_PADDING_TOP kanssa */
+  box-sizing: border-box;
+  background: var(--bg-main);
+}
+
+
+body.view-narrative:not(.hide-toc) #textArea {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+
+    /* =========================
+       TOC-PANEELI
+    ========================= */
+    #tocPanel {
+      position: fixed;
+      top: var(--topbar-height);
+      right: 0;
+      width: var(--toc-width);
+      height: calc(100vh - var(--topbar-height));
+      background: var(--bg-panel);
+      color: #fff;
+      border-left: 1px solid var(--border-soft);
+      z-index: 9000;
+      display: flex;
+      flex-direction: column;
+      transition: transform .35s ease;
+    }
+.context-panel {
+background: #2f5d85;
+position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10; /* Alempi kuin TOC */
+
+}
+    body.hide-toc #tocPanel {
+      transform: translateX(100%);
+    }
+
+    /* =========================
+       TOC-REUNAPAINIKE
+    ========================= */
+    #tocEdgeToggle {
+      position: absolute;
+      left: -12px;
+      top: 25%; /* 🔧 hieman ylemmäs */
+      transform: translate(-100%, -50%) rotate(-90deg);
+      transform-origin: right center;
+
+      background: #222;
+      color: #fff;
+      border: none;
+      padding: 4px 12px;
+      font-size: 11px;
+      font-weight: bold;
+      letter-spacing: 0.2em;
+      cursor: pointer;
+      white-space: nowrap;
+      border-radius: 8px 8px 0 0;
+      box-shadow: -2px 0 10px rgba(0,0,0,0.3);
+      z-index: 9001;
+    }
+
+    #tocEdgeToggle:hover {
+      background: #333;
+      color: var(--accent);
+    }
+
+    /* =========================
+       TOC-SISÄLTÖ
+    ========================= */
+    .toc-controls {
+      padding: 15px;
+      background: rgba(0,0,0,0.25);
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    #tocSearch {
+      width: 100%;
+      padding: 8px 10px;
+      background: #333;
+      border: 1px solid #444;
+      color: #fff;
+      border-radius: 4px;
+      font-size: .8rem;
+      margin-bottom: 10px;
+    }
+
+    /* 🔑 TÄMÄ OLI PUUTTUNUT → alasvetovalikko ei näkynyt */
+    #tocSelectorTarget {
+      margin-bottom: 10px;
+    }
+
+    #tocContainer {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 0 60px 0;
+    }
+
+    .toc-item {
+      display: flex;
+      gap: 12px;
+      padding: 10px 15px;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .toc-item:hover {
+      background: rgba(255,255,255,0.08);
+    }
+
+    .toc-item.active {
+      background: var(--accent);
+      color: #1a3a5a;
+      font-weight: bold;
+    }
+
+    .toc-num {
+      flex: 0 0 36px;
+      font-family: ui-monospace, monospace;
+      font-size: 0.75rem;
+      opacity: .7;
+    }
+
+    .toc-label {
+      flex: 1;
+      font-size: 0.85rem;
+    }
+    
+    .toc-section-title {
+  padding-top: 18px;   /* siirtää otsikkoa alaspäin edellisestä */
+  padding-bottom: 6px;
+  margin-top: 0;
+  margin-bottom: 0;
+  margin-left: 65px;
+  color: #ccc
+}
+
+/* =========================
+   STARFIELD UI
+========================= */
+#starfield {
+  width: 100%;
+  height: 100%;
   overflow: hidden;
-  padding: 4px;
+  position: relative;
+  cursor: crosshair;
+}
+
+.star-wrapper {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  z-index: 10;
+}
+
+.star-dot {
+  width: 6px;
+  height: 6px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #fff, 0 0 20px var(--accent);
+  transition: transform 0.3s ease;
+}
+
+.star-wrapper:hover .star-dot {
+  transform: scale(1.5);
+}
+
+/* Etikettilaatikko */
+.star-label-box {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  border: 1px solid var(--accent);
+  z-index: 100;
+}
+
+/* Näytetään nimet viiveellä tai klikattaessa */
+.labels-visible .star-label-box {
+  opacity: 0.4;
+}
+
+.star-wrapper:hover .star-label-box,
+.star-wrapper.label-active .star-label-box {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-5px);
+  pointer-events: auto;
+}
+
+/* Varmista, että sivupaneeli ja sen sisältö täyttävät korkeuden */
+#sidePanel {
+  height: 100%;
+  background: #2f5d85;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  
+}
+
+/* Analyysipaneelin asettelu */
+#analysisPanel {
+  display: none; /* UI-bindings hoitaa näkyvyyden */
+  flex-direction: column;
+  height: 100%; /* Koko korkeus */
+  overflow: hidden;
+}
+
+/* Starfield-moduulin säiliö */
+#starfield {
+  flex: 1; /* Täyttää kaiken jäljelle jäävän tilan valitsimien jälkeen */
+  position: relative;
+  background: rgba(0, 0, 0, 0.1);
+  width: 100%;
+}
+
+/* =========================
+   MOSAIC WINDOW - STARFIELD STYLE
+========================= */
+#mosaic-container {
+  position: relative; /* Muutettu absolute -> relative, jotta se pysyy paneelin virrassa */
+  width: 100%;
+  height: 100%;       /* Täyttää paneelin pystysuunnassa */
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  opacity: 0.9;
-}
-
-/* Pieni otsikkonauha */
-.chapter-visuals .visual-slot::before {
-  content: attr(data-label);
-  position: absolute;
-  top: 4px;
-  left: 6px;
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  opacity: 0.65;
-}
-
-/* Pienet näytöt – halutessasi NOSTA rajaa, esim. 500px */
-@media (max-width: 500px) {
-  .chapter-visuals {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* "Tämä saattaisi kiinnostaa" – hyvin kevyt vihjemerkki */
-.tk-suggest-word{
-  position: relative;
-  cursor: pointer;
-  background: linear-gradient(to top, rgba(208,180,140,0.35), transparent 55%);
-  border-bottom: 1px dashed rgba(208,180,140,0.8);
-  transition: background 0.15s ease, border-color 0.15s ease;
-}
-
-.tk-suggest-word:hover{
-  background: linear-gradient(to top, rgba(208,180,140,0.6), transparent 55%);
-  border-bottom-color: rgba(208,180,140,1);
-}
-
-/* Pieni kupla, joka avautuu sanan viereen */
-#tk-suggest-popover{
-  position: fixed;
-  max-width: 320px;
-  background: #fffdf7;
-  color: #2a2520;
-  border-radius: 10px;
-  box-shadow: 0 10px 26px rgba(0,0,0,0.25);
-  padding: 10px 12px;
-  font-size: 13px;
-  line-height: 1.5;
-  z-index: 500;
-  border: 1px solid rgba(208,180,140,0.7);
-  pointer-events: none !important;
-}
-
-#tk-suggest-popover h4{
-  margin: 0 0 4px;
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #7a6546;
-}
-
-#tk-suggest-popover .tk-suggest-body{
-  margin-bottom: 6px;
-}
-
-#tk-suggest-popover .tk-suggest-actions{
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-#tk-suggest-popover button{
-  border: none;
-  border-radius: 999px;
-  padding: 4px 9px;
-  font-size: 12px;
-  background: #f5ecde;
-  pointer-events: auto !important;
-}
-
-#tk-suggest-popover button:hover{
-  background: #e7dac6;
-}
-
-
-/* -----------------------------------------------------------
-   KAPPALE, JOTA KOMMENTOIDAAN
------------------------------------------------------------ */
-.p-selected-quote {
-  opacity: 0.55;
-  font-size: 0.92em;
-  line-height: 1.45;
-  padding-left: 12px;
-  border-left: 3px solid #d0b48c;
-  transition: all 0.25s ease;
-}
-
-
-/* -----------------------------------------------------------
-   KOMMENTTILAATIKKO (kappaleen alle)
------------------------------------------------------------ */
-.inline-comment-box {
-  width: 100%;
-  max-width: 550px;
-  margin: 12px 0 18px 0;
-  padding-left: 0;
-  background: none;
-  border: none;
-  margin-left: 12px; /* sama linja kuin p-selected-quote */
-}
-
-
-/* -----------------------------------------------------------
-   SYÖTEKENTÄT: textarea ja email
------------------------------------------------------------ */
-.inline-comment-box textarea,
-.inline-comment-box input {
-  width: 100%;
-  padding: 10px 12px;
-  margin-top: 6px;
-  background: rgba(0,0,0,0.04);
-  border: none;
-  border-bottom: 1px solid #cfc8be;
-  border-radius: 6px;
-  font-size: 15px;
-  color: #2a2520;
-  outline: none;
-}
-
-/* Tekstialue kasvaa */
-.inline-comment-box textarea {
-  min-height: 90px;
-  line-height: 1.5;
-  resize: vertical;
-}
-
-/* Placeholder-tekstit */
-.inline-comment-box textarea::placeholder,
-.inline-comment-box input::placeholder {
-  color: #9b9288;
-  opacity: 0.65;
-}
-
-
-/* -----------------------------------------------------------
-   PAINIKKEET
------------------------------------------------------------ */
-.inline-comment-actions {
-  display: flex;
-  justify-content: flex-end;
-  width: 100%;
-  gap: 10px;
-  margin-top: 8px;
-
-  /* siirto oikealle tasaukseen */
-  transform: translateX(22px);
-}
-
-.inline-comment-actions button {
-  padding: 6px 14px;
-  border-radius: 6px;
-  border: 1px solid #d0b48c;
-  background: rgba(208,180,140,0.07);
-  color: #5c4c38;
-  font-size: 13px;
-  cursor: pointer;
-}
-
-.inline-comment-actions button.cancel {
-  border-color: #bbb;
-  background: rgba(0,0,0,0.05);
-  color: #777;
-}
-
-.ic-inline-thanks {
-  padding: 10px 12px;
-  margin: 6px 0 14px 12px;
-  background: rgba(208,180,140,0.12);
-  border-left: 3px solid #d0b48c;
-  border-radius: 6px;
-  font-size: 14px;
-  color: #4a4239;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.05); /* Kevyt tausta ikkunalle */
+  
   opacity: 0;
-  transition: opacity 0.25s ease;
+  transition: opacity 0.5s ease;
 }
-.ic-inline-thanks.show {
+
+/* Aktivoituu narratiivissa kun TOC on piilotettu */
+body.view-narrative.hide-toc #mosaic-container {
   opacity: 1;
 }
 
+/* Varsinainen kuva-alue ikkunan sisällä */
+.mosaic-image-surface {
+  width: 90%;          /* Jätetään pienet marginaalit reunoille */
+  height: 90%;
+  background-size: contain;    /* 🔑 Skaalaa kuvan niin että se mahtuu kokonaan */
+  background-repeat: no-repeat;
+  background-position: center;
+  transition: filter 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
 
-/* -----------------------------------------------------------
-   SWIPE ALUEEN SKROLLAUS (tärkeä: estää vaakasuuntaheijahtelu)
------------------------------------------------------------ */
-#scrollContainer,
-#chapterContainer {
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;       /* sallii vain pystysuunnan */
-  overscroll-behavior-x: none;
+/* Mosaiikkiefekti */
+.mosaic-image-surface.transitioning {
+  filter: blur(15px) brightness(1.2);
+}
+
+.mosaic-placeholder {
+  position: absolute;
+  text-align: center;
+  color: var(--text-main);
+  opacity: 0.6;
 }
 
 /* -----------------------------------------------------------
-   KIITOS-PALAUTTEESTA – tekstialueen tyylinen viesti
-   (tätä käytetään vain tekstialueen sisällä)
+   KAPPALE, JOTA KOMMENTOIDAAN (Valittu tila)
 ----------------------------------------------------------- */
-.ic-area-wrapper textarea {
+.p-selected-quote {
+  opacity: 0.6;
+  font-size: 0.95em;
+  padding-left: 15px;
+  border-left: 4px solid #d0b48c; /* Kultainen reunaviiva */
+  transition: all 0.3s ease;
+  background: rgba(208, 180, 140, 0.05); /* Kevyt korostustausta */
+}
+
+/* -----------------------------------------------------------
+   KOMMENTTILAATIKKO (Lomake tekstin välissä)
+----------------------------------------------------------- */
+.inline-comment-box {
   width: 100%;
-  min-height: 90px;
-  padding: 10px 12px;
-  background: rgba(0,0,0,0.04);
-  border: none;
-  border-bottom: 1px solid #cfc8be;
-  border-radius: 6px;
-  font-size: 15px;
+  max-width: 600px;
+  margin: 15px 0 25px 15px; /* Sisennetty samalle tasolle kuin reunaviiva */
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Syötekentät */
+.inline-comment-box textarea,
+.inline-comment-box input {
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid #cfc8be;
+  border-radius: 8px;
+  font-size: 14px;
   color: #2a2520;
   outline: none;
+  box-sizing: border-box;
+}
+
+.inline-comment-box textarea {
+  min-height: 100px;
   resize: vertical;
 }
 
-.ic-area-wrapper .ic-success-msg {
-  padding: 10px 12px;
-  background: rgba(0,0,0,0.03);
+/* Painikkeet */
+.inline-comment-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.inline-comment-actions button {
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid #d0b48c;
+  background: transparent;
+  color: #5c4c38;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.inline-comment-actions button.send {
+  background: #d0b48c;
+  color: #fff;
+}
+
+.inline-comment-actions button:hover {
+  opacity: 0.8;
+  transform: translateY(-1px);
+}
+
+/* Kiitos-viesti */
+.ic-inline-thanks {
+  padding: 10px 15px;
+  margin-left: 15px;
+  background: rgba(208, 180, 140, 0.15);
   border-left: 3px solid #d0b48c;
   border-radius: 4px;
-  font-size: 15px;
+  font-size: 14px;
   color: #4a4239;
   opacity: 0;
-  transition: opacity 0.35s ease;
+  transition: opacity 0.4s ease;
 }
 
-
-/* -----------------------------------------------------------
-   YLÄREUNAN KIITOS-BANNERI (Lähetä → sulkemisen jälkeen)
------------------------------------------------------------ */
-#global-thanks-banner {
-  position: fixed;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 10px 18px;
-  background: rgba(0,0,0,0.08);
-  border-left: 3px solid #d0b48c;
-  border-radius: 6px;
-  font-size: 15px;
-  color: #4a4239;
-  z-index: 99999;
-  opacity: 0;
-  pointer-events: none;
+.ic-inline-thanks.show {
+  opacity: 1;
 }
-
   </style>
+  
+  <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-  <!-- Moduulit -->
-<script src="previewmaps.js"></script>
-<script src="bookcore.js"></script>
-<script src="tk_suggest.js"></script>
-<script src="infographics.js"></script>
+  // --- SINUN PÄÄSYKORTTISI (firebaseConfig) ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyBTC0eygSgWe7tFz11kopqqWAmBmKNTJl0",
+    authDomain: "interaktiivinen-esseekok-3bf69.firebaseapp.com",
+    projectId: "interaktiivinen-esseekok-3bf69",
+    storageBucket: "interaktiivinen-esseekok-3bf69.firebasestorage.app",
+    messagingSenderId: "186132599458",
+    appId: "1:186132599458:web:3a0733af2effda14eefdfb",
+    measurementId: "G-RMECRY91W2"
+  };
 
+  // Alustetaan Firebase
+  const app = initializeApp(firebaseConfig);
+  
+  // Luodaan yhteys tietokantaan ja tallennetaan se globaalisti
+  window.db = getFirestore(app);
 
-  <!-- THREE.JS CDN -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  console.log("Firebase-yhteys avattu projektille: " + firebaseConfig.projectId);
+</script>
 
-  <!-- Kartat -->
-  <script src="sammalkartta2d.js"></script>
-  <script src="maastokartta.js"></script>
-  <script src="taivaskartta3d.js"></script>
-  <script src="mapcontroller.js"></script> 
-
-
-<script src="tocplus.js"></script>
 
 </head>
-<body>
-<button onclick="TocPlusModule.open('chapters')"
-        style="position:fixed;top:10px;right:10px;z-index:150;">
-  ☰
-</button>
 
+<body class="view-narrative">
 
-
-<div id="app">
-  <div id="readerShell">
-    <div id="scrollContainer">
-      <div id="chapterContainer"></div>
-    </div>
+<header id="topbar">
+  <div class="nav-group">
+    <button id="prevBtn">◀</button>
+    <button id="nextBtn">▶</button>
   </div>
-</div>
 
-<!-- Hakupalkki -->
-<div id="searchBar">
-  <input id="searchInput" placeholder="Haku..." />
-  <span id="searchCount">0/0</span>
-  <button onclick="SearchModule.prev()">◀</button>
-  <button onclick="SearchModule.next()">▶</button>
-  <button onclick="document.getElementById('searchBar').style.display='none'">✕</button>
-</div>
-
-<!-- HAKEMISTO -->
-<div id="tocOverlay">
-  <div id="tocPanel">
-    <strong>Hakemisto</strong>
-    <ul id="tocList"></ul>
-    <div id="tocPreview"></div>
+  <div class="view-toggle">
+    <button class="view-btn active" data-view="narrative">Narratiivi</button>
+    <button class="view-btn" data-view="analysis">Analyysi</button>
+    <button class="view-btn" data-view="reflection">Reflektio</button>
   </div>
-</div>
 
-<!-- KARTTA UI -->
-<div id="map-overlay">
-  <div id="map-sheet">
-    <div id="map-buttons">
-      <button id="map-2d-btn">Sammalkartta</button>
-      <button id="map-maasto-btn">Maasto</button>
-      <button id="map-3d-btn">3D Taivaskartta</button>
-      <button id="map-panel-btn">Paneli</button>
-    </div>
-    <div id="map-zone">
-      <div id="sammal2d-container"></div>
-      <div id="maasto2d-container"></div>
-      <div id="taivas3d-container"></div>
-      <div id="map-panel"></div>
-    </div>
+
+
+<div class="global-search-container" style="flex: 1; max-width: 400px; margin: 0 20px;">
+    <input type="text" id="globalTextSearch" placeholder="Etsi kaikista esseistä..." 
+           style="width: 100%; padding: 6px 15px; border-radius: 20px; border: 1px solid #444; background: #222; color: #fff; font-size: 14px;">
   </div>
-</div>
-
-<script>
-/* ============================================================
-   YHDISTÄ MODUULIT
-============================================================ */
-
-const chapterContainer = document.getElementById("chapterContainer");
-const scrollContainer  = document.getElementById("scrollContainer");
-
-// Lataa sammalkartan data heti, jotta MI-slotit ovat käytettävissä
-if (window.Sammal2D_Preload) {
-  Sammal2D_Preload();
-}
-
-function isMapOpen(){
-  const ov = document.getElementById("map-overlay");
-  if (!ov) return false;
-  // overlay.style.display asetetaan "block" kun arkki avataan
-  return ov.style.display === "block";
-}
-
-BookModule.mount({
-  chapterContainer,
-  scrollContainer,
-  tocScrollContainer: document.getElementById("tocPreview"),
-  onChapterChange: (essayId) => {
-    // kerrotaan karttaohjaimelle, mikä essee on aktiivinen
-    if (window.MapController && MapController.setEssay){
-      MapController.setEssay(essayId);
-    }
-
-    // MI-numerot tekstissä vain jos kartta-arkki on auki.
-    // Kun kartta ei ole auki, tyhjennetään mahdolliset merkinnät.
-    if (window.MITextHighlighter && MITextHighlighter.markAnchorsForEssay){
-      if (isMapOpen()) {
-        MITextHighlighter.markAnchorsForEssay(essayId);
-      } else {
-        MITextHighlighter.markAnchorsForEssay(null);
-      }
-    }
-
-    highlightToc();
-  }
-});
-
-// SearchModule – hakusana + luvun sisäiset korostukset
-if (window.SearchModule) {
-  SearchModule.mount({
-    input:           document.getElementById("searchInput"),
-    countEl:         document.getElementById("searchCount"),
-    book:            BookModule,
-    scrollContainer: scrollContainer
-  });
-}
-
-// TocPlusModule – monitasoinen hakemisto
-if (window.TocPlusModule) {
-  TocPlusModule.mount({
-    overlayEl: document.getElementById("tocOverlay"),
-    panelEl:   document.getElementById("tocPanel"),
-    book:      BookModule
-  });
-}
-
-function highlightToc(){
-  const ch = BookModule.getCurrentChapter();
-  const items = document.querySelectorAll("#tocList li");
-  items.forEach(li=>{
-    li.classList.toggle("active", ch && li.dataset.index == ch.index);
-  });
-}
-
-/* MAP CONTROLLER – NYT MYÖS PANELI MUKANA */
-if (window.MapController && MapController.mount){
-  MapController.mount({
-    sheet:   document.getElementById("map-sheet"),
-    overlay: document.getElementById("map-overlay"),
-    zone:    document.getElementById("map-zone"),
-
-    btn2d:      document.getElementById("map-2d-btn"),
-    btnMaasto:  document.getElementById("map-maasto-btn"),
-    btn3d:      document.getElementById("map-3d-btn"),
-    panelBtn:   document.getElementById("map-panel-btn"),
-    panelContainer: document.getElementById("map-panel"),
-
-    sammal: document.getElementById("sammal2d-container"),
-    maasto: document.getElementById("maasto2d-container"),
-    taivas: document.getElementById("taivas3d-container"),
-
-    textScrollContainer: scrollContainer
-  });
-}
-</script>
-
-
-<script>
-// ======================================================
-// Kaksoisnapautus: avaa / sulkee kartta-arkin DOMin kautta
-// (nyt MapController hoitaa karttojen alustuksen)
-// ======================================================
-(function(){
-  const scroll   = document.getElementById("scrollContainer");
-  const overlay  = document.getElementById("map-overlay");
-  const sheet    = document.getElementById("map-sheet");
-  if (!scroll || !overlay || !sheet || !window.MapController) return;
-
-  let lastTapTime = 0;
-  let lastX = 0;
-  let lastY = 0;
-  const MAX_DELAY = 350;  // ms
-  const MAX_MOVE  = 20;   // px
-
-  function isOpen(){
-    return overlay.style.display === "block";
-  }
-
-  function openSheet(){
-    overlay.style.display = "block";
-    requestAnimationFrame(()=> sheet.classList.add("open"));
-
-    // Sammalkartta alustetaan kerran
-    if (!window.__sammalInited && window.Sammal2D_Init) {
-      window.__sammalInited = true;
-      const container = document.getElementById("sammal2d-container");
-      if (container) {
-        Sammal2D_Init(container);
-      }
-    }
-
-    if (window.MapController && MapController.switchTo) {
-      MapController.switchTo("2d");
-    }
-
-    // Kun kartta avataan, lisää MI-numerot nykyiseen lukuun
-    if (window.BookModule && window.MITextHighlighter) {
-      const ch = BookModule.getCurrentChapter && BookModule.getCurrentChapter();
-      if (ch && ch.id) {
-        MITextHighlighter.markAnchorsForEssay(ch.id);
-      }
-    }
-  }
-
-  function closeSheet(){
-    MapController.close();
-    // Kun kartta menee kiinni, poistetaan MI-numerointi tekstistä
-    if (window.MITextHighlighter && MITextHighlighter.clearAnchors){
-      MITextHighlighter.clearAnchors();
-    }
-  }
-
-  scroll.addEventListener("pointerup", (e)=>{
-    if (e.pointerType === "mouse" && e.button !== 0) return;
-
-    const now = Date.now();
-    const dx  = e.clientX - lastX;
-    const dy  = e.clientY - lastY;
-    const dist = Math.hypot(dx, dy);
-
-    if (now - lastTapTime < MAX_DELAY && dist < MAX_MOVE){
-      if (isOpen()) closeSheet();
-      else          openSheet();
-      lastTapTime = 0;
-    } else {
-      lastTapTime = now;
-      lastX = e.clientX;
-      lastY = e.clientY;
-    }
-  }, { passive:true });
   
   
-  // --- BookCore_OpenMapSheet: voidaan kutsua mistä tahansa (esim. suggestion-kuplasta) ---
-  window.BookCore_OpenMapSheet = function(mode){
-    if (!isOpen()) {
-      openSheet();
-    }
-    if (window.MapController && MapController.switchTo){
-      MapController.switchTo(mode || "2d");  // "2d" | "maasto" | "3d"
-    }
-  };
-
-  // (halutessa myös sulkeminen käyttöön muualta)
-  window.BookCore_CloseMapSheet = function(){
-    if (isOpen()){
-      closeSheet();
-    }
-  };
- 
-})();
-</script>
-
-<script>
-// MITextHighlighter – MI-numerot vain kun sitä erikseen kutsutaan
-(function(){
-  const ROOT_ID = "chapterContainer";
-
-  function debug(msg){
-    const box = document.getElementById("debug-box");
-    if (box) box.textContent = "debug: " + msg;
-  }
-
-  function clearAnchors(){
-    const root = document.getElementById(ROOT_ID);
-    if(!root) return;
-    const strip = root.querySelector("#mi-strip");
-    if (strip) strip.remove();
-    root.querySelectorAll(".mi-anchor-badge").forEach(el => el.remove());
-  }
-
-  function makePill(n){
-    const span = document.createElement("span");
-    span.className = "mi-inline-pill";
-    span.textContent = n;
-    return span;
-  }
-
-  function makeBadge(n){
-    const span = document.createElement("span");
-    span.className = "mi-anchor-badge";
-    span.textContent = n;
-    return span;
-  }
-
-  function wrapFirstMatchInTextNode(textNode, phrase, n){
-    const text  = textNode.textContent;
-    const lower = text.toLowerCase();
-    const idx   = lower.indexOf(phrase);
-    if (idx === -1) return false;
-
-    const before = text.slice(0, idx);
-    const match  = text.slice(idx, idx + phrase.length);
-    const after  = text.slice(idx + phrase.length);
-
-    const wrapper = document.createElement("span");
-    wrapper.className = "mi-anchor-wrapper";
-
-    const badge = makeBadge(n);
-    wrapper.appendChild(badge);
-    wrapper.appendChild(document.createTextNode(match));
-
-    const parent = textNode.parentNode;
-    if (!parent) return false;
-
-    const frag = document.createDocumentFragment();
-    if (before) frag.appendChild(document.createTextNode(before));
-    frag.appendChild(wrapper);
-    if (after)  frag.appendChild(document.createTextNode(after));
-
-    parent.replaceChild(frag, textNode);
-    return true;
-  }
-
-  function walkTextNodes(root, phrase, n){
-    const walker = document.createTreeWalker(
-      root,
-      NodeFilter.SHOW_TEXT,
-      {
-        acceptNode(node){
-          if (!node.textContent || !node.textContent.trim()) {
-            return NodeFilter.FILTER_REJECT;
-          }
-          if (node.parentNode && (
-              node.parentNode.tagName === "SCRIPT" ||
-              node.parentNode.tagName === "STYLE"
-          )) {
-            return NodeFilter.FILTER_REJECT;
-          }
-          return NodeFilter.FILTER_ACCEPT;
-        }
-      }
-    );
-
-    let node;
-    while((node = walker.nextNode())){
-      if (wrapFirstMatchInTextNode(node, phrase, n)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  function markAnchorsForEssay(essayId){
-    const root = document.getElementById(ROOT_ID);
-    if (!root) {
-      debug("mi: ei ROOT");
-      return;
-    }
-    clearAnchors();
-
-    if (!essayId) {
-      debug("mi: ei essayId");
-      return;
-    }
-
-    if (!window.Sammal2D_GetMiSlotsForEssay) {
-      debug("mi: ei Sammal2D_GetMiSlotsForEssay");
-      return;
-    }
-
-    const miSlots = window.Sammal2D_GetMiSlotsForEssay(essayId) || [];
-    debug("mi: essay " + essayId + " slotit " + miSlots.length);
-
-    if (!miSlots.length) return;
-
-    // 1) MI-rivi luvun alkuun
-    const strip = document.createElement("div");
-    strip.id = "mi-strip";
-    strip.style.display = "flex";
-    strip.style.flexWrap = "wrap";
-    strip.style.gap = "6px";
-    strip.style.marginBottom = "12px";
-
-    miSlots.forEach(slot => {
-      const n = (slot.slotIndex ?? 0) + 1;
-      const pill = makePill(n);
-      strip.appendChild(pill);
-    });
-
-    root.insertBefore(strip, root.firstChild);
-
-    // 2) Etsi canonical-fraasit tekstistä ja lisää pieni numero ennen niitä
-    miSlots.forEach(slot => {
-      const n = (slot.slotIndex ?? 0) + 1;
-      const canonical = (slot.canonical || "").toString().trim();
-      if (!canonical) return;
-
-      const phrase = canonical.replace(/_/g," ").toLowerCase();
-      if (phrase.length < 3) return;
-
-      walkTextNodes(root, phrase, n);
-    });
-  }
-
-  // Viedään ulos kaksi toimintoa: lisää ja poista
-  window.MITextHighlighter = {
-    markAnchorsForEssay,
-    clearAnchors
-  };
-
-})();
-</script>
-
-<script>
-// ======================================================
-// Pitkä painallus + pyyhkäisy tekstissä:
-// - pitkä painallus → hakupalkki ON/OFF (+ korostukset pois kun OFF)
-// - kun hakupalkki näkyy → swipe selaa hakutuloksia
-// - kun hakupalkki ei näy → swipe ohjaa hakemistoa (TocPlus)
-// ======================================================
-(function(){
-  const scroll = document.getElementById("scrollContainer");
-  const bar    = document.getElementById("searchBar");
-  const input  = document.getElementById("searchInput");
-  if (!scroll || !bar) return;
-
-  let pressTimer = null;
-  let startX = 0;
-  let startY = 0;
-  let startTime = 0;
-
-  const LONG_MS       = 650; // pitkä painallus
-  const MAX_MOVE      = 12;  // kuinka paljon saa liikkua long pressin aikana
-  const SWIPE_THRESH  = 50;  // vaadittu vaakasuuntainen liike (px)
-  const MAX_OFF_AXIS  = 40;  // sallittu pystysuunta swipelle
-  const MAX_SWIPE_MS  = 400; // max kesto, jotta tulkitaan swipeksi
-
-  function isSearchVisible(){
-    const style = window.getComputedStyle(bar);
-    return style.display !== "none";
-  }
-
-  function isTocOpen(){
-    const ov = document.getElementById("tocOverlay");
-    if (!ov) return false;
-    return ov.classList.contains("toc-visible");
-  }
-
-  function openToc(){
-    if (window.TocPlusModule && TocPlusModule.open){
-      TocPlusModule.open("chapters");
-    }
-  }
-
-  function closeToc(){
-    if (window.TocPlusModule && TocPlusModule.close){
-      TocPlusModule.close();
-    }
-  }
-
-  function toggleBar(){
-    const visible = isSearchVisible();
-    if (visible){
-      // palkki pois → nollaa korostukset
-      bar.style.display = "none";
-      if (window.SearchModule && SearchModule.clearAll){
-        SearchModule.clearAll();
-      }
-    } else {
-      bar.style.display = "flex";
-      if (input){
-        setTimeout(()=>{
-          input.focus();
-          input.select();
-        }, 50);
-      }
-    }
-  }
-
-  function startPress(e){
-    // hiirellä vain vasen nappi
-    if (e.pointerType === "mouse" && e.button !== 0) return;
-
-    startX = e.clientX;
-    startY = e.clientY;
-    startTime = Date.now();
-
-    if (pressTimer !== null){
-      clearTimeout(pressTimer);
-      pressTimer = null;
-    }
-
-    // ajastin pitkää painallusta varten
-    pressTimer = setTimeout(()=>{
-      pressTimer = null;
-      toggleBar();
-      const box = document.getElementById("debug-box");
-      if (box) box.textContent = "debug: long press → toggle search bar";
-    }, LONG_MS);
-  }
-
-  function cancelPress(){
-    if (pressTimer !== null){
-      clearTimeout(pressTimer);
-      pressTimer = null;
-    }
-  }
-
-  function onMove(e){
-    if (pressTimer === null) return;
-    const dx = (e.clientX ?? 0) - startX;
-    const dy = (e.clientY ?? 0) - startY;
-    if (Math.hypot(dx, dy) > MAX_MOVE){
-      // liikuttiin liikaa → ei enää long pressiä
-      cancelPress();
-    }
-  }
-
-  function onPointerUp(e){
-    const dt = Date.now() - startTime;
-
-    // joka tapauksessa: long press -ajastin pois päältä
-    cancelPress();
-
-    // jos sormi oli pitkään alhaalla → tämä oli long press, ei swipe
-    if (dt > MAX_SWIPE_MS){
-      const box = document.getElementById("debug-box");
-      if (box) box.textContent = "debug: pointerup (no swipe, dt="+dt+"ms)";
-      return;
-    }
-
-    const dx = e.clientX - startX;
-    const dy = e.clientY - startY;
-
-    // liian pystysuuntainen liike → tulkitaan scrolliksi
-    if (Math.abs(dy) > MAX_OFF_AXIS){
-      const box = document.getElementById("debug-box");
-      if (box) box.textContent = "debug: pointerup (vertical, dy="+dy+")";
-      return;
-    }
-
-    const box = document.getElementById("debug-box");
-
-// 1) Hakupalkki näkyy → haku-swipe (klikataan samoja nappeja kuin UI:ssa)
-if (isSearchVisible()){
-  const box = document.getElementById("debug-box");
-  const buttons = bar.querySelectorAll("button");
-  // Oletus: #searchBar: [0]=prev, [1]=next, [2]=close
-  const prevBtn = buttons[0] || null;
-  const nextBtn = buttons[1] || null;
-
-  if (dx > SWIPE_THRESH) {
-    // swipe oikealle → seuraava osuma (kuten ▶-nappi)
-    if (box) box.textContent = "debug: swipe search → next (dx="+dx+")";
-    if (nextBtn){
-      nextBtn.click();
-    } else if (window.SearchModule && SearchModule.next){
-      // varmuuskopiona, jos nappia ei löydy
-      SearchModule.next();
-    }
-  } else if (dx < -SWIPE_THRESH) {
-    // swipe vasemmalle → edellinen osuma (kuten ◀-nappi)
-    if (box) box.textContent = "debug: swipe search → prev (dx="+dx+")";
-    if (prevBtn){
-      prevBtn.click();
-    } else if (window.SearchModule && SearchModule.prev){
-      SearchModule.prev();
-    }
-  } else {
-    if (box) box.textContent = "debug: swipe search too small dx="+dx;
-  }
-  return;
-}
-
-
-    // ------------------------------
-    // 2) Hakupalkki EI näy → hakemisto-swipe
-    // ------------------------------
-    if (dx < -SWIPE_THRESH) {
-      // SWIPE LEFT
-      if (!isTocOpen()){
-        if (box) box.textContent = "debug: swipe toc → open (dx="+dx+")";
-        //openToc();
-      } else {
-        if (box) box.textContent = "debug: swipe toc → nextTab (dx="+dx+")";
-        if (window.TocPlusModule && TocPlusModule.nextTab){
-          TocPlusModule.nextTab();
-        }
-      }
-    } else if (dx > SWIPE_THRESH) {
-      // SWIPE RIGHT
-      if (isTocOpen()){
-        if (box) box.textContent = "debug: swipe toc → close (dx="+dx+")";
-        //closeToc();
-      } else {
-        if (box) box.textContent = "debug: swipe toc (no panel open, dx="+dx+")";
-      }
-    } else {
-      if (box) box.textContent = "debug: swipe dx too small (dx="+dx+")";
-    }
-  }
-
-  scroll.addEventListener("pointerdown",  startPress,   { passive:true });
-  scroll.addEventListener("pointermove",  onMove,       { passive:true });
-  scroll.addEventListener("pointerup",    onPointerUp,  { passive:true });
-  scroll.addEventListener("pointercancel", cancelPress, { passive:true });
-  scroll.addEventListener("pointerleave",  cancelPress, { passive:true });
-
-})();
-</script>
-
-<script>
-// ======================================================
-// Pyyhkäisyele tekstissä (pointer-eventeillä):
-// - jos hakupalkki näkyy → selaa hakutuloksia
-// - jos hakupalkki ei näy → ohjaa hakemistoa (TocPlus)
-// ======================================================
-(function(){
-  const scroll = document.getElementById("scrollContainer");
-  const bar    = document.getElementById("searchBar");
-  if (!scroll || !bar) return;
-
-  let tracking = false;
-  let startX = 0;
-  let startY = 0;
-  let startTime = 0;
-
-  const SWIPE_THRESHOLD = 50;  // vaadittu vaakaliike (px)
-  const MAX_OFF_AXIS    = 35;  // sallittu pystysuunnan liike
-  const MAX_DURATION    = 400; // max kesto (ms) että tulkitaan swipeksi
-
-  function isSearchVisible(){
-    const style = window.getComputedStyle(bar);
-    return style.display !== "none";
-  }
-
-  function isTocOpen(){
-    const ov = document.getElementById("tocOverlay");
-    if (!ov) return false;
-    return ov.classList.contains("toc-visible");
-  }
-
-  function openToc(){
-    if (window.TocPlusModule && TocPlusModule.open){
-      TocPlusModule.open("chapters");
-    }
-  }
-
-  function closeToc(){
-    if (window.TocPlusModule && TocPlusModule.close){
-      TocPlusModule.close();
-    }
-  }
-
-  scroll.addEventListener("pointerdown", (e)=>{
-    // vain sormella (ei oikea hiirinappi tms.)
-    if (e.pointerType === "mouse" && e.button !== 0) return;
-
-    startX = e.clientX;
-    startY = e.clientY;
-    startTime = Date.now();
-    tracking = true;
-  }, {passive:true});
-
-  scroll.addEventListener("pointerup", (e)=>{
-    if (!tracking) return;
-    tracking = false;
-
-    const dt = Date.now() - startTime;
-    if (dt > MAX_DURATION) return;  // liian pitkä → ei swipe vaan pitkä painallus / normaali scroll
-
-    const dx = e.clientX - startX;
-    const dy = e.clientY - startY;
-
-    // Jos ele on liian pystysuuntainen, tulkitaan scrolliksi
-    if (Math.abs(dy) > MAX_OFF_AXIS) return;
-
-    // 1) Jos hakupalkki näkyy → tämä on hakuselaus-ele
-    if (isSearchVisible()){
-      const box = document.getElementById("debug-box");
-      if (box) box.textContent = "debug: swipe search dx="+dx;
-
-      if (dx > SWIPE_THRESHOLD) {
-        // swipe oikealle → seuraava osuma
-        if (window.SearchModule && SearchModule.next){
-          SearchModule.next();
-        }
-      } else if (dx < -SWIPE_THRESHOLD) {
-        // swipe vasemmalle → edellinen osuma
-        if (window.SearchModule && SearchModule.prev){
-          SearchModule.prev();
-        }
-      }
-      return;
-    }
-
-    // 2) Hakupalkki EI näy → tämä ohjaa hakemistoa
-    const box = document.getElementById("debug-box");
-    if (box) box.textContent = "debug: swipe toc dx="+dx;
-
-    if (dx < -SWIPE_THRESHOLD) {
-      // SWIPE LEFT
-      if (!isTocOpen()){
-        //openToc();
-      } else {
-        if (window.TocPlusModule && TocPlusModule.nextTab){
-          TocPlusModule.nextTab();
-        }
-      }
-    } else if (dx > SWIPE_THRESHOLD) {
-      // SWIPE RIGHT
-      if (isTocOpen()){
-        //closeToc();
-      }
-    }
-  }, {passive:true});
-
-  scroll.addEventListener("pointercancel", ()=>{
-    tracking = false;
-  }, {passive:true});
-
-})();
-</script>
-
-<script>
-document.addEventListener("click", (e) => {
-  console.log("CLICK TARGET:", e.target);
-  const dbg = document.getElementById("debug-box");
-  dbg.textContent = "click: " + e.target.id;
-});
-</script>
-
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-
-  const chapterEl = document.getElementById("chapterContainer");
-
-  let startX = 0;
-  let startY = 0;
-  let tracking = false;
-
-  let selectedParagraph = null;
-  let currentBox = null;
-
-  const SWIPE_OPEN  = 60;
-  const SWIPE_CLOSE = -60;
-  const MAX_Y = 35;
-
-  // ------------------------------------------
-  // Sulje kommentointi
-  // ------------------------------------------
-  function clearSelection() {
-    if (selectedParagraph) {
-      selectedParagraph.classList.remove("p-selected-quote");
-    }
-    if (currentBox) {
-      currentBox.remove();
-      currentBox = null;
-    }
-    selectedParagraph = null;
-  }
-
-  // ------------------------------------------
-  // Lähetys Google Sheetiin
-  // ------------------------------------------
-  async function sendFeedbackToGoogle(quote, message, email) {
-    const payload = {
-      quote,
-      message,
-      email,
-      url: window.location.href
-    };
-    try {
-      await fetch(
-        "https://script.google.com/macros/s/AKfycbxR-F3qMEHGnRNuFjaPNMtA_iL4VleMOxqTFFymqDce_XMxdGY1nAB5GiF42oXEQhgI/exec",
-        {
-          method: "POST",
-          mode: "no-cors",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        }
-      );
-      return true;
-    } catch(e){
-      console.error(e);
-      return false;
-    }
-  }
-
-  // ------------------------------------------
-  // Paikallinen kiitospalkki (kommenttilaatikon tilalle)
-  // ------------------------------------------
-  function showInlineThanks(belowEl) {
-    const thanks = document.createElement("div");
-    thanks.className = "ic-inline-thanks";
-    thanks.textContent = "✓ Kiitos palautteesta!";
-
-    belowEl.insertAdjacentElement("afterend", thanks);
-
-    requestAnimationFrame(() => {
-      thanks.classList.add("show");
-    });
-
-    setTimeout(() => {
-      thanks.classList.remove("show");
-      setTimeout(() => thanks.remove(), 200);
-    }, 3000);
-  }
-
-  // ------------------------------------------
-  // Luo kommenttilaatikko
-  // ------------------------------------------
-  function createCommentBox(belowEl) {
-    const box = document.createElement("div");
-    box.className = "inline-comment-box";
-
-    box.innerHTML = `
-      <div class="ic-area-wrapper">
-        <textarea id="ic-text" placeholder="Kommentoi tätä kappaletta…"></textarea>
+</header>
+<main id="main">
+
+  <!-- VASEN: lukuteksti (aina sama paikka) -->
+  <section id="textArea">
+    <div id="textLoader">Ladataan sisältöä…</div>
+  </section>
+
+  <!-- OIKEA: kontekstipaneeli (TOC / analyysi / reflektio) -->
+  <aside id="sidePanel">
+
+    <!-- Narratiivi -->
+    <div id="tocPanel">
+      <button id="tocEdgeToggle" aria-label="Sisällysluettelo">
+        SISÄLLYSLUETTELO
+      </button>
+
+      <div class="toc-controls">
+        <input id="tocSearch" type="text" placeholder="Suodata lukuja…">
+        <div id="tocSelectorTarget"></div>
       </div>
 
-      <input id="ic-email" type="email" placeholder="Sähköpostisi (valinnainen)">
+      <div id="tocContainer"></div>
+    </div>
 
-      <div class="inline-comment-actions">
-        <button class="cancel">Peruuta</button>
-        <button class="send">Lähetä</button>
-      </div>
-    `;
-
-    // Peruuta
-    box.querySelector(".cancel").addEventListener("click", () => {
-      clearSelection();
-    });
-
-// Lähetä → sulkee heti + näyttää kiitoksen paikallisesti
-box.querySelector(".send").addEventListener("click", async () => {
-  const msg   = box.querySelector("#ic-text").value.trim();
-  const email = box.querySelector("#ic-email").value.trim();
-  const quote = selectedParagraph.textContent.trim();
-
-  if (!msg) return;
-
-  // tallennetaan sijainti kiitospalkkia varten
-  const anchor = selectedParagraph;
-
-  clearSelection();
-
-  // kiitos-viesti siihen kohtaan missä laatikko oli
-  showInlineThanks(anchor);
-
-  // lähetys taustalla
-  sendFeedbackToGoogle(quote, msg, email);
-});
-
-
-    belowEl.insertAdjacentElement("afterend", box);
-    return box;
-  }
-
-  // ------------------------------------------
-  // Pointer down
-  // ------------------------------------------
-  chapterEl.addEventListener("pointerdown", (e) => {
-    const p = e.target.closest("p");
-    if (!p) return;
-    tracking = true;
-    startX = e.clientX;
-    startY = e.clientY;
-  }, { passive:true });
-
-  // ------------------------------------------
-  // Pointer up
-  // ------------------------------------------
-  chapterEl.addEventListener("pointerup", (e) => {
-    if (!tracking) return;
-    tracking = false;
-
-    const p = e.target.closest("p");
-    if (!p) return;
-
-    const dx = e.clientX - startX;
-    const dy = e.clientY - startY;
-
-    if (Math.abs(dy) > MAX_Y) return;
-
-    // ---- VASEMMALLE: sulje ----
-    if (dx < SWIPE_CLOSE) {
-      clearSelection();
-      return;
-    }
-
-    // ---- OIKEALLE: avaa ----
-    if (dx > SWIPE_OPEN) {
-      clearSelection();
-      selectedParagraph = p;
-      p.classList.add("p-selected-quote");
-      currentBox = createCommentBox(p);
-    }
-  }, { passive:true });
-
-});
-</script>
-
-
-
-<div id="debug-box"
-     style="position:fixed;bottom:6px;left:6px;
-            padding:4px 8px;font-size:11px;
-            background:rgba(0,0,0,0.65);color:#fff;
-            border-radius:8px;z-index:9999;">
-  debug: alku
+<div id="narrativePanel" class="context-panel" style="flex: 1; display: flex; flex-direction: column;">
+  <div id="mosaic-container">
+    <div class="mosaic-placeholder">Etsitään infografiikkaa...</div>
+    </div>
 </div>
 
-<div id="global-thanks-banner">Kiitos palautteesta!</div>
+<div id="analysisPanel" class="context-panel">
+  <div style="padding: 15px; border-bottom: 1px solid var(--border-soft);">
+    <select id="frameworkSelect" style="width:100%; margin-bottom:10px;"></select>
+    <select id="presetSelect" style="width:100%;"></select>
+  </div>
+
+  <div id="starfield" style="flex: 1; position: relative; min-height: 300px; background: rgba(0,0,0,0.1);"></div>
+</div>
+
+    <!-- Reflektio -->
+    <div id="reflectionPanel" class="context-panel">
+      <!-- reflektiomoduulit renderöityvät tähän -->
+    </div>
+
+  </aside>
+
+</main>
 
 
+<script>
+  document.getElementById("tocEdgeToggle")
+    .addEventListener("click", () => {
+      document.body.classList.toggle("hide-toc");
+    });
+    
+</script>
+
+
+<!-- JS -->
+<script src="framework-engine.js"></script>
+<script src="framework-filter-engine.js"></script>
+<script src="evaluation-engine.js"></script>
+<script src="module-registry.js"></script>
+<script src="mi-engine.js"></script>
+<script src="preset-filter-engine.js"></script>
+<script src="preset-engine.js"></script>
+<script src="toc-bootstrap.js"></script>
+<script src="toc-engine.js"></script>
+<script src="ui-bindings.js"></script>
+
+<script type="module" src="text-engine.js"></script>
+
+<script src="starfield-module.js"></script>
+<script src="reflection-module.js"></script>
+<script src="app.js"></script>
+<script>
+  /**
+   * 1. ODOTUS JA ALUSTUS (TextEngine)
+   * Varmistaa, että moduuli on latautunut ennen init-kutsua.
+   */
+  function tryInitTextEngine() {
+    if (window.TextEngine && typeof window.TextEngine.init === "function") {
+      console.log("🚀 TextEngine löytyi, alustetaan...");
+      window.TextEngine.init();
+      setupGlobalSearch(); // Kytketään haku heti kun moottori on paikalla
+    } else {
+      setTimeout(tryInitTextEngine, 50);
+    }
+  }
+
+  /**
+   * 2. GLOBAALIN HAUN KYTKENTÄ
+   * Ohjaa yläpalkin hakusyötteen TextEnginen hallittavaksi.
+   */
+  function setupGlobalSearch() {
+    const searchInput = document.getElementById("globalTextSearch");
+    if (searchInput) {
+      searchInput.addEventListener("input", (e) => {
+        window.TextEngine.setSearchQuery(e.target.value);
+      });
+      console.log("🔍 Globaali haku kytketty moottoriin.");
+    }
+  }
+
+  /**
+   * 3. DATA-VALMIUDEN KUUNTELU (TOC ja muut)
+   * Suoritetaan, kun TextEngine on saanut luvut ladattua Firebasesta.
+   */
+  document.addEventListener("textEngineReady", (e) => {
+    const chapters = window.TextEngine.getAllChapters();
+    console.log(`📚 Data valmis (${chapters.length} lukua). Päivitetään käyttöliittymä...`);
+
+    // Alustetaan/Päivitetään Sisällysluettelo (TOC)
+    if (window.TOCEngine) {
+      if (typeof window.TOCEngine.init === "function") {
+        window.TOCEngine.init(chapters);
+      } else if (typeof window.TOCEngine.render === "function") {
+        window.TOCEngine.render(chapters);
+      }
+      
+      // Varmistetaan, että TOC on synkronoitu nykyisen suodatuksen kanssa
+      const activeId = window.TextEngine.getActiveChapterId();
+      if (typeof window.TOCEngine.setActive === "function") {
+        window.TOCEngine.setActive(activeId);
+      }
+    }
+    
+    // Herätetään Mosaic tai muut visuaaliset moduulit
+    if (window.MosaicModule && typeof window.MosaicModule.init === "function") {
+      window.MosaicModule.init();
+    }
+  });
+
+  // Käynnistetään alustusketju
+  tryInitTextEngine();
+</script>
 </body>
 </html>
