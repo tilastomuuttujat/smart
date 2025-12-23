@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="fi">
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-RMECRY91W2"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Kosketa – moduloitu lukutila</title>
@@ -25,7 +23,26 @@
     .aside-content {
     animation: fadeIn 0.5s ease;
 }
+.herenow-container {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: #f0f2f5;
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+}
 
+.dot {
+    width: 0.75rem;
+    height: 0.75rem;
+    background-color: #22c55e;
+    border-radius: 50%;
+    animation: pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+    50% { opacity: .5; }
+}
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
@@ -608,7 +625,10 @@ body.view-narrative.hide-toc #mosaic-container {
     <input type="text" id="globalTextSearch" placeholder="Etsi kaikista esseistä..." 
            style="width: 100%; padding: 6px 15px; border-radius: 20px; border: 1px solid #444; background: #222; color: #fff; font-size: 14px;">
   </div>
-  
+  <div class="herenow-container">
+    <span class="dot"></span>
+    <span class="herenow">1 online</span>
+</div>
   
 </header>
 <main id="main">
@@ -748,4 +768,5 @@ body.view-narrative.hide-toc #mosaic-container {
   tryInitTextEngine();
 </script>
 </body>
+<script src="https://wgx.github.io/herenow/herenow.min.js" defer></script>
 </html>
