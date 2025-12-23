@@ -1,121 +1,112 @@
 /* ============================================================
-    mosaic-module.js – MODULARISOITU VERSIO
-    Vastuu: Infografiikoiden haku, sovitus ikkunaan ja siirtymäefektit
+   mosaic-module.js – DYNAAMINEN AGENTTI-VERSIO
+   Vastuu: Infografiikoiden dynaaminen haku ja injektio.
    ============================================================ */
 
 export const MosaicModule = {
     id: "mosaic",
     title: "Infografiikka",
-
-    container: null,
-    surface: null, // Erillinen taso kuvalle Starfield-tyyliin
+    host: null,
+    surface: null,
     active: false,
     currentChapter: null,
     extensions: ['svg', 'png', 'jpg', 'SVG', 'PNG', 'JPG'],
 
-    /* ===================== INIT ===================== */
+    /* ===================== 🧠 DYNAAMINEN SIJOITTUMINEN ===================== */
 
-    init() {
-        this.container = document.getElementById("mosaic-container");
-        if (!this.container) return;
+    getPreferredPanel(viewMode) {
+        // Mosaic viihtyy ensisijaisesti narratiivipaneelissa tuomassa visuaalisuutta
+        if (viewMode === "narrative") return "narrativePanel";
+        // Voi näkyä myös analyysissä, jos tilaa on
+        if (viewMode === "analysis") return "analysisPanel";
+        return null;
+    },
 
-        // Luodaan kuvapinta dynaamisesti, jos sitä ei ole valmiina
-        if (!this.container.querySelector(".mosaic-image-surface")) {
-            const s = document.createElement("div");
-            s.className = "mosaic-image-surface";
-            this.container.appendChild(s);
-        }
-        this.surface = this.container.querySelector(".mosaic-image-surface");
-
-        // 1. Kuunnellaan luvun virallista vaihtumista
-        document.addEventListener("chapterChange", (e) => {
-            if (this.active) this.updateImage(e.detail.chapterId);
-        });
-
-        // 2. Kuunnellaan lähestymistä (progressiivinen sumennus)
-        document.addEventListener("chapterApproaching", (e) => {
-            if (this.active) this.handleApproach(e.detail.progress);
-        });
-
-        // Rekisteröidään itsensä globaaliin rekisteriin yhteensopivuuden vuoksi, jos tarpeen
-        if (window.ModuleRegistry && typeof window.ModuleRegistry.register === 'function') {
-            window.ModuleRegistry.register(this.id, this);
-        }
+    mount(targetEl) {
+        if (!targetEl || this.host === targetEl) return;
         
-        console.log("MosaicModule alustettu.");
+        console.log(`🖼️ Mosaic: Kiinnitetään isäntään: ${targetEl.id}`);
+        this.host = targetEl;
+
+        // Luodaan tarvittava HTML-rakenne isännän sisälle
+        // Huom: Käytetään wrapperia, jotta ei ylikirjoiteta koko paneelia jos siellä on muuta
+        const wrapper = document.createElement("div");
+        wrapper.id = "mosaic-container";
+        wrapper.style.width = "100%";
+        wrapper.style.height = "300px"; // Oletuskorkeus
+        wrapper.style.position = "relative";
+        wrapper.style.overflow = "hidden";
+        
+        const s = document.createElement("div");
+        s.className = "mosaic-image-surface";
+        s.style.cssText = `
+            width: 100%;
+            height: 100%;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            transition: all 0.5s ease-in-out;
+        `;
+        
+        wrapper.appendChild(s);
+        this.host.appendChild(wrapper);
+        this.surface = s;
     },
 
     /* ===================== ELINKAARI ===================== */
 
+    init() {
+        // Älykäs hermoverkko-reaktio (kuunnellaan jännitettä)
+        document.addEventListener('contextUpdate', (e) => {
+            if (!this.active || !this.surface) return;
+            const { systemMode } = e.detail;
+            
+            if (systemMode === 'tension') {
+                this.surface.style.filter = 'sepia(0.8) hue-rotate(-30deg) saturate(1.5) blur(0.5px)';
+            } else {
+                this.surface.style.filter = 'none';
+            }
+        });
+
+        // Kuunnellaan luvun vaihtumista
+        document.addEventListener("chapterChange", (e) => {
+            if (this.active) this.updateImage(e.detail.chapterId);
+        });
+    },
+
     activate() {
         this.active = true;
-        if (this.container) {
-            this.container.style.display = "flex"; 
-            this.container.style.opacity = "1";
-            const currentId = window.TextEngine?.getActiveChapterId();
-            if (currentId) this.updateImage(currentId);
-        }
+        const currentId = window.TextEngine?.getActiveChapterId();
+        if (currentId) this.updateImage(currentId);
     },
 
     deactivate() {
         this.active = false;
-        if (this.container) {
-            this.container.style.display = "none";
-            this.container.style.opacity = "0";
-            if (this.surface) this.surface.style.filter = "";
+        if (this.host) {
+            this.host.innerHTML = ''; // Siivotaan dynaaminen sisältö
         }
+        this.surface = null;
+        this.host = null;
     },
 
     /* ===================== VISUAALINEN LOGIIKKA ===================== */
 
-    handleApproach(progress) {
-        if (!this.surface) return;
-        // Mitä lähempänä vaihto on, sitä enemmän sumentuu (max 15px)
-        const blurAmount = progress * 15;
-        this.surface.style.filter = `blur(${blurAmount}px)`;
-        this.surface.style.opacity = 1 - (progress * 0.3);
-    },
-
     async updateImage(chapterId) {
-        if (this.currentChapter === chapterId) return;
+        if (this.currentChapter === chapterId || !this.surface) return;
         this.currentChapter = chapterId;
 
-        const meta = window.TextEngine?.getChapterMeta?.(chapterId);
-        const placeholder = this.container.querySelector(".mosaic-placeholder");
+        this.surface.style.opacity = "0";
+        this.surface.style.transform = "scale(0.95)";
 
-        // 1. Visuaalinen "lukitus" siirtymän ajaksi
-        if (this.surface) this.surface.classList.add("transitioning");
-
-        // 2. Etsitään tiedosto
         const foundUrl = await this.findValidImage(chapterId);
 
-        // 3. Suoritetaan vaihto viiveellä
         setTimeout(() => {
             if (foundUrl && this.surface) {
                 this.surface.style.backgroundImage = `url('${foundUrl}')`;
-                this.surface.style.display = "block";
-                this.container.classList.remove("no-image");
-                if (placeholder) placeholder.innerHTML = "";
-            } else {
-                if (this.surface) this.surface.style.display = "none";
-                this.container.classList.add("no-image");
-                
-                if (placeholder) {
-                    placeholder.innerHTML = `
-                        <div style="font-size: 1.1rem; font-weight: bold;">Luku ${chapterId}</div>
-                        <div style="font-size: 0.85rem; opacity: 0.7; margin: 8px 0;">${meta?.title || ""}</div>
-                        <div style="font-size: 0.65rem; opacity: 0.4; letter-spacing: 1.5px; margin-top: 15px;">EI INFOGRAFIIKKAA</div>
-                    `;
-                }
-            }
-            
-            // 4. Palautetaan terävyys
-            if (this.surface) {
-                this.surface.classList.remove("transitioning");
-                this.surface.style.filter = "blur(0px)";
                 this.surface.style.opacity = "1";
+                this.surface.style.transform = "scale(1)";
             }
-        }, 450);
+        }, 300);
     },
 
     async findValidImage(id) {
@@ -131,5 +122,6 @@ export const MosaicModule = {
     }
 };
 
-// Automaattinen alustus kun moduuli ladataan
-MosaicModule.init();
+if (window.ModuleRegistry) {
+    window.ModuleRegistry.register(MosaicModule);
+}

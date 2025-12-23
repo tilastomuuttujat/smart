@@ -1,75 +1,70 @@
 /* ============================================================
-   narrative-modules.js – KORJATTU (Quote siirretty paneeliin)
+   narrative-modules.js – DYNAAMINEN ARKKITEHTUURI
+   Vastuu: Tekstisisällön renderöinti. 
+   Moduulien hallinta delegoitu ModuleRegistrylle.
    ============================================================ */
-import { MosaicModule } from './mosaic-module.js';
 
 export const NarrativeModules = {
     
-    // 1. Renderöidään vain teksti TextAreaan
+    /**
+     * Renderöi luvun leipätekstin ja otsikon.
+     */
     renderChapter(ch, view, searchQuery, highlightFn) {
         if (!ch) return document.createElement("div");
+        
         const section = document.createElement("section");
         section.className = "chapter";
         section.dataset.chapterId = ch.id;
 
+        // Otsikko
         const h1 = document.createElement("h1");
         h1.innerHTML = highlightFn(ch.title || "Nimetön luku", searchQuery);
         section.appendChild(h1);
 
+        // Sisältöversio (narrative/analysis/reflection)
         const content = this.resolveContent(ch, view);
+        
         if (content?.body_md) {
-            // Jaetaan teksti kappaleisiin
             const paragraphs = content.body_md.split(/\r?\n\n/).filter(Boolean);
-
             paragraphs.forEach((para) => {
                 const p = document.createElement("p");
                 p.innerHTML = highlightFn(para.trim(), searchQuery);
                 section.appendChild(p);
-                // 🔑 Quote-nosto poistettu tästä, jotta se ei tule tekstin väliin
             });
         }
         return section;
     },
 
+    /**
+     * Valitsee oikean tekstiversion luvusta.
+     */
     resolveContent(ch, view) {
         if (view === "analysis") return ch.versions?.analysis;
         if (view === "reflection") return ch.versions?.reflection || ch.versions?.analysis;
         return ch.versions?.narrative;
     },
 
-    // 2. Päivitetään oikeanpuoleinen paneeli (Mosaic + Quote)
-    updateSidePanel(ch) {
+    /**
+     * Päivittää paneelin tilan. 
+     * HUOM: Uudessa arkkitehtuurissa tämä vain tyhjentää host-paneelin.
+     * ModuleRegistry täyttää sen dynaamisesti resolvePlacement-kutsulla.
+     */
+    updateSidePanel(ch, viewMode) {
         if (!ch) return;
 
-        // Etsitään narratiivipaneeli (aside-elementin sisältä)
-        const nPanel = document.getElementById("narrativePanel");
-        if (!nPanel) return;
+        // Etsitään tämänhetkinen host-paneeli (esim. narrativePanel)
+        const panelId = `${viewMode}Panel`;
+        const targetPanel = document.getElementById(panelId);
 
-        // Haetaan luvun quote
-        const quoteText = ch.quote || ch.views?.quote;
-
-        // Rakennetaan paneelin sisältö: pidetään mosaic-container ja lisätään quote sen alle
-        let sideContent = `<div id="mosaic-container"><div class="mosaic-placeholder"></div></div>`;
-        
-        if (quoteText) {
-            sideContent += `
-                <div class="aside-quote-box">
-                    <blockquote class="aside-pull-quote">${quoteText}</blockquote>
-                    <cite class="aside-quote-source">-- ${ch.title}</cite>
-                </div>
-            `;
-        }
-
-        nPanel.innerHTML = sideContent;
-
-        // 3. Hallitaan visuaalisia moduuleja
-        const primaryModule = ch.config?.primary_module || "mosaic";
-        if (primaryModule === "mosaic" && typeof MosaicModule !== 'undefined' && MosaicModule) {
-            // Mosaic-init täytyy kutsua uudestaan, koska innerHTML nollasi containerin
-            MosaicModule.init(); 
-            MosaicModule.activate();
-        } else if (typeof MosaicModule !== 'undefined' && MosaicModule) {
-            MosaicModule.deactivate();
+        if (targetPanel) {
+            // Tyhjennetään paneeli, jotta uudet moduulit voivat "asettua taloksi"
+            targetPanel.innerHTML = ''; 
+            
+            // 🧠 Pyydetään ModuleRegistryä neuvottelemaan moduulien paikat.
+            // Registry kutsuu moduulien mount() ja activate() metodeja.
+            if (window.ModuleRegistry) {
+                window.ModuleRegistry.resolvePlacement(viewMode);
+            }
         }
     }
 };

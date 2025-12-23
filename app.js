@@ -1,107 +1,161 @@
 /* ============================================================
-   app.js – VAKAA BOOTSTRAP (KORJATTU)
-   Vastuu:
-   - Moottoreiden käynnistysjärjestys
-   - Datan kytkeminen TextEnginen ja EvaluationEnginen välillä
-   - Käyttöliittymän alustus
+   app.js – TESTIJAKSO-VERSIO (V5)
+   Vastuu: 
+   - Vuorovaikutteinen tila pakotettu päälle
+   - Tilanhallinta ja tapahtumaväylä
+   - Google Sheets -datansiirto
 ============================================================ */
 
 (function () {
 
-  async function bootstrap() {
-    console.log("App: Käynnistetään bootstrap...");
+  /* ===================== 0. EVENTBUS ===================== */
+  window.EventBus = {
+    emit(type, detail = {}) {
+      document.dispatchEvent(new CustomEvent(type, { detail }));
+    },
+    on(type, handler) {
+      document.addEventListener(type, e => handler(e.detail));
+    }
+  };
 
-    /* ----------------------------------------------------------
-       0. Perusnäkymä: narratiivi + TOC näkyviin
-    ---------------------------------------------------------- */
-    document.body.classList.add("view-narrative");
-    document.body.classList.remove("hide-toc");
+  /* ===================== 1. YHTEINEN TILA ===================== */
+  window.AppState = {
+    data: {
+      chapters: [],
+      ready: false,
+      session: {
+        startedAt: Date.now(),
+        chaptersVisited: [],
+        keywordHits: {}
+      },
+      reflection: {
+        readerValues: { economy: 50, ethics: 50 },
+        lastInsight: null,
+        systemMode: "stable",
+        history: { visitedKeywords: {}, chapterFocus: [], intensityScore: 0 }
+      }
+    },
+    ui: {
+      view: "narrative",
+      activeChapterId: null,
+      // 🚀 TESTIJAKSO: Pakotetaan vuorovaikutteisuus päälle
+      interactive: true,
+      readingModeKnown: true
+    }
+  };
 
-    /* ----------------------------------------------------------
-       1. Varmista tekstikohde
-    ---------------------------------------------------------- */
-    const textArea = document.getElementById("textArea");
-    if (!textArea) {
-      document.body.insertAdjacentHTML(
-        "afterbegin",
-        `<div style="padding:12px;background:#300;color:#fff;z-index:9999;position:relative;">
-          ❌ #textArea puuttuu DOMista - sovellusta ei voida ladata.
-        </div>`
-      );
-      return;
+  /* ===================== 2. TILAN PALAUTUS ===================== */
+  (function restoreState() {
+    try {
+      const savedMemory = localStorage.getItem("readerMemory");
+      if (savedMemory) AppState.data.session = { ...AppState.data.session, ...JSON.parse(savedMemory) };
+      
+      // Huom: Emme enää lue interactiveEnabled-arvoa, koska se on pakotettu
+    } catch (e) {
+      console.warn("AppState: Palautus epäonnistui.");
+    }
+  })();
+
+  /* ===================== 3. REFLEKTIOMIDDLEWARE ===================== */
+  AppState.updateReflection = function (payload = {}) {
+    const r = this.data.reflection;
+
+    if (payload.readerValues) r.readerValues = { ...r.readerValues, ...payload.readerValues };
+    if (payload.lastInsight) {
+        r.lastInsight = payload.lastInsight;
+        r.history.visitedKeywords[payload.lastInsight] = (r.history.visitedKeywords[payload.lastInsight] || 0) + 1;
+        AppState.data.session.keywordHits[payload.lastInsight] = (AppState.data.session.keywordHits[payload.lastInsight] || 0) + 1;
     }
 
-    /* ----------------------------------------------------------
-       2. TextEngine (Pakollinen datalähde)
-    ---------------------------------------------------------- */
-    if (window.TextEngine && typeof TextEngine.init === "function") {
-      try {
-        // Odotetaan, että tekstit ladataan ennen muiden alustusta
-        await TextEngine.init();
-        console.log("App: TextEngine valmis.");
-      } catch (e) {
-        textArea.innerHTML = `<p style="color:#900">Virhe tekstien latauksessa: ${e.message}</p>`;
-        return;
-      }
+    const { economy, ethics } = r.readerValues;
+    const stats = r.history;
+
+    if ((stats.visitedKeywords['kustannus'] || 0) > 5 && ethics > 70) {
+        r.systemMode = "conflict";
     } else {
-      textArea.innerHTML = `<p style="color:#900">Kriittinen virhe: TextEngine puuttuu.</p>`;
-      return;
+        r.systemMode = Math.abs(economy - ethics) > 40 ? "tension" : "stable";
     }
 
-    /* ----------------------------------------------------------
-       3. Data-kytkentä: EvaluationEngine
-    ---------------------------------------------------------- */
-    const chapters = window.TextEngine.getAllChapters?.();
-    if (window.EvaluationEngine && chapters?.length > 0) {
-      // Syötetään ladattu data analyysimoottorille
-      window.EvaluationEngine.load(chapters);
-      console.log("App: Data kytketty EvaluationEngineen.");
-    }
+    EventBus.emit("reflection:update", { reflection: r, chapterId: this.ui.activeChapterId });
+    EventBus.emit("reflection:insightSaved", { 
+        chapterId: this.ui.activeChapterId,
+        values: r.readerValues
+    });
+  };
 
-    /* ----------------------------------------------------------
-       4. TOC (Sisällysluettelo)
-    ---------------------------------------------------------- */
-    if (window.TOC && typeof TOC.init === "function") {
-      try {
-        await TOC.init();
-        // Varmistetaan näkyvyys narratiivissa
-        document.body.classList.remove("hide-toc");
-      } catch (e) {
-        console.warn("TOC ei käynnistynyt:", e);
-        document.body.insertAdjacentHTML(
-          "afterbegin",
-          `<div style="padding:8px;background:#552;color:#fff;position:relative;z-index:9998;">
-            ⚠️ Sisällysluetteloa ei voitu ladata.
-          </div>`
-        );
-      }
-    }
+  /* ===================== 4. NÄKYMÄN JA LUVUN VAIHTO ===================== */
+  EventBus.on("ui:viewChange", ({ view }) => {
+    if (AppState.ui.view === view) return;
+    AppState.ui.view = view;
 
-    /* ----------------------------------------------------------
-       5. Muut moottorit ja moduulit
-    ---------------------------------------------------------- */
-    if (window.FrameworkEngine?.init) FrameworkEngine.init();
-    if (window.PresetEngine?.init) PresetEngine.init();
-    
-    // Moduulien (Starfield jne.) alustus
-    if (window.ModuleRegistry?.initAll) {
-      ModuleRegistry.initAll();
-    } else if (window.ModuleRegistry?.init) {
-      ModuleRegistry.init();
-    }
+    document.body.className = document.body.className.replace(/view-\w+/, "");
+    document.body.classList.add(`view-${view}`);
 
-    /* ----------------------------------------------------------
-       6. UI-Bindings (Viimeisenä)
-    ---------------------------------------------------------- */
-    if (window.UI && typeof UI.init === "function") {
-      UI.init();
-      console.log("App: UI alustettu.");
-    }
+    if (window.ModuleRegistry) window.ModuleRegistry.resolvePlacement(view);
+    EventBus.emit("app:viewUpdated", { view, chapterId: AppState.ui.activeChapterId });
+  });
 
-    console.info("App: Bootstrap suoritettu onnistuneesti.");
+  EventBus.on("chapter:change", ({ chapterId }) => {
+    if (AppState.ui.activeChapterId === chapterId) return;
+    AppState.ui.activeChapterId = chapterId;
+
+    const visited = AppState.data.session.chaptersVisited;
+    if (!visited.includes(chapterId)) visited.push(chapterId);
+
+    document.dispatchEvent(new CustomEvent("chapterChange", { detail: { chapterId } }));
+    EventBus.emit("app:chapterUpdated", { chapterId, view: AppState.ui.view });
+  });
+
+  /* ===================== 5. BOOTSTRAP JA KÄYNNISTYS ===================== */
+  async function bootstrap() {
+    // 🚀 TESTIJAKSO: showReadingModeChooser on poistettu, mennään suoraan starttiin
+    startApp();
   }
 
-  // Käynnistys kun DOM on valmis
+  async function startApp() {
+    // Pakotetaan CSS-luokka heti
+    document.body.classList.add("interactive-enabled");
+    
+    const chapters = await TextEngine.init();
+    AppState.data.chapters = chapters || [];
+    AppState.data.ready = true;
+    AppState.ui.activeChapterId = chapters?.[0]?.id || null;
+
+    // 📊 Analytiikka-agentin käynnistys
+    if (window.ModuleRegistry) {
+        const tracker = window.ModuleRegistry.get("tracker");
+        if (tracker && typeof tracker.init === "function") tracker.init();
+    }
+
+    EventBus.emit("app:ready", {
+      view: AppState.ui.view,
+      chapterId: AppState.ui.activeChapterId,
+      interactive: true
+    });
+  }
+
+  /* ===================== 6. UI-VIHJEET ===================== */
+  EventBus.on("reflection:update", ({ reflection }) => {
+    const el = document.getElementById("readerMemoryHint");
+    if (!el || !reflection.lastInsight) return;
+    el.textContent = `Muistijälki: ${reflection.lastInsight}`;
+    el.style.opacity = "0.7";
+    setTimeout(() => el.style.opacity = "0", 3000);
+  });
+
+  /* ===================== 7. LOPETUS JA DATAN LÄHETYS ===================== */
+  window.addEventListener("beforeunload", () => {
+    try {
+      localStorage.setItem("readerMemory", JSON.stringify(AppState.data.session));
+    } catch (e) {}
+
+    const tracker = window.ModuleRegistry?.get("tracker");
+    if (tracker && typeof tracker.dispatchData === "function") {
+        tracker.dispatchData();
+    }
+  });
+
+  // Init
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", bootstrap);
   } else {

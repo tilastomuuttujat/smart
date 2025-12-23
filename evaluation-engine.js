@@ -20,14 +20,20 @@ const EvaluationEngine = (() => {
   }
 
 
-// evaluation-engine.js
+// evaluation-engine.js – Varmistetaan kommunikaatio
 document.addEventListener("chapterChange", e => {
   const chapterId = e.detail?.chapterId;
   if (chapterId) {
-    EvaluationEngine.setActiveByChapterId(chapterId); //
+    const data = EvaluationEngine.setActiveByChapterId(chapterId); 
+    
+    // Lähetetään Starfieldille spesifi päivityskäsky, jos dataa löytyi
+    if (data) {
+      document.dispatchEvent(new CustomEvent("updateStarfield", { 
+        detail: { data: data.anatomy?.evidence?.factual || data.data } 
+      }));
+    }
   }
 });
-
 
 /**
    * Aktivoi analyysin luvun ID:n perusteella.

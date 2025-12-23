@@ -5,7 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Kosketa – moduloitu lukutila</title>
 
-  <style>
+<style>
+    /* ============================================================
+       1. GLOBAALIT MUUTTUJAT JA JUURIASETUKSET (:root)
+       ============================================================ */
     :root {
       --bg-main: #f3eee4;
       --bg-panel: #2f5d85;
@@ -19,56 +22,97 @@
       --content-width: 400px;
       --content-padding-x: 20px;
     }
-    
-    .aside-content {
-    animation: fadeIn 0.5s ease;
-}
-.herenow-container {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background-color: #f0f2f5;
-    padding: 0.5rem 1rem;
-    border-radius: 9999px;
+
+    /* ============================================================
+       2. ANIMAATIOT
+       ============================================================ */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes system-glitch {
+      0% { transform: translate(0); }
+      20% { transform: translate(-1px, 1px); }
+      40% { transform: translate(-1px, -1px); }
+      60% { transform: translate(1px, 1px); }
+      80% { transform: translate(1px, -1px); }
+      100% { transform: translate(0); }
+    }
+
+
+@keyframes fadeInRight {
+    from { opacity: 0; transform: translateX(30px); }
+    to { opacity: 1; transform: translateX(0); }
 }
 
-.dot {
-    width: 0.75rem;
-    height: 0.75rem;
-    background-color: #22c55e;
-    border-radius: 50%;
-    animation: pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+@keyframes fadeOutRight {
+    from { opacity: 1; transform: translateX(0); }
+    to { opacity: 0; transform: translateX(30px); }
 }
 
-@keyframes pulse {
-    50% { opacity: .5; }
-}
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+#intervention-status {
+    font-family: ui-monospace, monospace;
 }
 
+    /* ============================================================
+       3. BODY JA PERUSRAKENTEET
+       ============================================================ */
     body {
       margin: 0;
       background: var(--bg-main);
-      font: 16px/1.6 system-ui;
+      font: 14px/1.6 system-ui;
       display: flex;
       flex-direction: column;
       height: 100vh;
       overflow: hidden;
       color: var(--text-main);
     }
-    
-    mark.highlight {
-    background-color: #ffeb3b; /* Kirkas keltainen */
-    color: #000;
-    padding: 0 2px;
-    border-radius: 2px;
-}
 
-    /* =========================
-       YLÄPALKKI
-    ========================= */
+    #main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr var(--toc-width);
+      margin-top: var(--topbar-height);
+      height: calc(100vh - var(--topbar-height));
+    }
+
+    #textArea {
+      justify-self: start; 
+      align-self: start; 
+      width: 90%;
+      max-width: 1200px;
+      height: calc(100vh - var(--topbar-height)); /* Täyttää tilan yläpalkin alta */
+      overflow-y: auto;                            /* Sallii skrollauksen elementin sisällä */
+      scroll-behavior: smooth;                     /* Pehmeä siirtyminen luvusta toiseen */
+      margin-left: 10%;
+      margin-top: 0px; 
+      margin-right: 0;
+      padding: 30px var(--content-padding-x); 
+      box-sizing: border-box;
+      background: var(--bg-main);
+    }
+
+    .chapter {
+      scroll-margin-top: 70px;
+      left-margin: 20px;
+    }
+
+    mark.highlight {
+      background-color: #ffeb3b; /* Kirkas keltainen */
+      color: #000;
+      padding: 0 2px;
+      border-radius: 2px;
+    }
+
+    /* ============================================================
+       4. YLÄPALKKI (TOPBAR)
+       ============================================================ */
     #topbar {
       position: fixed;
       top: 0;
@@ -115,115 +159,18 @@
       background: var(--bg-panel);
       color: #fff;
     }
-    
-    body.view-analysis #panel::before {
-  content: "Analyysi";
-  padding: 14px 18px;
-  font-weight: bold;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  border-bottom: 1px solid var(--border-soft);
-}
 
-body.view-narrative #panel {
-  display: none;
-}
+    /* ============================================================
+       5. SIVUPANEELI JA TOC (TABLE OF CONTENTS)
+       ============================================================ */
+    #sidePanel {
+      height: 100%;
+      background: #2f5d85;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
 
-.chapter {
-  scroll-margin-top: 70px;
-  left-margin: 20px;
-}
-
-/* Lisää tämä CSS:ään, jos haluat hallita pystysuuntaista jakoa */
-#narrativePanel {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-}
-
-.aside-quote-box {
-    order: 1; /* Quote ylimpänä */
-    flex: 0 0 auto; /* Vie vain tarvittavan tilan */
-}
-
-#mosaic-container {
-    order: 2; /* Kuva sen alla */
-    flex: 1;  /* Täyttää lopun tilan pystysuunnassa */
-}
-/* =========================
-   ANALYYSINÄKYMÄ
-========================= */
-
-
-body.view-analysis #textArea,
-body.view-reflection #textArea {
-  justify-self: center;
-}
-
-
-
-
-/* TOC piilossa analyysissä ja reflektiossa */
-body.view-analysis #tocPanel,
-body.view-reflection #tocPanel {
-  display: none;
-}
-
-/* Analyysipaneeli näkyviin */
-body.view-analysis #panel,
-body.view-reflection #panel {
-  display: flex;
-  flex-direction: column;
-  background: #2f5d85;
-  color: var(--text-invert);
-}
-
-    /* =========================
-       PÄÄALUE
-    ========================= */
-#main {
-  flex: 1;
-  display: grid;
-
-  /* VASEN = teksti, OIKEA = TOC tai analyysipaneeli */
-  grid-template-columns: 1fr var(--toc-width);
-
-  margin-top: var(--topbar-height);
-  height: calc(100vh - var(--topbar-height));
-}
-
-
-#textArea {
-  justify-self: start; 
-  align-self: start; 
-
-  width: 90%;
-  max-width: 1200px;
-
-  /* 🔑 LISÄÄ NÄMÄ: */
-  height: calc(100vh - var(--topbar-height)); /* Täyttää tilan yläpalkin alta */
-  overflow-y: auto;                            /* Sallii skrollauksen elementin sisällä */
-  scroll-behavior: smooth;                     /* Pehmeä siirtyminen luvusta toiseen */
-
-  margin-left: 10%;
-  margin-top: 0px; /* Poista ylimääräinen marginaali, jotta skrollaus on tarkka */
-  margin-right: 0;
-
-  padding: 30px var(--content-padding-x); /* Täsmäytetty koodin CONTAINER_PADDING_TOP kanssa */
-  box-sizing: border-box;
-  background: var(--bg-main);
-}
-
-
-body.view-narrative:not(.hide-toc) #textArea {
-  margin-left: auto;
-  margin-right: auto;
-}
-
-
-    /* =========================
-       TOC-PANEELI
-    ========================= */
     #tocPanel {
       position: fixed;
       top: var(--topbar-height);
@@ -238,30 +185,17 @@ body.view-narrative:not(.hide-toc) #textArea {
       flex-direction: column;
       transition: transform .35s ease;
     }
-.context-panel {
-background: #2f5d85;
-position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 10; /* Alempi kuin TOC */
 
-}
     body.hide-toc #tocPanel {
       transform: translateX(100%);
     }
 
-    /* =========================
-       TOC-REUNAPAINIKE
-    ========================= */
     #tocEdgeToggle {
       position: absolute;
       left: -12px;
-      top: 25%; /* 🔧 hieman ylemmäs */
+      top: 25%;
       transform: translate(-100%, -50%) rotate(-90deg);
       transform-origin: right center;
-
       background: #222;
       color: #fff;
       border: none;
@@ -281,9 +215,6 @@ position: absolute;
       color: var(--accent);
     }
 
-    /* =========================
-       TOC-SISÄLTÖ
-    ========================= */
     .toc-controls {
       padding: 15px;
       background: rgba(0,0,0,0.25);
@@ -301,7 +232,6 @@ position: absolute;
       margin-bottom: 10px;
     }
 
-    /* 🔑 TÄMÄ OLI PUUTTUNUT → alasvetovalikko ei näkynyt */
     #tocSelectorTarget {
       margin-bottom: 10px;
     }
@@ -339,244 +269,457 @@ position: absolute;
 
     .toc-label {
       flex: 1;
-      font-size: 0.85rem;
+      font-size: 0.6rem;
     }
-    
+
     .toc-section-title {
-  padding-top: 18px;   /* siirtää otsikkoa alaspäin edellisestä */
-  padding-bottom: 6px;
-  margin-top: 0;
-  margin-bottom: 0;
-  margin-left: 65px;
-  color: #ccc
-}
+      padding-top: 18px;
+      padding-bottom: 6px;
+      margin-top: 0;
+      margin-bottom: 0;
+      margin-left: 65px;
+      color: #ccc;
+    }
 
-/* =========================
-   STARFIELD UI
-========================= */
-#starfield {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  position: relative;
-  cursor: crosshair;
-}
+    /* ============================================================
+       6. NÄKYMÄKOHTAISET SÄÄDÖT (NARRATIVE / ANALYSIS / REFLECTION)
+       ============================================================ */
+    .context-panel {
+      background: #2f5d85;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+    }
 
-.star-wrapper {
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  z-index: 10;
-}
+    body.view-narrative #panel {
+      display: none;
+    }
 
-.star-dot {
-  width: 6px;
-  height: 6px;
-  background: #fff;
-  border-radius: 50%;
-  box-shadow: 0 0 10px #fff, 0 0 20px var(--accent);
-  transition: transform 0.3s ease;
-}
+    body.view-narrative:not(.hide-toc) #textArea {
+      margin-left: auto;
+      margin-right: auto;
+    }
 
-.star-wrapper:hover .star-dot {
-  transform: scale(1.5);
-}
+    body.view-analysis #textArea,
+    body.view-reflection #textArea {
+      justify-self: center;
+    }
 
-/* Etikettilaatikko */
-.star-label-box {
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.85);
-  color: #fff;
-  padding: 6px 10px;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  white-space: nowrap;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.4s ease, transform 0.4s ease;
-  border: 1px solid var(--accent);
-  z-index: 100;
-}
+    body.view-analysis #tocPanel,
+    body.view-reflection #tocPanel {
+      display: none;
+    }
 
-/* Näytetään nimet viiveellä tai klikattaessa */
-.labels-visible .star-label-box {
-  opacity: 0.4;
-}
+    /* Analyysipaneeli ja sen otsikko */
+    #analysisPanel {
+      display: none; 
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+    }
 
-.star-wrapper:hover .star-label-box,
-.star-wrapper.label-active .star-label-box {
-  opacity: 1;
-  transform: translateX(-50%) translateY(-5px);
-  pointer-events: auto;
-}
+    body.view-analysis #panel,
+    body.view-reflection #panel {
+      display: flex;
+      flex-direction: column;
+      background: #2f5d85;
+      color: var(--text-invert);
+    }
 
-/* Varmista, että sivupaneeli ja sen sisältö täyttävät korkeuden */
-#sidePanel {
-  height: 100%;
-  background: #2f5d85;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  
-}
+    body.view-analysis #panel::before {
+      content: "Analyysi";
+      padding: 14px 18px;
+      font-weight: bold;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border-soft);
+    }
 
-/* Analyysipaneelin asettelu */
-#analysisPanel {
-  display: none; /* UI-bindings hoitaa näkyvyyden */
-  flex-direction: column;
-  height: 100%; /* Koko korkeus */
-  overflow: hidden;
-}
+    /* ============================================================
+       7. NARRATIVE PANEL - MODUULIT (MOSAIC & QUOTE)
+       ============================================================ */
+    #narrativePanel {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
 
-/* Starfield-moduulin säiliö */
-#starfield {
-  flex: 1; /* Täyttää kaiken jäljelle jäävän tilan valitsimien jälkeen */
-  position: relative;
-  background: rgba(0, 0, 0, 0.1);
-  width: 100%;
-}
+    .aside-content {
+      animation: fadeIn 0.5s ease;
+    }
 
-/* =========================
-   MOSAIC WINDOW - STARFIELD STYLE
-========================= */
-#mosaic-container {
-  position: relative; /* Muutettu absolute -> relative, jotta se pysyy paneelin virrassa */
-  width: 100%;
-  height: 100%;       /* Täyttää paneelin pystysuunnassa */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  background: rgba(0, 0, 0, 0.05); /* Kevyt tausta ikkunalle */
-  
-  opacity: 0;
-  transition: opacity 0.5s ease;
-}
+    /* Mosaic Window */
+    #mosaic-container {
+      position: relative; 
+      width: 100%;
+      height: 100%;      
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: rgba(0, 0, 0, 0.05);
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      order: 2; /* Kuva alimpana jos useita elementtejä pystyssä */
+      flex: 1;
+    }
 
-/* Aktivoituu narratiivissa kun TOC on piilotettu */
-body.view-narrative.hide-toc #mosaic-container {
-  opacity: 1;
-}
+    body.view-narrative.hide-toc #mosaic-container {
+      opacity: 1;
+    }
 
-/* Varsinainen kuva-alue ikkunan sisällä */
-.mosaic-image-surface {
-  width: 90%;          /* Jätetään pienet marginaalit reunoille */
-  height: 90%;
-  background-size: contain;    /* 🔑 Skaalaa kuvan niin että se mahtuu kokonaan */
-  background-repeat: no-repeat;
-  background-position: center;
-  transition: filter 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-}
+    .mosaic-image-surface {
+      width: 90%;
+      height: 90%;
+      background-size: contain; 
+      background-repeat: no-repeat;
+      background-position: center;
+      transition: filter 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
 
-/* Mosaiikkiefekti */
-.mosaic-image-surface.transitioning {
-  filter: blur(15px) brightness(1.2);
-}
+    .mosaic-image-surface.transitioning {
+      filter: blur(15px) brightness(1.2);
+    }
 
-.mosaic-placeholder {
-  position: absolute;
-  text-align: center;
-  color: var(--text-main);
-  opacity: 0.6;
-}
+    .mosaic-placeholder {
+      position: absolute;
+      text-align: center;
+      color: var(--text-main);
+      opacity: 0.6;
+    }
 
-/* -----------------------------------------------------------
-   KAPPALE, JOTA KOMMENTOIDAAN (Valittu tila)
------------------------------------------------------------ */
-.p-selected-quote {
-  opacity: 0.6;
-  font-size: 0.95em;
-  padding-left: 15px;
-  border-left: 4px solid #d0b48c; /* Kultainen reunaviiva */
-  transition: all 0.3s ease;
-  background: rgba(208, 180, 140, 0.05); /* Kevyt korostustausta */
-}
+    /* Lincoln Style Quote */
+    .lincoln-style-wrapper {
+        position: relative;
+        padding: 2rem;
+        min-height: 300px;
+        display: flex;
+        align-items: center;
+        overflow: hidden;
+        background: radial-gradient(
+          farthest-corner at 40px 40px,
+          white 0%,
+          blue 100%
+        );
+        border-radius: 8px;
+        margin: 10px;
+    }
 
-/* -----------------------------------------------------------
-   KOMMENTTILAATIKKO (Lomake tekstin välissä)
------------------------------------------------------------ */
-.inline-comment-box {
-  width: 100%;
-  max-width: 600px;
-  margin: 15px 0 25px 15px; /* Sisennetty samalle tasolle kuin reunaviiva */
-  animation: slideDown 0.3s ease-out;
-}
+    .lincoln-style-wrapper::before {
+        content: "&";
+        font-size: 25rem;
+        color: rgba(250, 200, 130, 0.05);
+        position: absolute;
+        top: -5rem;
+        left: -2rem;
+        pointer-events: none;
+    }
 
-@keyframes slideDown {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+    .lincoln-style-wrapper.tension-active {
+        animation: system-glitch 0.2s infinite;
+        border: 1px solid rgba(255, 0, 0, 0.6) !important;
+    }
 
-/* Syötekentät */
-.inline-comment-box textarea,
-.inline-comment-box input {
-  width: 100%;
-  padding: 12px;
-  margin-top: 8px;
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid #cfc8be;
-  border-radius: 8px;
-  font-size: 14px;
-  color: #2a2520;
-  outline: none;
-  box-sizing: border-box;
-}
+    blockquote.dynamic-typography {
+        color: rgba(250, 200, 130, 0.8);
+        font-family: Tahoma, sans-serif;
+        font-size: 1.5rem;
+        width: 100%;
+        margin: 0;
+        position: relative;
+        z-index: 2;
+        border: none !important;
+    }
 
-.inline-comment-box textarea {
-  min-height: 100px;
-  resize: vertical;
-}
+    blockquote.dynamic-typography p {
+        font-style: italic;
+        position: relative;
+        line-height: 1.3;
+    }
 
-/* Painikkeet */
-.inline-comment-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 10px;
-}
+    blockquote.dynamic-typography p::before,
+    blockquote.dynamic-typography p::after {
+        content: '"';
+        font-family: Georgia, serif;
+        font-size: 5rem;
+        opacity: 0.3;
+        position: absolute;
+    }
 
-.inline-comment-actions button {
-  padding: 8px 16px;
-  border-radius: 20px;
-  border: 1px solid #d0b48c;
-  background: transparent;
-  color: #5c4c38;
-  font-size: 12px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s;
-}
+    blockquote.dynamic-typography p::before { left: -1.5rem; top: -2rem; }
+    blockquote.dynamic-typography p::after { right: -1rem; bottom: -3rem; }
 
-.inline-comment-actions button.send {
-  background: #d0b48c;
-  color: #fff;
-}
+    blockquote.dynamic-typography cite {
+        display: block;
+        font-size: 1rem;
+        margin-top: 1.5rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        opacity: 0.7;
+    }
 
-.inline-comment-actions button:hover {
-  opacity: 0.8;
-  transform: translateY(-1px);
-}
+    /* Muut Quote säädöt */
+    .aside-quote-box {
+        order: 1; /* Quote ylimpänä */
+        flex: 0 0 auto;
+    }
 
-/* Kiitos-viesti */
-.ic-inline-thanks {
-  padding: 10px 15px;
-  margin-left: 15px;
-  background: rgba(208, 180, 140, 0.15);
-  border-left: 3px solid #d0b48c;
-  border-radius: 4px;
-  font-size: 14px;
-  color: #4a4239;
-  opacity: 0;
-  transition: opacity 0.4s ease;
-}
+    .aside-quote-wrapper {
+        width: 100%;
+        padding: 10px;
+        box-sizing: border-box;
+    }
 
-.ic-inline-thanks.show {
-  opacity: 1;
-}
-  </style>
+    #narrativePanel blockquote {
+        margin: 10px 0 !important;
+        font-size: 14px;
+        line-height: 1.4;
+        color: #444;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    #narrativePanel blockquote cite {
+        display: block;
+        margin-top: 10px;
+        font-weight: bold;
+        text-align: right;
+        font-style: normal;
+        color: #888;
+        font-size: 11px;
+        text-transform: uppercase;
+    }
+
+    .fb-share-btn-lincoln {
+        background: transparent;
+        border: 1px solid rgba(250, 200, 130, 0.4);
+        color: rgba(250, 200, 130, 0.8);
+        padding: 8px 16px;
+        font-size: 0.8rem;
+        letter-spacing: 2px;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    .fb-share-btn-lincoln:hover {
+        background: rgba(250, 200, 130, 0.1);
+        border-color: rgba(250, 200, 130, 0.8);
+    }
+
+    .fb-share-btn-small {
+        background: #eee;
+        border: none;
+        padding: 5px 10px;
+        font-size: 10px;
+        font-weight: bold;
+        color: #c76c0c;
+        cursor: pointer;
+        border-radius: 4px;
+        text-transform: uppercase;
+        transition: all 0.2s;
+    }
+
+    .fb-share-btn-small:hover {
+        background: #d0b48c;
+        color: white;
+    }
+
+    /* ============================================================
+       8. ANALYSIS PANEL - MODUULIT (STARFIELD & PARAGRAPHS)
+       ============================================================ */
+    #starfield {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      position: relative;
+      cursor: crosshair;
+      flex: 1; /* Täyttää jäljelle jäävän tilan */
+      background: rgba(0, 0, 0, 0.1);
+    }
+
+    .star-wrapper {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      z-index: 10;
+    }
+
+    .star-dot {
+      width: 6px;
+      height: 6px;
+      background: #fff;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #fff, 0 0 20px var(--accent);
+      transition: transform 0.3s ease;
+    }
+
+    .star-wrapper:hover .star-dot {
+      transform: scale(1.5);
+    }
+
+    .star-label-box {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.85);
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.4s ease, transform 0.4s ease;
+      border: 1px solid var(--accent);
+      z-index: 100;
+    }
+
+    .labels-visible .star-label-box {
+      opacity: 0.4;
+    }
+
+    .star-wrapper:hover .star-label-box,
+    .star-wrapper.label-active .star-label-box {
+      opacity: 1;
+      transform: translateX(-50%) translateY(-5px);
+      pointer-events: auto;
+    }
+
+    .analysis-paragraph {
+        cursor: pointer;
+        padding: 8px;
+        margin-bottom: 10px;
+        border-radius: 4px;
+        transition: background 0.3s ease, border-left 0.3s ease;
+        border-left: 2px solid transparent;
+    }
+
+    .analysis-paragraph:hover {
+        background: rgba(208, 180, 140, 0.05);
+        border-left: 2px solid var(--accent);
+    }
+
+    .analysis-active-hit {
+        background: rgba(208, 180, 140, 0.15) !important;
+        transform: scale(0.99);
+    }
+
+    #analysisTextTarget {
+        max-height: 40vh;
+        overflow-y: auto;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--border-soft);
+    }
+
+    /* ============================================================
+       9. REFLECTION PANEL - MODUULIT
+       ============================================================ */
+    .reflection-card {
+        padding: 25px;
+        background: rgba(255, 255, 255, 0.03);
+        border-left: 3px solid var(--accent);
+        border-radius: 4px;
+        animation: fadeIn 0.8s ease;
+    }
+
+    .reflection-card h3 {
+        font-family: 'Playfair Display', serif;
+        color: var(--accent);
+        margin-top: 0;
+    }
+
+    .reflection-body {
+        font-size: 0.95rem;
+        line-height: 1.5;
+        opacity: 0.9;
+    }
+
+    /* ============================================================
+       10. KOMMENTOINTI JA VALINNAT (INLINE COMMENTS)
+       ============================================================ */
+    .p-selected-quote {
+      opacity: 0.6;
+      font-size: 0.95em;
+      padding-left: 15px;
+      border-left: 4px solid #d0b48c; /* Kultainen reunaviiva */
+      transition: all 0.3s ease;
+      background: rgba(208, 180, 140, 0.05); /* Kevyt korostustausta */
+    }
+
+    .inline-comment-box {
+      width: 100%;
+      max-width: 600px;
+      margin: 15px 0 25px 15px;
+      animation: slideDown 0.3s ease-out;
+    }
+
+    .inline-comment-box textarea,
+    .inline-comment-box input {
+      width: 100%;
+      padding: 12px;
+      margin-top: 8px;
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid #cfc8be;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #2a2520;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    .inline-comment-box textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .inline-comment-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .inline-comment-actions button {
+      padding: 8px 16px;
+      border-radius: 20px;
+      border: 1px solid #d0b48c;
+      background: transparent;
+      color: #5c4c38;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .inline-comment-actions button.send {
+      background: #d0b48c;
+      color: #fff;
+    }
+
+    .inline-comment-actions button:hover {
+      opacity: 0.8;
+      transform: translateY(-1px);
+    }
+
+    .ic-inline-thanks {
+      padding: 10px 15px;
+      margin-left: 15px;
+      background: rgba(208, 180, 140, 0.15);
+      border-left: 3px solid #d0b48c;
+      border-radius: 4px;
+      font-size: 14px;
+      color: #4a4239;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    .ic-inline-thanks.show {
+      opacity: 1;
+    }
+</style>
   
   <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -625,10 +768,18 @@ body.view-narrative.hide-toc #mosaic-container {
     <input type="text" id="globalTextSearch" placeholder="Etsi kaikista esseistä..." 
            style="width: 100%; padding: 6px 15px; border-radius: 20px; border: 1px solid #444; background: #222; color: #fff; font-size: 14px;">
   </div>
-  <div class="herenow-container">
-    <span class="dot"></span>
-    <span class="herenow">1 online</span>
-</div>
+  <div id="intervention-status" style="
+    position: fixed;
+    top: 60px;
+    right: 20px;
+    z-index: 10001;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+"></div>
+
+
   
 </header>
 <main id="main">
@@ -655,31 +806,19 @@ body.view-narrative.hide-toc #mosaic-container {
       <div id="tocContainer"></div>
     </div>
 
-<div id="narrativePanel" class="context-panel" style="flex: 1; display: flex; flex-direction: column;">
-  <div id="mosaic-container">
-    <div class="mosaic-placeholder">Etsitään infografiikkaa...</div>
-    </div>
-</div>
 
-<div id="analysisPanel" class="context-panel">
+
   <div style="padding: 15px; border-bottom: 1px solid var(--border-soft);">
     <select id="frameworkSelect" style="width:100%; margin-bottom:10px;"></select>
     <select id="presetSelect" style="width:100%;"></select>
   </div>
 
-  <div id="starfield" style="flex: 1; position: relative; min-height: 300px; background: rgba(0,0,0,0.1);"></div>
-</div>
-
-    <!-- Reflektio -->
-    <div id="reflectionPanel" class="context-panel">
-      <!-- reflektiomoduulit renderöityvät tähän -->
-    </div>
-
-  </aside>
+  <div id="narrativePanel" class="context-panel host-panel"></div>
+  <div id="analysisPanel" class="context-panel host-panel"></div>
+  <div id="reflectionPanel" class="context-panel host-panel"></div>
+</aside>
 
 </main>
-
-
 <script>
   document.getElementById("tocEdgeToggle")
     .addEventListener("click", () => {
@@ -703,8 +842,6 @@ body.view-narrative.hide-toc #mosaic-container {
 
 <script type="module" src="text-engine.js"></script>
 
-<script src="starfield-module.js"></script>
-<script src="reflection-module.js"></script>
 <script src="app.js"></script>
 <script>
   /**
@@ -725,13 +862,18 @@ body.view-narrative.hide-toc #mosaic-container {
    * 2. GLOBAALIN HAUN KYTKENTÄ
    * Ohjaa yläpalkin hakusyötteen TextEnginen hallittavaksi.
    */
-  function setupGlobalSearch() {
+function setupGlobalSearch() {
     const searchInput = document.getElementById("globalTextSearch");
     if (searchInput) {
       searchInput.addEventListener("input", (e) => {
-        window.TextEngine.setSearchQuery(e.target.value);
+        // Lisätään tarkistus onko funktio olemassa
+        if (window.TextEngine && typeof window.TextEngine.setSearchQuery === "function") {
+          window.TextEngine.setSearchQuery(e.target.value);
+        } else {
+          console.warn("TextEngine.setSearchQuery ei ole vielä valmis.");
+        }
       });
-      console.log("🔍 Globaali haku kytketty moottoriin.");
+      console.log("🔍 Globaali hakuvalmius asetettu.");
     }
   }
 
@@ -741,7 +883,7 @@ body.view-narrative.hide-toc #mosaic-container {
    */
   document.addEventListener("textEngineReady", (e) => {
     const chapters = window.TextEngine.getAllChapters();
-    console.log(`📚 Data valmis (${chapters.length} lukua). Päivitetään käyttöliittymä...`);
+    //console.log(`📚 Data valmis (${chapters.length} lukua). Päivitetään käyttöliittymä...`);
 
     // Alustetaan/Päivitetään Sisällysluettelo (TOC)
     if (window.TOCEngine) {
@@ -758,15 +900,21 @@ body.view-narrative.hide-toc #mosaic-container {
       }
     }
     
-    // Herätetään Mosaic tai muut visuaaliset moduulit
-    if (window.MosaicModule && typeof window.MosaicModule.init === "function") {
-      window.MosaicModule.init();
-    }
-  });
 
+  });
+function bootApp() {
+    if (window.TextEngine) {
+      window.TextEngine.init();
+      setupGlobalSearch();
+    } else {
+      // Jos ei vielä löytynyt, odotetaan hetki
+      setTimeout(bootApp, 100);
+    }
+  }
+
+  bootApp();
   // Käynnistetään alustusketju
   tryInitTextEngine();
 </script>
 </body>
-<script src="https://wgx.github.io/herenow/herenow.min.js" defer></script>
 </html>

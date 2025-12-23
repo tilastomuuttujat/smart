@@ -1,40 +1,18 @@
 /* ============================================================
-   ui-bindings.js – VAKAA YHDISTETTY NÄKYMÄOHJAUS
-   - Ei riko olemassa olevaa
-   - Tukee sidePanel + vanha TOC-malli
-   - Layout ei muutu, vain sisältö
+   ui-bindings.js – VAKAA YHDISTETTY NÄKYMÄOHJAUS (KORJATTU)
+   - Käyttää globaalia EventBusia viestintään
+   - Etsii elementit vasta init-vaiheessa (varmistaa löytymisen)
 ============================================================ */
 
 (function () {
-
-  const BODY = document.body;
-
-  const VIEW_BUTTONS = document.querySelectorAll(".view-btn");
-  const PREV_BTN = document.getElementById("prevBtn");
-  const NEXT_BTN = document.getElementById("nextBtn");
-  const TOC_EDGE_BTN = document.getElementById("tocEdgeToggle");
-  const TOC_TOP_BTN = document.getElementById("tocToggleBtn");
-  const TEXT_AREA = document.getElementById("textArea");
-
-  /* ===== OIKEA PANEELI (jos olemassa) ===== */
-  const PANELS = {
-    narrative: document.getElementById("tocPanel"),
-    analysis: document.getElementById("analysisPanel"),
-    reflection: document.getElementById("reflectionPanel")
-  };
-
-  const ALL_PANELS = Object.values(PANELS).filter(Boolean);
-
-  let CURRENT_VIEW = "narrative";
+  // Muuttujat elementeille (alustetaan initissä)
+  let BODY, VIEW_BUTTONS, PREV_BTN, NEXT_BTN, TOC_EDGE_BTN, TEXT_AREA;
+  let PANELS = {};
+  let ALL_PANELS = [];
 
   /* ============================================================
      APUTOIMINNOT
   ============================================================ */
-
-  function setBodyViewClass(view) {
-    BODY.classList.remove("view-narrative", "view-analysis", "view-reflection");
-    BODY.classList.add(`view-${view}`);
-  }
 
   function setActiveViewButton(view) {
     VIEW_BUTTONS.forEach(btn => {
@@ -43,7 +21,7 @@
   }
 
   function hideAllContextPanels() {
-    ALL_PANELS.forEach(p => p.style.display = "none");
+    ALL_PANELS.forEach(p => { if(p) p.style.display = "none"; });
   }
 
   function showContextPanel(view) {
@@ -51,77 +29,44 @@
     if (panel) panel.style.display = "flex";
   }
 
-  function notifyTextEngine(view) {
-    if (window.TextEngine && typeof window.TextEngine.setView === "function") {
-      window.TextEngine.setView(view);
-    }
-  }
-
-  function notifyPanelMode(view) {
-    let mode = "narrative";
-    if (view === "analysis") mode = "analysis";
-    if (view === "reflection") mode = "reflection";
-
-    document.dispatchEvent(
-      new CustomEvent("panelModeChange", {
-        detail: { mode }
-      })
-    );
-  }
-
-  function resetScroll() {
-    if (TEXT_AREA) TEXT_AREA.scrollTop = 0;
+  function requestViewChange(view) {
+    if (!["narrative", "analysis", "reflection"].includes(view)) return;
+    console.log(`🚀 UI: Pyydetään näkymää: ${view}`);
+    // Käytetään ikkunatason EventBusia
+    window.EventBus?.emit("ui:viewChange", { view });
   }
 
   /* ============================================================
-     NÄKYMÄN VAIHTO
+     ALUSTUS – KUTSUTAAN KUN DOM ON VALMIS
   ============================================================ */
 
-  /**
-   * Vaihtaa sovelluksen pääasiallista näkymää (Narratiivi / Analyysi / Reflektio).
-   * Varmistaa, että aktiivinen luku pysyy synkronoituna näkymien välillä.
-   */
-  function setView(view) {
-    if (!["narrative", "analysis", "reflection"].includes(view)) return;
-    if (view === CURRENT_VIEW) return;
+  function init() {
+    console.log("🎮 UIBindings: Alustetaan kytkennät...");
 
-    CURRENT_VIEW = view;
+    // 1. Etsitään elementit (nyt ne ovat varmasti DOMissa)
+    BODY = document.body;
+    VIEW_BUTTONS = document.querySelectorAll(".view-btn");
+    PREV_BTN = document.getElementById("prevBtn");
+    NEXT_BTN = document.getElementById("nextBtn");
+    TOC_EDGE_BTN = document.getElementById("tocEdgeToggle");
+    TEXT_AREA = document.getElementById("textArea");
 
-    // 1. Päivitetään visuaaliset luokat ja painikkeet
-    setBodyViewClass(view);
-    setActiveViewButton(view);
+    PANELS = {
+      narrative: document.getElementById("tocPanel"),
+      analysis: document.getElementById("analysisPanel"),
+      reflection: document.getElementById("reflectionPanel")
+    };
+    ALL_PANELS = Object.values(PANELS).filter(Boolean);
 
-    // 2. TOC-paneelin hallinta: näkyvissä vain narratiivissa
-    if (view === "narrative") {
-      BODY.classList.remove("hide-toc");
-    } else {
-      BODY.classList.add("hide-toc");
-    }
-
-    // 3. Kontekstipaneelien (oikea reuna) vaihto
-    if (ALL_PANELS.length) {
-      hideAllContextPanels();
-      showContextPanel(view);
-    }
-
-    // 4. Ilmoitetaan TextEnginelle näkymän muutoksesta
-    if (window.TextEngine && typeof window.TextEngine.setView === "function") {
-      window.TextEngine.setView(view);
-      
-      // 🔑 SYNKRONOINTI: Jos palataan narratiiviin, varmistetaan skrollaus oikeaan kohtaan
-      if (view === "narrative") {
-        window.TextEngine.scrollToActive();
-      }
-    }
-
-    // 5. Ilmoitetaan moduuleille (kuten Starfield) uusi tila
-    notifyPanelMode(view);
+    // 2. Tapahtumakuuntelijat (Näkymän vaihto)
+    VIEW_BUTTONS.forEach(btn => {
+      btn.addEventListener("click", e => {
+        e.preventDefault();
+        requestViewChange(btn.dataset.view);
+      });
+    });
     
-    // 6. Nollataan skrollaus (analyysi/reflektio alkavat ylhäältä)
-    resetScroll();
-  }
-  
-  /* SISÄLLYSLUETTELON PAINIKE */
+      /* SISÄLLYSLUETTELON PAINIKE */
   
   const tocEdgeToggle = document.getElementById("tocEdgeToggle");
 
@@ -129,73 +74,54 @@ tocEdgeToggle.addEventListener("click", () => {
   document.body.classList.toggle("hide-toc");
 });
 
-  /* ============================================================
-     NAPIT
-  ============================================================ */
-
-  VIEW_BUTTONS.forEach(btn => {
-    btn.addEventListener("click", e => {
+    // 3. Navigointi
+    PREV_BTN?.addEventListener("click", e => {
       e.preventDefault();
-      setView(btn.dataset.view);
+      window.TextEngine?.prevChapter?.();
     });
-  });
 
-  if (PREV_BTN) {
-    PREV_BTN.addEventListener("click", e => {
+    NEXT_BTN?.addEventListener("click", e => {
       e.preventDefault();
-      window.TextEngine?.prevChapter();
+      window.TextEngine?.nextChapter?.();
     });
-  }
 
-  if (NEXT_BTN) {
-    NEXT_BTN.addEventListener("click", e => {
-      e.preventDefault();
-      window.TextEngine?.nextChapter();
+    // 4. Sisällysluettelon toggle
+    TOC_EDGE_BTN?.addEventListener("click", () => {
+      BODY.classList.toggle("hide-toc");
     });
-  }
 
-  /* ---- TOC-reunapainike: vain narratiivissa ---- */
-  if (TOC_EDGE_BTN) {
-    TOC_EDGE_BTN.addEventListener("click", () => {
-      if (BODY.classList.contains("view-narrative")) {
-        BODY.classList.toggle("hide-toc");
+    // 5. REAKTIIVINEN PÄIVITYS (EventBus-kuuntelija)
+    // Tämä varmistaa, että kun app.js vaihtaa näkymää, UI päivittyy
+    window.EventBus?.on("app:viewUpdated", ({ view }) => {
+      console.log(`📱 UI-päivitys: ${view}`);
+      setActiveViewButton(view);
+      hideAllContextPanels();
+      showContextPanel(view);
+
+      if (view === "narrative") {
+        window.TextEngine?.scrollToActive?.();
+      } else if (TEXT_AREA) {
+        TEXT_AREA.scrollTop = 0;
       }
     });
+
+    // Asetetaan alkutila
+    const currentView = BODY.classList.contains("view-analysis") ? "analysis" : 
+                       BODY.classList.contains("view-reflection") ? "reflection" : "narrative";
+    
+    setActiveViewButton(currentView);
+    hideAllContextPanels();
+    showContextPanel(currentView);
   }
 
-  /* ---- TOC-yläpalkin nappi (jos olemassa) ---- */
-  if (TOC_TOP_BTN) {
-    TOC_TOP_BTN.addEventListener("click", e => {
-      e.preventDefault();
-      if (!BODY.classList.contains("view-narrative")) return;
-
-      const hidden = BODY.classList.toggle("hide-toc");
-      TOC_TOP_BTN.textContent = hidden
-        ? "Näytä sisällysluettelo"
-        : "Piilota sisällysluettelo";
-    });
-  }
-
-  /* ============================================================
-     ALUSTUS
-  ============================================================ */
-
-  function init() {
-    /* varmista oletusnäkymä */
-    setActiveViewButton("narrative");
-    setBodyViewClass("narrative");
-
-    if (ALL_PANELS.length) {
-      hideAllContextPanels();
-      showContextPanel("narrative");
-    }
-
-    notifyTextEngine("narrative");
-    notifyPanelMode("narrative");
-  }
-
+  // Julkaistaan globaalisti
   window.UI = { init };
 
-  document.addEventListener("DOMContentLoaded", init);
-
 })();
+
+// Käynnistetään kun kaikki skriptit ja DOM on ladattu
+window.addEventListener("load", () => {
+  if (window.UI && typeof window.UI.init === "function") {
+    window.UI.init();
+  }
+});

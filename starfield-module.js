@@ -1,203 +1,138 @@
 /* ============================================================
-   starfield-module.js
-   Analyysiin sidottu Tilannekuva-moduuli
+   starfield-module.js – DYNAAMINEN AGENTTI-VERSIO
+   Vastuu: Itsenäinen visualisointi ja dynaaminen sijoittuminen.
    ============================================================ */
 
-ModuleRegistry.register({
-  id: "starfield",
-  title: "Tilannekuva",
+export const StarfieldModule = {
+    id: "starfield",
+    title: "Tähtikenttä",
+    host: null,
+    canvas: null,
+    ctx: null,
+    stars: [],
+    active: false,
+    intensity: 1,
+    interventionActive: false,
 
-  container: null,
-  active: false,
-  labelTimeout: null,
+    // 🧠 1. ILMOITTAA PREFERENSSIN (Missä moduuli haluaa näkyä)
+    getPreferredPanel(viewMode) {
+        // Jos jännite on äärimmäisen korkea, Starfield haluaa dominoida narratiivia
+        const score = window.AppState?.data?.reflection?.history?.intensityScore || 0;
+        if (score > 120 && viewMode === "narrative") return "narrativePanel";
+        
+        // Oletuspaikka analyysinäkymässä
+        if (viewMode === "analysis") return "analysisPanel";
+        
+        return null; // Muissa tapauksissa moduuli pysyy piilossa
+    },
 
-  /* ============================================================
-     INIT
-  ============================================================ */
+    // 🧠 2. MOUNT-METODI (Injektoidaan annettuun paneeliin)
+    mount(targetEl) {
+        if (!targetEl || this.host === targetEl) return;
+        
+        console.log(`⭐ Starfield: Kiinnitetään isäntään: ${targetEl.id}`);
+        this.host = targetEl;
+        
+        // Luodaan canvas dynaamisesti isännän sisälle
+        this.host.innerHTML = ''; // Tyhjennetään isäntä
+        this.canvas = document.createElement("canvas");
+        this.canvas.style.width = "100%";
+        this.canvas.style.height = "100%";
+        this.canvas.style.display = "block";
+        this.host.appendChild(this.canvas);
+        
+        this.ctx = this.canvas.getContext("2d");
+        this.resize();
+    },
 
-  init() {
-  this.container = document.getElementById("starfield");
-  if (!this.container) return;
+    init() {
+        document.addEventListener('contextUpdate', (e) => {
+            if (this.active) this.processIntelligence(e.detail);
+        });
+        
+        window.addEventListener('resize', () => this.resize());
+        console.log("⭐ Starfield: Agentti alustettu.");
+    },
 
-  this.container.style.position = "relative";
-  this.container.style.overflow = "hidden";
-  this.container.style.display = "none";
+    activate() {
+        if (!this.canvas) return;
+        this.active = true;
+        if (this.stars.length === 0) this.createStars();
+        this.animate();
+    },
 
-  /* Reagoi analyysin vaihtumiseen */
-  document.addEventListener("evaluationChanged", () => {
-    if (this.active) this.render();
-  });
+    deactivate() {
+        this.active = false;
+        this.handleIntervention(false);
+        if (this.host) this.host.innerHTML = ''; // Siivotaan jäljet
+        this.canvas = null;
+        this.host = null;
+    },
 
-  /* 🔑 OIKEA event + oikea this */
-  document.addEventListener("panelModeChange", (e) => {
-    const mode = e.detail?.mode;
-    if (mode === "analysis") {
-      this.activate();
-    } else {
-      this.deactivate();
-    }
-  });
-},
+    resize() {
+        if (!this.canvas) return;
+        this.canvas.width = this.host.clientWidth;
+        this.canvas.height = this.host.clientHeight;
+        this.createStars();
+    },
 
-  /* ============================================================
-     AKTIVOINTI
-  ============================================================ */
-
-  activate() {
-    if (this.active) return;
-    this.active = true;
-    if (this.container) this.container.style.display = "block";
-    this.render();
-  },
-
-  deactivate() {
-    if (!this.active) return;
-    this.active = false;
-
-    if (this.container) {
-      this.container.style.display = "none";
-      this.container.innerHTML = "";
-      this.container.classList.remove("labels-visible");
-    }
-
-    clearTimeout(this.labelTimeout);
-  },
-
-  /* ============================================================
-     RENDER
-     ============================================================ */
-
-  render() {
-    if (!this.container || !this.active) return;
-
-    // Tyhjennetään säiliö ja nollataan tilat uutta renderöintiä varten
-    this.container.innerHTML = "";
-    this.container.classList.remove("labels-visible");
-    clearTimeout(this.labelTimeout);
-
-    // 🔑 KORJAUS: Haetaan aktiivinen data EvaluationEngineltä
-    const evalData = EvaluationEngine.getActive();
-
-    // 🔑 KORJAUS: Navigoidaan syvälle rakenteeseen: versions -> analysis -> anatomy -> evidence -> factual
-    // Tuetaan sekä TextEnginen normalisoitua rakennetta että suoraa analyysiobjektia
-    const analysis = evalData?.versions?.analysis || evalData;
-    const facts = analysis?.anatomy?.evidence?.factual || [];
-
-    // DEBUG: Diagnostiikka konsoliin datavirran varmistamiseksi
-    console.log("Starfield render - Faktat:", facts);
-
-    if (!facts || facts.length === 0) {
-      this.renderEmptyState();
-      return;
-    }
-
-    /* 1. Luo tähdet alkuasentoon (yleensä keskelle 50%/50%) */
-    facts.forEach((fact, index) => {
-      this.createStar(fact, index);
-    });
-
-    /* 2. Käynnistä "tehosekoitin" siirtämällä tähdet tavoitepaikkoihin.
-       Käytetään requestAnimationFramea varmistamaan, että DOM on päivittynyt ennen animaatiota. */
-    requestAnimationFrame(() => {
-      const wrappers = this.container.querySelectorAll(".star-wrapper");
-      wrappers.forEach(wrapper => {
-        // dataset-targetX ja Y on asetettu createStar-metodissa
-        if (wrapper.dataset.targetX && wrapper.dataset.targetY) {
-          wrapper.style.left = `${wrapper.dataset.targetX}%`;
-          wrapper.style.top  = `${wrapper.dataset.targetY}%`;
-          wrapper.style.opacity = "1";
+    processIntelligence(state) {
+        const score = state.history?.intensityScore || 0;
+        this.intensity = 1 + (score / 25);
+        
+        if (score > 90 && !this.interventionActive) {
+            this.handleIntervention(true);
+        } else if (score < 70 && this.interventionActive) {
+            this.handleIntervention(false);
         }
-      });
-    });
+    },
 
-    /* 3. Viivästetyt nimet: etiketti-laatikot tulevat näkyviin, kun tähdet ovat asettuneet paikoilleen */
-    this.labelTimeout = setTimeout(() => {
-      if (this.active && this.container) {
-        this.container.classList.add("labels-visible");
-      }
-    }, 1800);
-  },
+    handleIntervention(start) {
+        this.interventionActive = start;
+        window.ModuleRegistry?.requestIntervention(this.id, 'VISUAL_EFFECT', {
+            target: 'body',
+            filter: start ? 'blur(1.2px) saturate(0.8)' : 'none',
+            transition: 'filter 2s ease'
+        });
+    },
 
-  /* ============================================================
-     YKSITTÄINEN TÄHTI
-  ============================================================ */
+    createStars() {
+        if (!this.canvas) return;
+        const count = 200;
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+        this.stars = Array.from({ length: count }, () => ({
+            x: Math.random() * w,
+            y: Math.random() * h,
+            z: Math.random() * w,
+            o: Math.random()
+        }));
+    },
 
-  createStar(text, index) {
-    const starWrapper = document.createElement("div");
-    starWrapper.className = "star-wrapper";
+    animate() {
+        if (!this.active) return;
+        this.draw();
+        requestAnimationFrame(() => this.animate());
+    },
 
-    const x = 10 + Math.random() * 80;
-    const y = 10 + Math.random() * 80;
+    draw() {
+        if (!this.ctx || !this.canvas) return;
+        const { width, height } = this.canvas;
+        this.ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+        this.ctx.fillRect(0, 0, width, height);
 
-    Object.assign(starWrapper.style, {
-      left: "50%",
-      top: "50%",
-      opacity: "0",
-      position: "absolute",
-      transition: "all 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)"
-    });
-
-    const dot = document.createElement("div");
-    dot.className = "star-dot";
-
-    const label = document.createElement("div");
-    label.className = "star-label-box";
-    label.textContent = text;
-
-    starWrapper.appendChild(dot);
-    starWrapper.appendChild(label);
-
-    /* Klikkaus: avaa/sulje etiketti */
-    starWrapper.onclick = (e) => {
-      e.stopPropagation();
-      const isActive = starWrapper.classList.toggle("label-active");
-      if (isActive) this.ensureLabelInBounds(label);
-    };
-
-    starWrapper.dataset.targetX = x;
-    starWrapper.dataset.targetY = y;
-
-    this.container.appendChild(starWrapper);
-  },
-
-  /* ============================================================
-     TYHJÄ TILA
-  ============================================================ */
-
-  renderEmptyState() {
-    const msg = document.createElement("div");
-    msg.style.cssText = `
-      position:absolute;
-      inset:0;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      opacity:.6;
-      font-size:.85rem;
-    `;
-    msg.textContent = "Ei faktapohjaista aineistoa analyysissä.";
-    this.container.appendChild(msg);
-  },
-
-  /* ============================================================
-     ÄLYKÄS RAJOITIN
-  ============================================================ */
-
-  ensureLabelInBounds(label) {
-    const rect = label.getBoundingClientRect();
-    const containerRect = this.container.getBoundingClientRect();
-
-    if (rect.right > containerRect.right) {
-      label.style.left = "auto";
-      label.style.right = "15px";
+        this.stars.forEach(s => {
+            s.z -= this.intensity * 2;
+            if (s.z <= 0) s.z = width;
+            const sx = (s.x - width / 2) * (width / s.z) + width / 2;
+            const sy = (s.y - height / 2) * (width / s.z) + height / 2;
+            const size = (1 - s.z / width) * 3;
+            this.ctx.fillStyle = `rgba(255, 255, 255, ${s.o})`;
+            this.ctx.beginPath();
+            this.ctx.arc(sx, sy, size, 0, Math.PI * 2);
+            this.ctx.fill();
+        });
     }
-    if (rect.left < containerRect.left) {
-      label.style.left = "15px";
-      label.style.right = "auto";
-    }
-    if (rect.bottom > containerRect.bottom) {
-      label.style.top = "auto";
-      label.style.bottom = "15px";
-    }
-  }
-});
+};
+
+if (window.ModuleRegistry) window.ModuleRegistry.register(StarfieldModule);

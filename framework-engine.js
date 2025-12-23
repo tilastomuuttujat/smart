@@ -1,14 +1,12 @@
 /* ============================================================
-   framework-engine.js – KORJATTU JA YHTEENSOPIVA
-   Vastuu:
-   - Lataa tulkintakehykset (frameworks.json)
-   - Hallitsee aktiivista kehystä ja moodia
-   - Synkronoi tekstin, paneelit ja moduulit
-============================================================ */
+   framework-engine.js – DYNAAMINEN TILAOHJAAJA
+   Vastuu: 
+   - Tulkintakehysten hallinta
+   - Analyysimoodien synkronointi (Kuvaile/Tulkitse/Hypotesoi)
+   - Tila-ilmoitusten lähetys ModuleRegistrylle
+   ============================================================ */
 
 const FrameworkEngine = (() => {
-
-  /* ===================== SISÄINEN TILA ===================== */
 
   let frameworks = [];
   let activeFramework = null;
@@ -20,41 +18,38 @@ const FrameworkEngine = (() => {
   /* ===================== LATAUS ===================== */
 
   async function loadFrameworks(url = "frameworks.json") {
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) {
-      throw new Error(`FrameworkEngine: HTTP ${res.status} (${url})`);
+    try {
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      frameworks = Array.isArray(json.core_frameworks) ? json.core_frameworks : [];
+      return frameworks;
+    } catch (e) {
+      console.error("FrameworkEngine: Latausvirhe", e);
+      return [];
     }
-
-    const json = await res.json();
-
-    frameworks = Array.isArray(json.core_frameworks)
-      ? json.core_frameworks
-      : [];
-
-    if (!frameworks.length) {
-      console.warn("FrameworkEngine: core_frameworks tyhjä");
-    }
-
-    return frameworks;
   }
 
   /* ===================== AKTIVOINTI ===================== */
 
   function activateFramework(id) {
     const fw = frameworks.find(f => f.id === id);
-    if (!fw) {
-      console.warn(`FrameworkEngine: kehystä ei löydy: ${id}`);
-      return null;
-    }
+    if (!fw) return null;
 
-    // 🔑 KRITTIINEN: säilytetään KOKO framework-olio (ml. modules)
     activeFramework = { ...fw };
-
     activeMode = activeFramework.modes?.[0] || null;
 
+    // Päivitetään DOM-tila
     document.body.dataset.framework = activeFramework.id;
-    if (activeMode) {
-      document.body.dataset.mode = activeMode;
+    if (activeMode) document.body.dataset.mode = activeMode;
+
+    // 🧠 SYNKRONOINTI MODUULIEN KANSSA
+    // Ilmoitetaan ModuleRegistrylle, että moduulien sallittu joukko on muuttunut
+    if (window.ModuleRegistry) {
+      window.ModuleRegistry.syncWithFramework({
+        framework: activeFramework,
+        mode: activeMode
+      });
     }
 
     applyTextFocus();
@@ -64,11 +59,21 @@ const FrameworkEngine = (() => {
   }
 
   function setMode(mode) {
-    if (!activeFramework) return;
-    if (!activeFramework.modes?.includes(mode)) return;
+    if (!activeFramework || !activeFramework.modes?.includes(mode)) return;
 
     activeMode = mode;
     document.body.dataset.mode = mode;
+
+    // 🧠 PÄIVITETÄÄN AGENTIT
+    // Esim. AnatomyModule reagoi tähän vaihtamalla teeseistä hypoteeseihin
+    if (window.ModuleRegistry) {
+        // Lähetetään tieto kaikille aktiivisille moduuleille
+        window.ModuleRegistry.list().forEach(mod => {
+            if (mod.active && typeof mod.onModeChange === "function") {
+                mod.onModeChange(activeMode, activeFramework);
+            }
+        });
+    }
 
     applyTextFocus();
     notify();
@@ -79,9 +84,7 @@ const FrameworkEngine = (() => {
   function applyTextFocus() {
     if (!activeFramework || !activeMode) return;
 
-    const allowedClasses =
-      activeFramework.textMap?.[activeMode] || [];
-
+    const allowedClasses = activeFramework.textMap?.[activeMode] || [];
     const paragraphs = document.querySelectorAll("#textArea p");
 
     if (!allowedClasses.length) {
@@ -95,78 +98,40 @@ const FrameworkEngine = (() => {
     }
 
     document.body.classList.add("focus");
-
     paragraphs.forEach(p => {
-      const isActive = allowedClasses.some(cls =>
-        p.classList.contains(cls)
-      );
-
+      const isActive = allowedClasses.some(cls => p.classList.contains(cls));
       p.style.opacity = isActive ? "1" : "0.25";
       p.style.filter = isActive ? "none" : "grayscale(40%)";
       p.classList.toggle("fw-active", isActive);
     });
   }
 
-  /* ===================== MODUULIT ===================== */
-
-  function isModuleEnabled(moduleId) {
-    return !!activeFramework?.modules?.includes(moduleId);
-  }
-
-  /* ===================== GETTERIT ===================== */
-
-  function getFrameworks() {
-    return frameworks;
-  }
-
-  function getActiveFramework() {
-    return activeFramework;
-  }
-
-  function getActiveMode() {
-    return activeMode;
-  }
-
-  function getActiveChapter() {
-    return activeChapterId;
-  }
-
-  /* ===================== TILAUKSET ===================== */
+  /* ===================== TILAUKSET & ILMOITUKSET ===================== */
 
   function subscribe(fn) {
-    if (typeof fn !== "function") return () => {};
-    subscribers.add(fn);
+    if (typeof fn === "function") subscribers.add(fn);
     return () => subscribers.delete(fn);
   }
 
   function notify() {
-    subscribers.forEach(fn => {
-      try {
-        fn({
-          framework: activeFramework,
-          mode: activeMode,
-          chapterId: activeChapterId
-        });
-      } catch (e) {
-        console.error("FrameworkEngine subscriber error", e);
-      }
-    });
+    const state = {
+        framework: activeFramework,
+        mode: activeMode,
+        chapterId: activeChapterId
+    };
+    subscribers.forEach(fn => fn(state));
   }
-
-  /* ===================== JULKINEN API ===================== */
 
   return {
     loadFrameworks,
     activateFramework,
     setMode,
-
-    getFrameworks,
-    getActiveFramework,
-    getActiveMode,
-    getActiveChapter,
-
-    isModuleEnabled,
+    getFrameworks: () => frameworks,
+    getActiveFramework: () => activeFramework,
+    getActiveMode: () => activeMode,
     subscribe
   };
 
 })();
+
+window.FrameworkEngine = FrameworkEngine;
