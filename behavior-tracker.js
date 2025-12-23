@@ -13,7 +13,29 @@ export const BehaviorTracker = {
     sessionStart: Date.now(),
     
     // Google Apps Script Web App URL - LIITÄ TÄHÄN OMASI
-    targetUrl: "https://docs.google.com/spreadsheets/d/1oHQhb4inC8RWCW2iXlOYfcMLo-Hy6ePmewB1HXbclAc/edit?usp=sharing",
+    targetUrl: "https://script.google.com/macros/s/AKfycbwZj8fsyMdGwpmjjtdzpaSNhDXPHnKVTyfGov3Clw2IM9SyjihXQETXLj2BMbb7rPgn/exec",
+
+    async dispatchData() {
+        const logs = JSON.parse(localStorage.getItem("tulkintakone_logs") || "[]");
+        // Jos osoite on vielä oletus, ei lähetetä
+        if (logs.length === 0 || this.targetUrl.includes("SINUN_GOOGLE")) return;
+
+        const report = {
+            origin: window.location.origin,
+            timestamp: new Date().toISOString(),
+            summary: this.getSessionSummary(),
+            fullLogs: logs 
+        };
+
+        // Lähetetään data Googlelle
+        fetch(this.targetUrl, {
+            method: "POST",
+            mode: "no-cors", // Tärkeä Sheetsin kanssa
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(report)
+        });
+
+
 
     getPreferredPanel() { return null; },
     mount() { return; },
