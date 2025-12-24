@@ -48,6 +48,17 @@ const StarfieldModule = {
             if (this.canvas) this.resize();
         });
 
+
+// Lisää tämä init-metodiin:
+window.EventBus?.on("readingStateChanged", (state) => {
+    if (window.AppState.ui.view === "narrative") {
+        // Jos lukija skrollaa nopeasti, tähtiympäristö kirkastuu (energia nousee)
+        // Jos lukija pysähtyy, tähdet himmenevät, jotta teksti on helpompi lukea.
+        const targetOpacity = state.scrollEnergy > 0 ? 0.6 : 0.2;
+        if (this.canvas) this.canvas.style.opacity = targetOpacity;
+    }
+});
+
         console.log("🌌 Starfield-agentti: Tarkkailu aloitettu.");
     },
 
@@ -132,6 +143,8 @@ const StarfieldModule = {
     
     deactivate() { this.active = false; }
 };
+
+
 
 window.StarfieldModule = StarfieldModule;
 if (window.ModuleRegistry) window.ModuleRegistry.register(StarfieldModule);

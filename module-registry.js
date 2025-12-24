@@ -11,7 +11,7 @@
   let currentView = null; // Seurataan aktiivista näkymää
 
   const VIEW_TARGETS = {
-    narrative: null,
+    narrative: "moduleStack",
     analysis: "moduleStack",
     reflection: "moduleStack"
   };

@@ -104,28 +104,30 @@
     }
   });
 
-  /* ===================== 4. NÄKYMÄN VAIHTO (VAKAUTETTU) ===================== */
-
-  EventBus.on("ui:viewChange", ({ view }) => {
+  /* app.js – Kohta 4: NÄKYMÄN VAIHTO (PÄIVITETTY) */
+EventBus.on("ui:viewChange", ({ view }) => {
     if (!view || view === AppState.ui.view) return;
     
-    console.log("🔄 Vaihdetaan näkymää:", view);
     AppState.ui.view = view;
-
-    /* 1. Body-luokat */
     document.body.classList.remove("view-narrative", "view-analysis", "view-reflection");
     document.body.classList.add(`view-${view}`);
 
-    /* 2. Moduulipalkin hallinta */
+    /* 🧠 MUUTOS: Älä piilota paneelia, jos haluat moduulien vierailevan narratiivissa */
     const moduleColumn = document.getElementById("moduleColumn");
     if (moduleColumn) {
-        moduleColumn.style.display = (view === "narrative") ? "none" : "block";
+        // Pidetään paneeli näkyvissä, mutta ehkä hieman kapeampana tai eri tyylillä narratiivissa
+        moduleColumn.style.display = "block"; 
+        if (view === "narrative") {
+            moduleColumn.classList.add("narrative-mode");
+        } else {
+            moduleColumn.classList.remove("narrative-mode");
+        }
     }
 
-    /* 3. Moduulien sijoittelu Registryn kautta */
     if (window.ModuleRegistry) {
         window.ModuleRegistry.resolvePlacement(view);
     }
+    
     
     if (window.TextEngine?.setView) {
         window.TextEngine.setView(view);
