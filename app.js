@@ -1,9 +1,9 @@
 /* ============================================================
-   app.js – TESTIJAKSO-VERSIO (V5)
+   app.js – KORJATTU JA SYNKRONOITU (V5.1)
    Vastuu: 
-   - Vuorovaikutteinen tila pakotettu päälle
-   - Tilanhallinta ja tapahtumaväylä
-   - Google Sheets -datansiirto
+   - Tilanhallinta ja EventBus-viestintä
+   - Näkymänvaihdon välitys TextEnginelle
+   - Analytiikka-agentin hallinta
 ============================================================ */
 
 (function () {
@@ -38,7 +38,6 @@
     ui: {
       view: "narrative",
       activeChapterId: null,
-      // 🚀 TESTIJAKSO: Pakotetaan vuorovaikutteisuus päälle
       interactive: true,
       readingModeKnown: true
     }
@@ -49,8 +48,6 @@
     try {
       const savedMemory = localStorage.getItem("readerMemory");
       if (savedMemory) AppState.data.session = { ...AppState.data.session, ...JSON.parse(savedMemory) };
-      
-      // Huom: Emme enää lue interactiveEnabled-arvoa, koska se on pakotettu
     } catch (e) {
       console.warn("AppState: Palautus epäonnistui.");
     }
@@ -68,80 +65,83 @@
     }
 
     const { economy, ethics } = r.readerValues;
-    const stats = r.history;
+    r.systemMode = Math.abs(economy - ethics) > 40 ? "tension" : "stable";
 
-    if ((stats.visitedKeywords['kustannus'] || 0) > 5 && ethics > 70) {
-        r.systemMode = "conflict";
-    } else {
-        r.systemMode = Math.abs(economy - ethics) > 40 ? "tension" : "stable";
-    }
-
-    EventBus.emit("reflection:update", { reflection: r, chapterId: this.ui.activeChapterId });
-    EventBus.emit("reflection:insightSaved", { 
+    window.EventBus.emit("reflection:update", { reflection: r, chapterId: this.ui.activeChapterId });
+    window.EventBus.emit("reflection:insightSaved", { 
         chapterId: this.ui.activeChapterId,
         values: r.readerValues
     });
   };
 
   /* ===================== 4. NÄKYMÄN JA LUVUN VAIHTO ===================== */
-  EventBus.on("ui:viewChange", ({ view }) => {
-    if (AppState.ui.view === view) return;
+
+  // Tämä kuuntelee painikkeilta tulevaa viestiä
+  window.EventBus.on("ui:viewChange", ({ view }) => {
+    if (!view) return;
+    
+    console.log("App: Näkymän vaihto ->", view);
     AppState.ui.view = view;
 
+    // Vaihdetaan body-luokka CSS-ohjausta varten
     document.body.className = document.body.className.replace(/view-\w+/, "");
     document.body.classList.add(`view-${view}`);
 
+    // 🔑 KORJAUS: Kutsutaan TextEnginen oikeaa metodia (setView)
+    if (window.TextEngine && typeof window.TextEngine.setView === "function") {
+        window.TextEngine.setView(view); 
+    }
+
     if (window.ModuleRegistry) window.ModuleRegistry.resolvePlacement(view);
-    EventBus.emit("app:viewUpdated", { view, chapterId: AppState.ui.activeChapterId });
-  });
-
-  EventBus.on("chapter:change", ({ chapterId }) => {
-    if (AppState.ui.activeChapterId === chapterId) return;
-    AppState.ui.activeChapterId = chapterId;
-
-    const visited = AppState.data.session.chaptersVisited;
-    if (!visited.includes(chapterId)) visited.push(chapterId);
-
-    document.dispatchEvent(new CustomEvent("chapterChange", { detail: { chapterId } }));
-    EventBus.emit("app:chapterUpdated", { chapterId, view: AppState.ui.view });
+    window.EventBus.emit("app:viewUpdated", { view, chapterId: AppState.ui.activeChapterId });
   });
 
   /* ===================== 5. BOOTSTRAP JA KÄYNNISTYS ===================== */
   async function bootstrap() {
-    // 🚀 TESTIJAKSO: showReadingModeChooser on poistettu, mennään suoraan starttiin
-    startApp();
-  }
-
-  async function startApp() {
-    // Pakotetaan CSS-luokka heti
+    console.log("🚀 App: Käynnistetään bootstrap...");
+    
+    // Pakotetaan CSS-luokka
     document.body.classList.add("interactive-enabled");
     
-    const chapters = await TextEngine.init();
-    AppState.data.chapters = chapters || [];
-    AppState.data.ready = true;
-    AppState.ui.activeChapterId = chapters?.[0]?.id || null;
-
-    // 📊 Analytiikka-agentin käynnistys
-    if (window.ModuleRegistry) {
-        const tracker = window.ModuleRegistry.get("tracker");
-        if (tracker && typeof tracker.init === "function") tracker.init();
+    // Alustetaan TextEngine
+    if (window.TextEngine) {
+        await window.TextEngine.init();
+        const chapters = window.TextEngine.getAllChapters();
+        AppState.data.chapters = chapters || [];
+        AppState.data.ready = true;
+        AppState.ui.activeChapterId = window.TextEngine.getActiveChapterId();
     }
 
-    EventBus.emit("app:ready", {
+    // Analytiikka-agentin käynnistys
+    if (window.BehaviorTracker) {
+        window.BehaviorTracker.init();
+    }
+
+    // Kytketään HTML-painikkeet
+    bindUIEvents();
+
+    window.EventBus.emit("app:ready", {
       view: AppState.ui.view,
       chapterId: AppState.ui.activeChapterId,
       interactive: true
     });
   }
 
-  /* ===================== 6. UI-VIHJEET ===================== */
-  EventBus.on("reflection:update", ({ reflection }) => {
-    const el = document.getElementById("readerMemoryHint");
-    if (!el || !reflection.lastInsight) return;
-    el.textContent = `Muistijälki: ${reflection.lastInsight}`;
-    el.style.opacity = "0.7";
-    setTimeout(() => el.style.opacity = "0", 3000);
-  });
+  /* ===================== 6. UI-KYTKENTÄ ===================== */
+  function bindUIEvents() {
+    // Kuunnellaan klikkauksia koko dokumentin tasolla (delegointi)
+    document.addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-view]");
+        if (btn) {
+            const targetView = btn.getAttribute("data-view");
+            window.EventBus.emit("ui:viewChange", { view: targetView });
+            
+            // Päivitetään painikkeiden aktiivinen tila
+            document.querySelectorAll("[data-view]").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+        }
+    });
+  }
 
   /* ===================== 7. LOPETUS JA DATAN LÄHETYS ===================== */
   window.addEventListener("beforeunload", () => {
@@ -149,9 +149,8 @@
       localStorage.setItem("readerMemory", JSON.stringify(AppState.data.session));
     } catch (e) {}
 
-    const tracker = window.ModuleRegistry?.get("tracker");
-    if (tracker && typeof tracker.dispatchData === "function") {
-        tracker.dispatchData();
+    if (window.BehaviorTracker) {
+        window.BehaviorTracker.dispatchData();
     }
   });
 
