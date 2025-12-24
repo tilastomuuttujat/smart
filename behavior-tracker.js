@@ -1,39 +1,49 @@
 /* ============================================================
-   behavior-tracker.js – KOGNITIIVINEN ANALYYTIKKO (V6.0)
+   behavior-tracker.js – SUODATTAVA ANALYYTIKKO (V7.0)
    Vastuu:
-   - Lukijan kognitiivinen profilointi ja tyypitys
-   - Keskitetty "bongaus-reititys" ModuleRegistryn kautta
+   - Kognitiivinen profilointi ja tyypitys
+   - Tuplalokien ja nollatapahtumien suodatus (V7 päivitys)
    - Viipymän (dwell time) muuntaminen moduulikäskyiksi
    ============================================================ */
 
 const BehaviorTracker = {
     id: "tracker",
     title: "Analytiikka-ajuri",
-    logs: [],
     sessionStart: Date.now(),
     lastLogTime: Date.now(),
+    
+    // Suodatusmuistit tuplien estoon
+    lastSentChapter: null,
+    lastSentView: null,
     
     userId: localStorage.getItem("tulkintakone_user_id") || 
             "user_" + Math.random().toString(36).substr(2, 9) + "_" + Date.now().toString(36),
 
-    targetUrl: "https://script.google.com/macros/s/AKfycbyrtFHU2E6QcyplYnOGOJWBzbBDERrNkXsbXgCSHXWUD7FtArslNMKUh8d_nvKI4Qs/exec",
+    targetUrl: "https://script.google.com/macros/s/AKfycbz2Z-6IL6CrlarLmbxFWbd14oH7-4Ff_DZMptw-uOx-kQaz3LHY7N7ZFUGochJ5LGFC/exec",
 
     init() {
         localStorage.setItem("tulkintakone_user_id", this.userId);
-        console.log(`📊 Tracker: Kognitiivinen analyysi aktivoitu. ID: ${this.userId}`);
+        console.log(`📊 Tracker V7.0: Suodattava analyysi aktivoitu. ID: ${this.userId}`);
 
-        // 1. BONGAUS: Lukutilan muutokset (Skrollaus & Kappaleet)
+        // 1. BONGAUS: Lukutilan muutokset
         window.EventBus?.on("readingStateChanged", (state) => {
             this.analyzeDwellTime(state);
         });
 
-        // 2. BONGAUS: Luvun vaihto ja tyypitys
+        // 2. BONGAUS: Luvun vaihto (Suodattava malli)
         document.addEventListener("chapterChange", (e) => {
             const duration = this.getDurationSinceLast();
             const chapterId = e.detail.chapterId;
             const view = e.detail.view || window.AppState?.ui?.view || "narrative";
             
-            // Tyypitetään luku ja välitetään asiantuntijuus-pyynnöt
+            // 🧠 ÄLYKÄS SUODATUS: Estetään tuplalokit ja nollakestot samassa näkymässä
+            if (chapterId === this.lastSentChapter && view === this.lastSentView && duration < 1) {
+                return; 
+            }
+
+            this.lastSentChapter = chapterId;
+            this.lastSentView = view;
+
             this.processChapterExpertise(chapterId);
 
             this.log("NAVIGATE", { 
@@ -58,18 +68,13 @@ const BehaviorTracker = {
 
     /**
      * 🤖 ASIANTUNTIJUUDEN REITYTYS
-     * Jakaa luvun parametrit moduuleille näkökulmakysymyksinä.
      */
     processChapterExpertise(chapterId) {
         const meta = window.TextEngine?.getChapterMeta(chapterId);
         if (!meta) return;
 
-        // Määritellään luvun painopisteet (esim. tyypitys datasta)
         const scores = meta.scores || { ethics: 0.5, economy: 0.5, complexity: 0.5 };
 
-        console.log(`🧠 Tracker: Reititetään asiantuntijuus luvulle ${chapterId}`, scores);
-
-        // Välitetään pyynnöt ModuleRegistryn kautta kategorioittain
         if (scores.ethics > 0.7) {
             window.ModuleRegistry?.dispatch({ category: 'ethics' }, 'onBongattu', { 
                 type: 'high_tension', 
@@ -84,15 +89,14 @@ const BehaviorTracker = {
 
     /**
      * ⏱️ VIIPYMÄANALYYSI (Dwell Time)
-     * Bongaa, jos lukija pysähtyy tärkeään kohtaan.
+     * Välittää herätteen moduuleille, kun lukija pysähtyy.
      */
     analyzeDwellTime(state) {
-        // Jos lukija on pysähtynyt (scrollEnergy on nolla)
         if (state.scrollEnergy === 0) {
             const now = Date.now();
             const dwell = now - this.lastLogTime;
 
-            // Jos viipymä ylittää 7 sekuntia tietyssä kappaleessa
+            // Kynnysarvo: 7 sekunnin staattinen tila
             if (dwell > 7000) {
                 window.ModuleRegistry?.dispatch(null, 'onDeepFocus', { 
                     paragraphIndex: state.paragraphIndex,
@@ -120,22 +124,29 @@ const BehaviorTracker = {
         const logs = JSON.parse(localStorage.getItem("tulkintakone_logs") || "[]");
         if (logs.length === 0 || this.targetUrl.includes("SINUN_GOOGLE")) return;
 
-        const report = {
-            userId: this.userId, 
+        const dataToSend = {
+            userId: this.userId,
             timestamp: new Date().toISOString(),
-            summary: this.getSessionSummary(),
-            fullLogs: logs 
+            fullLogs: logs
         };
+        
+        // Tyhjennetään heti estämään kilpajuoksu
+        localStorage.setItem("tulkintakone_logs", "[]");
 
         try {
             fetch(this.targetUrl, {
                 method: "POST",
                 mode: "no-cors", 
-                keepalive: true,
-                body: JSON.stringify(report)
+                headers: { "Content-Type": "text/plain" },
+                body: JSON.stringify(dataToSend),
+                keepalive: true
             });
-            if (logs.length > 50) localStorage.setItem("tulkintakone_logs", "[]");
-        } catch (e) { console.warn("❌ Tracker: Lähetysvirhe."); }
+            console.log(`🚀 Tracker: Lähetetty ${logs.length} tapahtumaa.`);
+        } catch (e) {
+            console.warn("❌ Tracker: Lähetys epäonnistui, palautetaan puskuriin.", e);
+            const currentLogs = JSON.parse(localStorage.getItem("tulkintakone_logs") || "[]");
+            localStorage.setItem("tulkintakone_logs", JSON.stringify([...logs, ...currentLogs]));
+        }
     },
 
     getDurationSinceLast() {
@@ -162,14 +173,6 @@ const BehaviorTracker = {
         const existing = JSON.parse(localStorage.getItem("tulkintakone_logs") || "[]");
         existing.push(entry);
         localStorage.setItem("tulkintakone_logs", JSON.stringify(existing.slice(-100)));
-    },
-
-    getSessionSummary() {
-        const interestProfile = JSON.parse(localStorage.getItem("tulkintakone_interest_profile") || "{}");
-        return {
-            totalTimeSeconds: Math.round((Date.now() - this.sessionStart) / 1000),
-            topInterests: interestProfile
-        };
     }
 };
 
