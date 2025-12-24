@@ -1,13 +1,14 @@
 /* ============================================================
-   module-registry.js – KOGNITIIVINEN REITITIN (V3.0)
+   module-registry.js – KOGNITIIVINEN REITITIN (V3.2)
    Vastuu:
    - Moduulien elinkaari ja dynaaminen pinoaminen
    - Älykäs viestien välitys (Dispatch)
-   - Behavior-Trackerin ja moduulien välinen orkestraatio
+   - KORJAUS: Estää turhat tyhjennykset (välähdys-korjaus)
 ============================================================ */
 
 (function () {
   const modules = new Map();
+  let currentView = null; // Seurataan aktiivista näkymää
 
   const VIEW_TARGETS = {
     narrative: null,
@@ -27,7 +28,6 @@
       active: false,
       host: null,
       el: null,
-      // Oletuskategoria, jos ei määritelty
       category: definition.category || "general" 
     };
 
@@ -35,21 +35,11 @@
     if (document.readyState !== "loading") initModule(mod);
   }
 
-  /* ===================== 2. ÄLYKÄS DISPATCH (UUSI) ===================== */
+  /* ===================== 2. ÄLYKÄS DISPATCH ===================== */
 
-  /**
-   * 🤖 KESKITETTY VIESTINVÄLITYS
-   * Mahdollistaa täsmäviestit kymmenille moduuleille ilman EventBus-ruuhkaa.
-   * @param {Object} criteria - Esim. { category: 'ethics' } tai { id: 'anatomy' }
-   * @param {String} action - Metodi, jota kutsutaan (esim. 'onBongattu')
-   * @param {Object} payload - Data (esim. ankkurin tiedot)
-   */
   function dispatch(criteria, action, payload) {
     modules.forEach(mod => {
-      // 1. Tarkistetaan täsmääkö kriteeri (id, kategoria jne.)
       const isTarget = !criteria || Object.keys(criteria).every(key => mod[key] === criteria[key]);
-      
-      // 2. Välitetään viesti vain aktiivisille ja toiminnallisille moduuleille
       if (isTarget && mod.active && typeof mod[action] === 'function') {
         try {
           mod[action](payload);
@@ -60,43 +50,58 @@
     });
   }
 
-  /* ===================== 3. SIJOITTELU JA PINOTTAMINEN ===================== */
+  /* ===================== 3. SIJOITTELU (KORJATTU VÄLÄHDYS) ===================== */
 
   function resolvePlacement(view) {
     const targetId = VIEW_TARGETS[view];
     const target = targetId ? document.getElementById(targetId) : null;
 
-    if (target) target.innerHTML = "";
+    // 🧠 KORJAUS: Tyhjennetään paneeli vain, jos näkymä todella VAIHTUU.
+    // Jos ollaan jo 'analysis'-näkymässä, ei tuhota DOMia uudestaan.
+    if (currentView !== view) {
+        if (target) target.innerHTML = "";
+        currentView = view;
+    }
+
+    if (!target) {
+      modules.forEach(mod => { if (mod.active) deactivate(mod); });
+      return;
+    }
+
+    // Luodaan lista aktivoitavista moduuleista porrastusta varten
+    const toActivate = [];
 
     modules.forEach(mod => {
-      // Moduuli päättää itse isAvailable-metodillaan näkyvyydestään
+      // 1. Tarkistetaan saatavuus
       if (typeof mod.isAvailable === "function" && !mod.isAvailable(view)) {
         if (mod.active) deactivate(mod);
         return;
       }
 
-      if (!target) {
-        if (mod.active) deactivate(mod);
-        return;
-      }
-
+      // 2. Alustetaan jos tarpeen
       if (!mod.initialized) initModule(mod);
 
-      // Renderöinti kerran
+      // 3. Renderöidään elementti kerran
       if (!mod.el && typeof mod.render === "function") {
         mod.el = mod.render();
       }
 
       if (!mod.el) return;
 
-      // Pinotaan moduulit isäntään
+      // 4. Kiinnitetään isäntään jos se on muuttunut
       if (mod.host !== target) {
-        if (mod.active) deactivate(mod);
         target.appendChild(mod.el);
         mod.host = target;
       }
 
-      activate(mod, { view });
+      toActivate.push(mod);
+    });
+
+    // 5. Aktivoidaan moduulit porrastetusti (staggered animation)
+    toActivate.forEach((mod, index) => {
+      setTimeout(() => {
+        activate(mod, { view });
+      }, index * 50); // 50ms viive per moduuli luo orgaanisen nousun
     });
   }
 
@@ -123,10 +128,11 @@
     try {
       if (typeof mod.deactivate === "function") mod.deactivate();
       mod.active = false;
+      mod.host = null; // Resetoidaan isäntä deaktivoitaessa
     } catch (e) { console.error(`❌ ModuleRegistry: Deactivate virhe (${mod.id})`, e); }
   }
 
-  /* ===================== 5. INTERVENTIO-REITITYS ===================== */
+  /* ===================== 5. INTERVENTIOT ===================== */
 
   function requestIntervention(moduleId, type, payload) {
     const mod = modules.get(moduleId);
@@ -151,7 +157,7 @@
     register,
     resolvePlacement,
     requestIntervention,
-    dispatch, // 👈 Uusi älykäs viestinvälityskonunkti
+    dispatch,
     get: id => modules.get(id),
     list: () => Array.from(modules.values())
   };

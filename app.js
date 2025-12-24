@@ -1,10 +1,9 @@
 /* ============================================================
-   app.js – SYNKRONOITU KOGNITIIVINEN OHJAIN (V8.1)
+   app.js – SYNKRONOITU KOGNITIIVINEN OHJAIN (V8.2)
    Vastuu:
-   - Keskitetty EventBus ja AppState
-   - Lukutilan orkestrointi
-   - Näkymien ja paneelien deterministinen hallinta
-   - TOC-tilan yksiselitteinen ohjaus (ei päällekkäisyyksiä)
+   - Keskitetty EventBus ja AppState (Sisältää update-metodit)
+   - Lukutilan orkestrointi ja TOC-tila
+   - KORJAUS: Lisätty updateReflection-metodi agentteja varten
 ============================================================ */
 
 (function () {
@@ -27,13 +26,11 @@
     data: {
       chapters: [],
       ready: false,
-
       session: {
         startedAt: Date.now(),
         chaptersVisited: [],
         keywordHits: {}
       },
-
       reflection: {
         readerValues: { economy: 50, ethics: 50 },
         lastInsight: null,
@@ -44,17 +41,35 @@
           intensityScore: 0
         }
       },
-
       reading: {
         chapterId: null,
         paragraphIndex: 0,
         scrollEnergy: 0
       }
     },
-
     ui: {
       view: "narrative",
       activeChapterId: null
+    },
+
+    /* 🧠 AGENTTI-METODIT: Mahdollistavat moduulien välisen tilanpäivityksen */
+    
+    updateReflection(update) {
+      if (!update) return;
+      
+      // Päivitetään arvot (esim. liukusäätimet)
+      if (update.readerValues) {
+        this.data.reflection.readerValues = {
+          ...this.data.reflection.readerValues,
+          ...update.readerValues
+        };
+      }
+      
+      // Päivitetään tila (esim. 'tension' tai 'stable')
+      if (update.systemMode) this.data.reflection.systemMode = update.systemMode;
+      
+      // Ilmoitetaan muutos muille (esim. Starfield kuuntelee tätä)
+      window.EventBus.emit("state:reflectionUpdated", this.data.reflection);
     }
   };
 
@@ -89,8 +104,9 @@
     }
   });
 
-/* app.js – Kohta 4: NÄKYMÄN VAIHTO (VAKAUTETTU) */
-EventBus.on("ui:viewChange", ({ view }) => {
+  /* ===================== 4. NÄKYMÄN VAIHTO (VAKAUTETTU) ===================== */
+
+  EventBus.on("ui:viewChange", ({ view }) => {
     if (!view || view === AppState.ui.view) return;
     
     console.log("🔄 Vaihdetaan näkymää:", view);
@@ -106,37 +122,43 @@ EventBus.on("ui:viewChange", ({ view }) => {
         moduleColumn.style.display = (view === "narrative") ? "none" : "block";
     }
 
-    /* 3. Varmistetaan data ennen moduulien sijoittelua */
-    if (window.AppState?.data?.ready) {
-        window.ModuleRegistry?.resolvePlacement(view);
-        window.TextEngine?.setView(view);
-    } else {
-        console.warn("⏳ App: Data ei valmiina, odotetaan textEngineReady-tapahtumaa...");
+    /* 3. Moduulien sijoittelu Registryn kautta */
+    if (window.ModuleRegistry) {
+        window.ModuleRegistry.resolvePlacement(view);
+    }
+    
+    if (window.TextEngine?.setView) {
+        window.TextEngine.setView(view);
     }
 
     EventBus.emit("app:viewUpdated", { view, chapterId: AppState.ui.activeChapterId });
-});
+  });
+
   /* ===================== 5. BOOTSTRAP ===================== */
 
   async function bootstrap() {
     console.log("🚀 App: Kognitiivinen tila käynnistyy");
 
     if (window.TextEngine) {
-      await window.TextEngine.init();
-      AppState.data.chapters = window.TextEngine.getAllChapters() || [];
-      AppState.ui.activeChapterId = window.TextEngine.getActiveChapterId();
-      AppState.data.reading.chapterId = AppState.ui.activeChapterId;
+      try {
+        await window.TextEngine.init();
+        AppState.data.chapters = window.TextEngine.getAllChapters() || [];
+        AppState.ui.activeChapterId = window.TextEngine.getActiveChapterId();
+        AppState.data.reading.chapterId = AppState.ui.activeChapterId;
+      } catch (e) {
+        console.error("❌ App: TextEngine init epäonnistui", e);
+      }
     }
 
+    // Herätetään seuranta
     window.BehaviorTracker?.init();
 
     bindUIEvents();
     initTOCLogic();
 
-    /* Alkunäkymä */
-    EventBus.emit("ui:viewChange", { view: AppState.ui.view });
-
+    /* Alkunäkymä - pakotetaan resolvePlacement ekalla kerralla */
     AppState.data.ready = true;
+    window.ModuleRegistry?.resolvePlacement(AppState.ui.view);
   }
 
   /* ===================== 6. UI-SIDONNAT ===================== */
@@ -155,7 +177,7 @@ EventBus.on("ui:viewChange", ({ view }) => {
     });
   }
 
-  /* ===================== 7. TOC-LOGIIKKA (AINOA PAIKKA) ===================== */
+  /* ===================== 7. TOC-LOGIIKKA ===================== */
 
   function initTOCLogic() {
     const body = document.body;
