@@ -1,112 +1,112 @@
 /* ============================================================
-   starfield-module.js – DYNAAMINEN AGENTTI-VERSIO
-   Vastuu: Itsenäinen visualisointi ja dynaaminen sijoittuminen.
-   ============================================================ */
+   starfield-module.js – KOGNITIIVINEN AGENTTI (V6.3)
+   Korjaus: Lisätty null-tarkistukset canvakselle.
+============================================================ */
 
-export const StarfieldModule = {
+const StarfieldModule = {
     id: "starfield",
-    title: "Tähtikenttä",
+    title: "Kognitiivinen kenttä",
     host: null,
     canvas: null,
     ctx: null,
-    stars: [],
+    concepts: [],
     active: false,
-    intensity: 1,
-    interventionActive: false,
+    
+    scrollEnergy: 0,
+    tensionLevel: 0,
 
-    // 🧠 1. ILMOITTAA PREFERENSSIN (Missä moduuli haluaa näkyä)
-    getPreferredPanel(viewMode) {
-        // Jos jännite on äärimmäisen korkea, Starfield haluaa dominoida narratiivia
-        const score = window.AppState?.data?.reflection?.history?.intensityScore || 0;
-        if (score > 120 && viewMode === "narrative") return "narrativePanel";
-        
-        // Oletuspaikka analyysinäkymässä
-        if (viewMode === "analysis") return "analysisPanel";
-        
-        return null; // Muissa tapauksissa moduuli pysyy piilossa
-    },
+    isAvailable(view) { return true; }, // Aina valmiudessa
 
-    // 🧠 2. MOUNT-METODI (Injektoidaan annettuun paneeliin)
-    mount(targetEl) {
-        if (!targetEl || this.host === targetEl) return;
+    render() {
+        if (this.canvas) return this.canvas;
         
-        console.log(`⭐ Starfield: Kiinnitetään isäntään: ${targetEl.id}`);
-        this.host = targetEl;
-        
-        // Luodaan canvas dynaamisesti isännän sisälle
-        this.host.innerHTML = ''; // Tyhjennetään isäntä
         this.canvas = document.createElement("canvas");
-        this.canvas.style.width = "100%";
-        this.canvas.style.height = "100%";
-        this.canvas.style.display = "block";
-        this.host.appendChild(this.canvas);
+        this.canvas.id = "starfield-canvas";
+        // Varmistetaan, että se on aina pohjalla
+        this.canvas.style.cssText = "position:fixed; inset:0; z-index:0; pointer-events:none; opacity:0.6;";
         
         this.ctx = this.canvas.getContext("2d");
-        this.resize();
+        this.resize(); // Asetetaan koko heti kun canvas on luotu
+        return this.canvas;
     },
 
     init() {
-        document.addEventListener('contextUpdate', (e) => {
-            if (this.active) this.processIntelligence(e.detail);
+        // 1. BONGAUS: Skrollaus
+        window.EventBus?.on("readingStateChanged", (state) => {
+            this.scrollEnergy = state.scrollEnergy || 0;
+            if (this.scrollEnergy > 0.8) this.triggerTension(0.1);
         });
-        
-        window.addEventListener('resize', () => this.resize());
-        console.log("⭐ Starfield: Agentti alustettu.");
+
+        // 2. BONGAUS: Luvun vaihto
+        window.EventBus?.on("chapter:change", ({ chapterId }) => {
+            const ch = window.TextEngine?.getChapterMeta(chapterId);
+            if (ch) this.scrambleField(ch);
+        });
+
+        // 3. Resizen turvallinen kytkentä
+        window.addEventListener("resize", () => {
+            if (this.canvas) this.resize();
+        });
+
+        console.log("🌌 Starfield-agentti: Tarkkailu aloitettu.");
     },
 
-    activate() {
-        if (!this.canvas) return;
-        this.active = true;
-        if (this.stars.length === 0) this.createStars();
-        this.animate();
+    /* ===================== ÄLYKÄS LOGIIKKA ===================== */
+
+    scrambleField(chapterData) {
+        const tags = chapterData.tags || ["rakenne", "eetos", "valta"];
+        this.concepts = tags.map((tag, i) => ({
+            label: tag,
+            x: Math.random(),
+            y: Math.random(),
+            targetX: 0.15 + (i / tags.length) * 0.7,
+            targetY: 0.3 + Math.random() * 0.4,
+            size: 3 + Math.random() * 4,
+            opacity: 0
+        }));
+        this.tensionLevel = 0.2;
     },
 
-    deactivate() {
-        this.active = false;
-        this.handleIntervention(false);
-        if (this.host) this.host.innerHTML = ''; // Siivotaan jäljet
-        this.canvas = null;
-        this.host = null;
-    },
-
-    resize() {
-        if (!this.canvas) return;
-        this.canvas.width = this.host.clientWidth;
-        this.canvas.height = this.host.clientHeight;
-        this.createStars();
-    },
-
-    processIntelligence(state) {
-        const score = state.history?.intensityScore || 0;
-        this.intensity = 1 + (score / 25);
-        
-        if (score > 90 && !this.interventionActive) {
-            this.handleIntervention(true);
-        } else if (score < 70 && this.interventionActive) {
-            this.handleIntervention(false);
+    triggerTension(amount) {
+        this.tensionLevel = Math.min(1.5, this.tensionLevel + amount);
+        if (this.tensionLevel > 1.2) {
+            window.EventBus?.emit("shakeStarfield", { intensity: this.tensionLevel });
         }
     },
 
-    handleIntervention(start) {
-        this.interventionActive = start;
-        window.ModuleRegistry?.requestIntervention(this.id, 'VISUAL_EFFECT', {
-            target: 'body',
-            filter: start ? 'blur(1.2px) saturate(0.8)' : 'none',
-            transition: 'filter 2s ease'
-        });
-    },
+    /* ===================== PIIRTO-LOOP ===================== */
 
-    createStars() {
-        if (!this.canvas) return;
-        const count = 200;
+    draw() {
+        if (!this.ctx || !this.canvas) return;
+        
         const w = this.canvas.width;
         const h = this.canvas.height;
-        this.stars = Array.from({ length: count }, () => ({
-            x: Math.random() * w,
-            y: Math.random() * h,
-            z: Math.random() * w,
-            o: Math.random()
-        }));
+        this.ctx.clearRect(0, 0, w, h);
+
+        const globalTension = this.tensionLevel + (this.scrollEnergy * 0.5);
+
+        this.concepts.forEach((c) => {
+            const jitter = globalTension * 5;
+            c.x += (c.targetX - c.x) * 0.02 + (Math.random() - 0.5) * jitter * 0.001;
+            c.y += (c.targetY - c.y) * 0.02 + (Math.random() - 0.5) * jitter * 0.001;
+            c.opacity += (1 - c.opacity) * 0.01;
+
+            const px = c.x * w;
+            const py = c.y * h;
+            
+            this.ctx.beginPath();
+            this.ctx.arc(px, py, c.size + globalTension * 3, 0, Math.PI * 2);
+            this.ctx.fillStyle = globalTension > 1 ? `rgba(255,100,100,${c.opacity})` : `rgba(208,180,140,${c.opacity})`;
+            this.ctx.shadowBlur = 10 + globalTension * 20;
+            this.ctx.shadowColor = globalTension > 1 ? "#ff0000" : "#d0b48c";
+            this.ctx.fill();
+
+            this.ctx.font = `${10 + globalTension * 2}px Inter, sans-serif`;
+            this.ctx.fillStyle = `rgba(255,255,255,${0.4 * c.opacity})`;
+            this.ctx.fillText(c.label.toUpperCase(), px + 15, py + 5);
+        });
+
+        this.tensionLevel *= 0.99;
     },
 
     animate() {
@@ -115,24 +115,23 @@ export const StarfieldModule = {
         requestAnimationFrame(() => this.animate());
     },
 
-    draw() {
-        if (!this.ctx || !this.canvas) return;
-        const { width, height } = this.canvas;
-        this.ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
-        this.ctx.fillRect(0, 0, width, height);
+    resize() {
+        // TURVATARKISTUS: Ei tehdä mitään, jos render() ei ole vielä luonut canvasta
+        if (!this.canvas) return;
+        
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+    },
 
-        this.stars.forEach(s => {
-            s.z -= this.intensity * 2;
-            if (s.z <= 0) s.z = width;
-            const sx = (s.x - width / 2) * (width / s.z) + width / 2;
-            const sy = (s.y - height / 2) * (width / s.z) + height / 2;
-            const size = (1 - s.z / width) * 3;
-            this.ctx.fillStyle = `rgba(255, 255, 255, ${s.o})`;
-            this.ctx.beginPath();
-            this.ctx.arc(sx, sy, size, 0, Math.PI * 2);
-            this.ctx.fill();
-        });
-    }
+    activate() { 
+        this.active = true; 
+        // Varmistetaan että canvas on olemassa ennen animointia
+        if (!this.canvas) this.render();
+        this.animate(); 
+    },
+    
+    deactivate() { this.active = false; }
 };
 
+window.StarfieldModule = StarfieldModule;
 if (window.ModuleRegistry) window.ModuleRegistry.register(StarfieldModule);

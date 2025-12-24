@@ -1,103 +1,131 @@
 /* ============================================================
-   challenge-module.js – DIALOGI-VERSIO (P2P)
+   challenge-module.js – DIALOGI-VERSIO (P2P) V6.1
    Vastuu: Aktivoi haasteet ja reagoi muiden moduulien tilaan.
    ============================================================ */
 
-export const ChallengeModule = {
+const ChallengeModule = {
     id: "challenge",
     title: "Lukuhaaste",
-    container: null,
     active: false,
     currentIntensity: 0,
+    el: null,
+
+    /* ===================== 🧠 SIJOITTELULOGIIKKA ===================== */
+
+    isAvailable(viewMode) {
+        // Haasteet näkyvät reflektiossa ja analyysissä
+        return viewMode === "reflection" || viewMode === "analysis";
+    },
+
+    /**
+     * ModuleRegistry V2.3 vaatii render-metodin elementin palauttamiseksi.
+     */
+    render() {
+        if (this.el) return this.el;
+
+        this.el = document.createElement("div");
+        this.el.id = "challenge-module-root";
+        this.el.className = "module-card challenge-container";
+        this.el.style.cssText = `
+            transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+            border-left: 3px solid var(--accent);
+            padding: 20px;
+        `;
+
+        return this.el;
+    },
 
     /* ===================== ELINKAARI ===================== */
 
     init() {
-        this.container = document.getElementById("challenge-target");
-        if (!this.container) {
-            const rPanel = document.getElementById("reflectionPanel");
-            if (rPanel) {
-                this.container = document.createElement("div");
-                this.container.id = "challenge-target";
-                rPanel.appendChild(this.container);
-            }
-        }
-
-        // 🧠 MODUULIEN VÄLINEN DIALOGI (Peer-to-Peer)
-        // Kuunnellaan Starfieldin ilmoitusta korkeasta jännityksestä
-        document.addEventListener('starfieldIntervention', (e) => {
+        // 🧠 MODUULIEN VÄLINEN DIALOGI
+        // Kuunnellaan EventBusin kautta tulevia jännitesignaaleja
+        window.EventBus?.on("shakeStarfield", (detail) => {
             if (!this.active) return;
-            console.log("💬 ChallengeModule: Vastaanotettu signaali Starfieldiltä.");
-            this.currentIntensity = e.detail.intensityScore;
-            this.render(true); // Pakotetaan renderöinti intensiivisessä tilassa
+            console.log("💬 Challenge: Korkea intensiteetti havaittu.");
+            this.currentIntensity = detail.intensity || 1.0;
+            this.updateUI(true); 
         });
+
+        // Kuunnellaan luvun vaihtumista
+        window.EventBus?.on("chapter:change", ({ chapterId }) => {
+            if (this.active) this.updateUI(false);
+        });
+
+        console.log("💬 Challenge: Agentti valmiudessa.");
     },
 
-    activate(ctx) {
+    activate() {
         this.active = true;
-        if (this.container) this.container.style.display = "block";
-
-        // Haetaan alkutilanne istuntomuistista
-        const session = window.AppState?.data?.session;
-        const economyHits = session?.keywordHits?.['kustannus'] || 0;
-        const ethicsHits = session?.keywordHits?.['sielu'] || session?.keywordHits?.['ihminen'] || 0;
-
-        this.render(false, economyHits, ethicsHits);
+        this.updateUI();
     },
 
     deactivate() {
         this.active = false;
         this.currentIntensity = 0;
-        if (this.container) {
-            this.container.style.display = "none";
-            this.container.innerHTML = "";
-        }
     },
 
-    /* ===================== RENDERÖINTI ===================== */
+    /* ===================== VISUAALINEN LOGIIKKA ===================== */
 
-    render(isHighIntensity = false, economyHits = 0, ethicsHits = 0) {
-        if (!this.active || !this.container) return;
+    updateUI(isHighIntensity = false) {
+        if (!this.el || !this.active) return;
 
         const chId = window.TextEngine?.getActiveChapterId();
         const ch = window.TextEngine?.getChapterMeta(chId);
-        const challengeData = ch?.reflection?.challenge;
+        const challengeData = ch?.reflection?.challenge || ch?.challenge;
 
         if (!challengeData) {
-            this.container.innerHTML = "";
+            this.el.style.display = "none";
             return;
         }
 
-        // 🤖 DIALOGI-LOGIIKKA: Mukautetaan teksti Starfieldin tilan mukaan
-        const title = isHighIntensity ? "⚠️ Kriittinen havainto" : (challengeData.title || "Lukuhaaste");
-        const cardClass = isHighIntensity ? "challenge-card intensity-alert" : "challenge-card";
+        this.el.style.display = "block";
 
-        // Muistijälki (jos ei olla korkeassa intensiteetissä)
+        // Haetaan tila globaalista AppStatesta
+        const session = window.AppState?.data?.session;
+        const economyHits = session?.keywordHits?.['kustannus'] || 0;
+        const ethicsHits = session?.keywordHits?.['sielu'] || 0;
+
+        const title = isHighIntensity ? "⚠️ Kriittinen havainto" : (this.title);
+        const cardStyle = isHighIntensity ? "border-color: #ff4d4d; background: rgba(255, 77, 77, 0.05);" : "";
+
+        // Muistijälki
         let memoryNote = "";
         if (!isHighIntensity) {
-            if (economyHits > 3) memoryNote = `<div class="memory-note">Talouspainotus havaittu aiemmissa luvuissa...</div>`;
-            else if (ethicsHits > 3) memoryNote = `<div class="memory-note">Eettinen polkusi vahvistuu...</div>`;
+            if (economyHits > 3) memoryNote = `<div style="font-size:10px; color:var(--accent); margin-bottom:10px;">Talouspainotus havaittu aiemmin...</div>`;
+            else if (ethicsHits > 3) memoryNote = `<div style="font-size:10px; color:var(--accent); margin-bottom:10px;">Eettinen polkusi vahvistuu...</div>`;
         }
 
-        this.container.innerHTML = `
-            <div class="${cardClass}">
-                <div class="challenge-badge">${isHighIntensity ? 'JÄRJESTELMÄN JÄNNITE' : 'POHDINTA'}</div>
+        this.el.style.cssText += cardStyle;
+        this.el.innerHTML = `
+            <div class="challenge-content">
+                <div style="font-size: 9px; letter-spacing: 1px; color: var(--accent); margin-bottom: 12px; text-transform: uppercase;">
+                    ${isHighIntensity ? 'Järjestelmän jännite' : 'Pohdinta'}
+                </div>
                 ${memoryNote}
-                <h4>${title}</h4>
-                <p>${challengeData.question || "Pysähdy hetkeksi ja mieti tätä lukua."}</p>
+                <h4 style="margin-bottom: 15px; color: var(--accent-gold);">${title}</h4>
+                <p style="font-size: 14px; line-height: 1.5; margin-bottom: 20px;">
+                    ${challengeData.question || "Miten tämä luku resonoi arvojesi kanssa?"}
+                </p>
                 
                 ${isHighIntensity ? `
-                    <div class="intensity-context">
-                        Visualisointi kiihtyi kognitiivisen kuorman vuoksi. 
-                        Tämä kysymys on nyt ratkaiseva.
+                    <div style="font-size: 12px; font-style: italic; margin-bottom: 20px; color: #ff9999;">
+                        Kognitiivinen kuorma on kasvanut. Tämä oivallus on nyt ratkaiseva.
                     </div>
                 ` : ''}
 
-                <div class="challenge-action">
-                    <button class="insight-btn" data-chapter="${chId}">
-                        ${isHighIntensity ? 'TALLENNA KRIITTINEN OIVALLUS' : 'Kirjaa oivallus'}
-                    </button>
-                </div>
+                <button class="insight-btn" style="
+                    width: 100%;
+                    padding: 12px;
+                    background: var(--accent);
+                    color: #000;
+                    border: none;
+                    border-radius: 4px;
+                    font-weight: bold;
+                    cursor: pointer;
+                ">
+                    ${isHighIntensity ? 'TALLENNA KRIITTINEN OIVALLUS' : 'Kirjaa oivallus'}
+                </button>
             </div>
         `;
 
@@ -105,7 +133,7 @@ export const ChallengeModule = {
     },
 
     setupButton(chId) {
-        const btn = this.container.querySelector(".insight-btn");
+        const btn = this.el.querySelector(".insight-btn");
         if (btn) {
             btn.onclick = () => {
                 window.EventBus?.emit("reflection:insightSaved", {
@@ -113,13 +141,18 @@ export const ChallengeModule = {
                     intensityLevel: this.currentIntensity,
                     type: "challenge_completed"
                 });
-                btn.textContent = "✓ Tallennettu";
+                btn.textContent = "✓ Oivallus tallennettu";
+                btn.style.background = "rgba(255,255,255,0.1)";
+                btn.style.color = "var(--accent)";
                 btn.disabled = true;
             };
         }
     }
 };
 
+/* ===================== REKISTERÖINTI ===================== */
+
+window.ChallengeModule = ChallengeModule;
 if (window.ModuleRegistry) {
     window.ModuleRegistry.register(ChallengeModule);
 }

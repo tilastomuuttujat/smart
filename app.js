@@ -1,160 +1,201 @@
 /* ============================================================
-   app.js – KORJATTU JA SYNKRONOITU (V5.1)
-   Vastuu: 
-   - Tilanhallinta ja EventBus-viestintä
-   - Näkymänvaihdon välitys TextEnginelle
-   - Analytiikka-agentin hallinta
+   app.js – SYNKRONOITU KOGNITIIVINEN OHJAIN (V8.1)
+   Vastuu:
+   - Keskitetty EventBus ja AppState
+   - Lukutilan orkestrointi
+   - Näkymien ja paneelien deterministinen hallinta
+   - TOC-tilan yksiselitteinen ohjaus (ei päällekkäisyyksiä)
 ============================================================ */
 
 (function () {
 
   /* ===================== 0. EVENTBUS ===================== */
-  window.EventBus = {
-    emit(type, detail = {}) {
-      document.dispatchEvent(new CustomEvent(type, { detail }));
-    },
-    on(type, handler) {
-      document.addEventListener(type, e => handler(e.detail));
-    }
-  };
+  if (!window.EventBus) {
+    window.EventBus = {
+      emit(type, detail = {}) {
+        document.dispatchEvent(new CustomEvent(type, { detail }));
+      },
+      on(type, handler) {
+        document.addEventListener(type, e => handler(e.detail));
+      }
+    };
+  }
 
   /* ===================== 1. YHTEINEN TILA ===================== */
+
   window.AppState = {
     data: {
       chapters: [],
       ready: false,
+
       session: {
         startedAt: Date.now(),
         chaptersVisited: [],
         keywordHits: {}
       },
+
       reflection: {
         readerValues: { economy: 50, ethics: 50 },
         lastInsight: null,
         systemMode: "stable",
-        history: { visitedKeywords: {}, chapterFocus: [], intensityScore: 0 }
+        history: {
+          visitedKeywords: {},
+          chapterFocus: [],
+          intensityScore: 0
+        }
+      },
+
+      reading: {
+        chapterId: null,
+        paragraphIndex: 0,
+        scrollEnergy: 0
       }
     },
+
     ui: {
       view: "narrative",
-      activeChapterId: null,
-      interactive: true,
-      readingModeKnown: true
+      activeChapterId: null
     }
   };
 
-  /* ===================== 2. TILAN PALAUTUS ===================== */
-  (function restoreState() {
-    try {
-      const savedMemory = localStorage.getItem("readerMemory");
-      if (savedMemory) AppState.data.session = { ...AppState.data.session, ...JSON.parse(savedMemory) };
-    } catch (e) {
-      console.warn("AppState: Palautus epäonnistui.");
+  /* ===================== 2. LUKUTILAN SYNKRONOINTI ===================== */
+
+  EventBus.on("readingStateChanged", (state) => {
+    if (!state) return;
+
+    AppState.data.reading = {
+      chapterId: state.chapterId ?? AppState.data.reading.chapterId,
+      paragraphIndex: state.paragraphIndex ?? 0,
+      scrollEnergy: state.scrollEnergy ?? 0
+    };
+
+    AppState.data.reflection.history.intensityScore = Math.min(
+      100,
+      AppState.data.reflection.history.intensityScore + state.scrollEnergy * 2
+    );
+  });
+
+  /* ===================== 3. LUVUN VAIHTO ===================== */
+
+  document.addEventListener("chapterChange", (e) => {
+    const chapterId = e.detail?.chapterId;
+    if (!chapterId) return;
+
+    AppState.ui.activeChapterId = chapterId;
+    AppState.data.reading.chapterId = chapterId;
+
+    if (!AppState.data.session.chaptersVisited.includes(chapterId)) {
+      AppState.data.session.chaptersVisited.push(chapterId);
     }
-  })();
+  });
 
-  /* ===================== 3. REFLEKTIOMIDDLEWARE ===================== */
-  AppState.updateReflection = function (payload = {}) {
-    const r = this.data.reflection;
-
-    if (payload.readerValues) r.readerValues = { ...r.readerValues, ...payload.readerValues };
-    if (payload.lastInsight) {
-        r.lastInsight = payload.lastInsight;
-        r.history.visitedKeywords[payload.lastInsight] = (r.history.visitedKeywords[payload.lastInsight] || 0) + 1;
-        AppState.data.session.keywordHits[payload.lastInsight] = (AppState.data.session.keywordHits[payload.lastInsight] || 0) + 1;
-    }
-
-    const { economy, ethics } = r.readerValues;
-    r.systemMode = Math.abs(economy - ethics) > 40 ? "tension" : "stable";
-
-    window.EventBus.emit("reflection:update", { reflection: r, chapterId: this.ui.activeChapterId });
-    window.EventBus.emit("reflection:insightSaved", { 
-        chapterId: this.ui.activeChapterId,
-        values: r.readerValues
-    });
-  };
-
-  /* ===================== 4. NÄKYMÄN JA LUVUN VAIHTO ===================== */
-
-  // Tämä kuuntelee painikkeilta tulevaa viestiä
-  window.EventBus.on("ui:viewChange", ({ view }) => {
-    if (!view) return;
+/* app.js – Kohta 4: NÄKYMÄN VAIHTO (VAKAUTETTU) */
+EventBus.on("ui:viewChange", ({ view }) => {
+    if (!view || view === AppState.ui.view) return;
     
-    console.log("App: Näkymän vaihto ->", view);
+    console.log("🔄 Vaihdetaan näkymää:", view);
     AppState.ui.view = view;
 
-    // Vaihdetaan body-luokka CSS-ohjausta varten
-    document.body.className = document.body.className.replace(/view-\w+/, "");
+    /* 1. Body-luokat */
+    document.body.classList.remove("view-narrative", "view-analysis", "view-reflection");
     document.body.classList.add(`view-${view}`);
 
-    // 🔑 KORJAUS: Kutsutaan TextEnginen oikeaa metodia (setView)
-    if (window.TextEngine && typeof window.TextEngine.setView === "function") {
-        window.TextEngine.setView(view); 
+    /* 2. Moduulipalkin hallinta */
+    const moduleColumn = document.getElementById("moduleColumn");
+    if (moduleColumn) {
+        moduleColumn.style.display = (view === "narrative") ? "none" : "block";
     }
 
-    if (window.ModuleRegistry) window.ModuleRegistry.resolvePlacement(view);
-    window.EventBus.emit("app:viewUpdated", { view, chapterId: AppState.ui.activeChapterId });
-  });
+    /* 3. Varmistetaan data ennen moduulien sijoittelua */
+    if (window.AppState?.data?.ready) {
+        window.ModuleRegistry?.resolvePlacement(view);
+        window.TextEngine?.setView(view);
+    } else {
+        console.warn("⏳ App: Data ei valmiina, odotetaan textEngineReady-tapahtumaa...");
+    }
 
-  /* ===================== 5. BOOTSTRAP JA KÄYNNISTYS ===================== */
+    EventBus.emit("app:viewUpdated", { view, chapterId: AppState.ui.activeChapterId });
+});
+  /* ===================== 5. BOOTSTRAP ===================== */
+
   async function bootstrap() {
-    console.log("🚀 App: Käynnistetään bootstrap...");
-    
-    // Pakotetaan CSS-luokka
-    document.body.classList.add("interactive-enabled");
-    
-    // Alustetaan TextEngine
+    console.log("🚀 App: Kognitiivinen tila käynnistyy");
+
     if (window.TextEngine) {
-        await window.TextEngine.init();
-        const chapters = window.TextEngine.getAllChapters();
-        AppState.data.chapters = chapters || [];
-        AppState.data.ready = true;
-        AppState.ui.activeChapterId = window.TextEngine.getActiveChapterId();
+      await window.TextEngine.init();
+      AppState.data.chapters = window.TextEngine.getAllChapters() || [];
+      AppState.ui.activeChapterId = window.TextEngine.getActiveChapterId();
+      AppState.data.reading.chapterId = AppState.ui.activeChapterId;
     }
 
-    // Analytiikka-agentin käynnistys
-    if (window.BehaviorTracker) {
-        window.BehaviorTracker.init();
-    }
+    window.BehaviorTracker?.init();
 
-    // Kytketään HTML-painikkeet
     bindUIEvents();
+    initTOCLogic();
 
-    window.EventBus.emit("app:ready", {
-      view: AppState.ui.view,
-      chapterId: AppState.ui.activeChapterId,
-      interactive: true
-    });
+    /* Alkunäkymä */
+    EventBus.emit("ui:viewChange", { view: AppState.ui.view });
+
+    AppState.data.ready = true;
   }
 
-  /* ===================== 6. UI-KYTKENTÄ ===================== */
+  /* ===================== 6. UI-SIDONNAT ===================== */
+
   function bindUIEvents() {
-    // Kuunnellaan klikkauksia koko dokumentin tasolla (delegointi)
     document.addEventListener("click", (e) => {
-        const btn = e.target.closest("[data-view]");
-        if (btn) {
-            const targetView = btn.getAttribute("data-view");
-            window.EventBus.emit("ui:viewChange", { view: targetView });
-            
-            // Päivitetään painikkeiden aktiivinen tila
-            document.querySelectorAll("[data-view]").forEach(b => b.classList.remove("active"));
-            btn.classList.add("active");
-        }
+      const btn = e.target.closest("[data-view]");
+      if (!btn) return;
+
+      EventBus.emit("ui:viewChange", { view: btn.dataset.view });
+
+      document
+        .querySelectorAll("[data-view]")
+        .forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
     });
   }
 
-  /* ===================== 7. LOPETUS JA DATAN LÄHETYS ===================== */
+  /* ===================== 7. TOC-LOGIIKKA (AINOA PAIKKA) ===================== */
+
+  function initTOCLogic() {
+    const body = document.body;
+    const edgeBtn = document.getElementById("tocEdgeToggle");
+    const textArea = document.getElementById("textArea");
+
+    if (!edgeBtn) return;
+
+    edgeBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      body.classList.toggle("toc-open");
+
+      edgeBtn.textContent = body.classList.contains("toc-open")
+        ? "SULJE"
+        : "SISÄLLYS";
+    });
+
+    if (textArea) {
+      textArea.addEventListener("click", () => {
+        if (body.classList.contains("toc-open")) {
+          body.classList.remove("toc-open");
+          edgeBtn.textContent = "SISÄLLYS";
+        }
+      });
+    }
+  }
+
+  /* ===================== 8. PERSISTENSSI ===================== */
+
   window.addEventListener("beforeunload", () => {
     try {
-      localStorage.setItem("readerMemory", JSON.stringify(AppState.data.session));
-    } catch (e) {}
+      localStorage.setItem(
+        "readerMemory",
+        JSON.stringify(AppState.data.session)
+      );
+    } catch (_) {}
 
-    if (window.BehaviorTracker) {
-        window.BehaviorTracker.dispatchData();
-    }
+    window.BehaviorTracker?.dispatchData();
   });
 
-  // Init
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", bootstrap);
   } else {

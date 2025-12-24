@@ -1,9 +1,5 @@
 /* ============================================================
-   TOC ENGINE – KANONINEN JA VAKAA (KORJATTU)
-   Vastuu:
-   - Lataa toc-narrative.json ja rakentaa näkymät
-   - Ohjaa TextEnginen suodatusta (Haku & Setit)
-   - Synkronoi aktiivisen luvun korostuksen
+   TOC ENGINE – KANONINEN JA VAKAA (DATA-POHJAINEN HAKU)
 ============================================================ */
 
 (function () {
@@ -20,6 +16,17 @@
 
   let bootstrapped = false;
 
+  /* ===== DATA INDEX ===== */
+
+  let tocIndex = [];              // [{ id, title, section }]
+  let currentFilterKey = "__ALL__";
+
+  /* ===================== UTIL ===================== */
+
+  function normalizeId(id) {
+    return String(id).padStart(3, "0");
+  }
+
   /* ===================== INIT ===================== */
 
   async function init(options = {}) {
@@ -35,19 +42,11 @@
 
     if (!containerEl) return;
 
-    try {
-      await loadData();
-    } catch {
-      containerEl.innerHTML =
-        "<p style='padding:15px;opacity:.7'>TOC ei latautunut.</p>";
-      return;
-    }
-
+    await loadData();
     buildSetSelector();
     bindSearch();
     waitForTextEngine();
 
-    // Reagoidaan tekstin vaihtumiseen (esim. skrollaus tai painikkeet)
     document.addEventListener("chapterChange", e => {
       setActiveItem(e.detail?.chapterId);
     });
@@ -57,18 +56,41 @@
 
   async function loadData() {
     const res = await fetch(TOC_URL, { cache: "no-store" });
-    if (!res.ok) throw new Error("TOC JSON ei latautunut");
-    tocData = await res.json();
+    const raw = await res.json();
+    tocData = transformTOCData(raw);
+  }
+
+  function transformTOCData(data) {
+    if (!data?.paths) return data;
+
+    const tocSets = [{
+      id: "publish_order",
+      title: "Julkaisujärjestys",
+      sections: []
+    }];
+
+    data.paths.forEach(p => {
+      tocSets.push({
+        id: p.id,
+        title: p.title,
+        sections: [{
+          title: p.description || p.title,
+          chapters: (p.chapters || []).map(normalizeId)
+        }]
+      });
+    });
+
+    return { tocSets };
   }
 
   function getActiveSet() {
-    return tocData?.tocSets?.find(s => s.id === activeSetId) || null;
+    return tocData.tocSets.find(s => s.id === activeSetId);
   }
 
   /* ===================== TEXTENGINE SYNC ===================== */
 
   function waitForTextEngine() {
-    if (window.TextEngine?.getAllChapters?.()?.length) {
+    if (window.TextEngine?.getAllChapters?.().length) {
       bootstrapAndRender();
     } else {
       document.addEventListener("textEngineReady", bootstrapAndRender, { once: true });
@@ -78,74 +100,39 @@
   function bootstrapAndRender() {
     if (bootstrapped) return;
     bootstrapped = true;
-
-    if (window.TOCBootstrap?.run && tocData) {
-      tocData = TOCBootstrap.run(tocData);
-    }
-
-    render();
+    render(null); // ei hakua
   }
 
   /* ===================== PUBLISH ORDER ===================== */
 
   function buildPublishOrderSections() {
-    const chapters = window.TextEngine?.getAllChapters?.();
-    if (!Array.isArray(chapters) || chapters.length === 0) return [];
-
-    const dated = chapters
-      .filter(ch => typeof ch.date === "string" && /^\d{4}-\d{2}-\d{2}/.test(ch.date))
-      .map(ch => ({
-        id: ch.id,
-        ym: ch.date.slice(0, 7),
-        date: ch.date
-      }))
-      .sort((a, b) => b.date.localeCompare(a.date));
-
-    if (dated.length > 0) {
-      const groups = {};
-      dated.forEach(ch => {
-        if (!groups[ch.ym]) groups[ch.ym] = [];
-        groups[ch.ym].push(ch.id);
-      });
-
-      return Object.keys(groups)
-        .sort((a, b) => b.localeCompare(a))
-        .map(key => ({
-          title: key.replace("-", " / "),
-          chapters: groups[key]
-        }));
-    }
-
+    const chapters = window.TextEngine?.getAllChapters?.() || [];
     return [{
       title: "Kaikki esseet",
-      chapters: chapters.map(ch => ch.id)
+      chapters: chapters.map(ch => normalizeId(ch.id))
     }];
   }
 
   /* ===================== RENDER ===================== */
 
-  function render() {
-    if (!tocData || !containerEl) return;
-
+  function render(filteredIds) {
     const set = getActiveSet();
-    if (!set) {
-      containerEl.innerHTML = "<p style='padding:15px;opacity:.7'>Ei sisältöä.</p>";
-      return;
-    }
+    if (!set) return;
 
     const sections = set.id === "publish_order"
       ? buildPublishOrderSections()
-      : (Array.isArray(set.sections) ? set.sections : []);
-
-    if (!sections.length) {
-      containerEl.innerHTML = "<p style='padding:15px;opacity:.7'>Ei lukuja.</p>";
-      return;
-    }
+      : set.sections || [];
 
     containerEl.innerHTML = "";
-    const activeIds = []; // Kerätään sallitut ID:t TextEnginelle
+    tocIndex = [];
 
     sections.forEach(section => {
+      const visibleChapters = (section.chapters || [])
+        .map(normalizeId)
+        .filter(id => !filteredIds || filteredIds.includes(id));
+
+      if (!visibleChapters.length) return;
+
       if (section.title) {
         const h = document.createElement("h6");
         h.className = "toc-section-title";
@@ -153,52 +140,92 @@
         containerEl.appendChild(h);
       }
 
-      section.chapters.forEach(id => {
-        const item = buildItem(id);
-        if (item) {
-          containerEl.appendChild(item);
-          activeIds.push(id);
-        }
+      visibleChapters.forEach(id => {
+        const meta = window.TextEngine?.getChapterMeta?.(id);
+        if (!meta) return;
+
+        tocIndex.push({
+          id,
+          title: meta.title || "",
+          section: section.title || ""
+        });
+
+        const item = buildItem(id, meta);
+        if (item) containerEl.appendChild(item);
       });
     });
 
-    // 🔑 SYNKRONOINTI: Päivitetään TextEnginen suodatus vastaamaan valittua settiä
-    window.TextEngine?.setFilter(activeIds);
-    
-    // Varmistetaan että nykyinen luku on korostettu
     setActiveItem(window.TextEngine?.getActiveChapterId());
   }
 
-  function buildItem(chapterId) {
-    const meta = window.TextEngine?.getChapterMeta?.(chapterId);
-    if (!meta) return null;
-
+  function buildItem(id, meta) {
     const item = document.createElement("div");
     item.className = "toc-item";
-    item.dataset.chapter = chapterId;
+    item.dataset.chapter = id;
 
     const num = document.createElement("div");
     num.className = "toc-num";
-    num.textContent = chapterId;
+    num.textContent = id;
 
     const label = document.createElement("div");
     label.className = "toc-label";
-    label.textContent = meta.title || `Luku ${chapterId}`;
+    label.textContent = meta.title || `Luku ${id}`;
 
     item.appendChild(num);
     item.appendChild(label);
 
     item.addEventListener("click", () => {
-      window.TextEngine?.loadChapter?.(chapterId);
+      window.TextEngine?.loadChapter?.(id);
+      if (window.innerWidth < 768) document.body.classList.remove("toc-open");
     });
 
     return item;
   }
 
-  /* ===================== UI & SEARCH ===================== */
+  /* ===================== DATA-POHJAINEN SEARCH ===================== */
+
+  function bindSearch() {
+    if (!searchInputEl) return;
+
+    let debounceTimer = null;
+
+    searchInputEl.addEventListener("input", e => {
+      const q = e.target.value.toLowerCase().trim();
+
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+
+        let visibleIds = null;
+
+        if (q) {
+          visibleIds = tocIndex
+            .filter(row =>
+              row.title.toLowerCase().includes(q) ||
+              row.section.toLowerCase().includes(q)
+            )
+            .map(row => row.id);
+        }
+
+        const key = visibleIds ? visibleIds.join(",") : "__ALL__";
+        if (key === currentFilterKey) return;
+        currentFilterKey = key;
+
+        render(visibleIds);
+
+        if (visibleIds === null) {
+          window.TextEngine?.setFilter(null);
+        } else {
+          window.TextEngine?.setFilter(visibleIds);
+        }
+
+      }, 200);
+    });
+  }
+
+  /* ===================== SELECTOR ===================== */
 
   function buildSetSelector() {
-    if (!selectorTargetEl || !tocData?.tocSets) return;
+    if (!selectorTargetEl) return;
 
     const select = document.createElement("select");
     select.className = "toc-set-selector";
@@ -213,49 +240,53 @@
 
     select.addEventListener("change", e => {
       activeSetId = e.target.value;
-      if (searchInputEl) searchInputEl.value = ""; // Nollataan haku vaihdon yhteydessä
-      render();
+      if (searchInputEl) searchInputEl.value = "";
+      currentFilterKey = "__ALL__";
+      render(null);
+      window.TextEngine?.setFilter(null);
     });
 
     selectorTargetEl.innerHTML = "";
     selectorTargetEl.appendChild(select);
   }
 
-  function setActiveItem(chapterId) {
-    if (!containerEl || !chapterId) return;
-    const targetId = String(chapterId).padStart(3, "0");
-    containerEl.querySelectorAll(".toc-item").forEach(el => {
-      el.classList.toggle("active", el.dataset.chapter === targetId);
-    });
-  }
+  /* ===================== ACTIVE ===================== */
 
-  function bindSearch() {
-    if (!searchInputEl) return;
-    searchInputEl.addEventListener("input", e => {
-      const q = e.target.value.toLowerCase();
-      const visibleIds = [];
+function setActiveItem(chapterId) {
+  if (!chapterId || !containerEl) return;
 
-      containerEl.querySelectorAll(".toc-item").forEach(item => {
-        const isMatch = item.textContent.toLowerCase().includes(q);
-        item.style.display = isMatch ? "" : "none";
-        
-        // Piilotetaan myös tyhjät otsikot (h6) myöhemmässä vaiheessa jos tarpeen
-        if (isMatch) visibleIds.push(item.dataset.chapter);
+  const id = normalizeId(chapterId);
+  let activeEl = null;
+
+  containerEl.querySelectorAll(".toc-item").forEach(el => {
+    const isActive = el.dataset.chapter === id;
+    el.classList.toggle("active", isActive);
+    if (isActive) activeEl = el;
+  });
+
+  // 🔑 PIDÄ AKTIIVINEN KOHTA NÄKYVISSÄ
+  if (activeEl) {
+    const panel = containerEl.closest("#tocPanel");
+    if (!panel) return;
+
+    const panelRect = panel.getBoundingClientRect();
+    const itemRect = activeEl.getBoundingClientRect();
+
+    const isAbove = itemRect.top < panelRect.top + 40;
+    const isBelow = itemRect.bottom > panelRect.bottom - 40;
+
+    if (isAbove || isBelow) {
+      activeEl.scrollIntoView({
+        block: "center",
+        behavior: "smooth"
       });
-
-      // 🔑 SYNKRONOINTI: Rajoitetaan TextEnginen navigointi vain haun tuloksiin
-      window.TextEngine?.setFilter(visibleIds);
-    });
+    }
   }
+}
+
 
   /* ===================== API ===================== */
 
-  window.TOCEngine = {
-    init,
-    render,
-    setActiveItem
-  };
-
-  window.TOC = window.TOCEngine;
+  window.TOCEngine = { init, render, setActiveItem };
 
 })();

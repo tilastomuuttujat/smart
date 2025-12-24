@@ -1,21 +1,34 @@
 /* ============================================================
-   text-engine.js – KORJATTU JA HARMONISOITU VERSIO (V5.0)
-   ============================================================ */
-import { NarrativeModules } from './narrative-modules.js';
-import { AnalysisModules } from './analysis-modules.js';
-import { ReflectionModules } from './reflection-modules.js';
+   text-engine.js – HARMONISOITU LUKUTILA (V5.3)
+   Vastuu:
+   - Sisällön lataus ja renderöinti
+   - Hakukorostus
+   - Lukutilan tulkinta (scroll → merkitys)
+   - Teemakohtainen suodatus (setFilter)
+============================================================ */
+
 import { collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 (function () {
-    // 1. TILAMUUTTUJAT
+
+    /* ===================== TILA ===================== */
+
     let chapters = [];
-    let filteredIds = [];
+    let filteredIds = []; // 🔑 Ohjaa mitä lukuja narratiivissa näytetään
     let activeIndex = 0;
     let currentView = "narrative";
     let searchQuery = "";
-    let dwellTimer = null;
+
     let container = null;
     const containerId = "textArea";
+
+    // Lukutila
+    let lastScrollTop = 0;
+    let lastScrollTime = performance.now();
+    let scrollEnergy = 0;
+    let activeParagraphIndex = 0;
+
+    let dwellTimer = null;
 
     const keywords = {
         'kustannus': { economy: 80 },
@@ -24,251 +37,359 @@ import { collection, getDocs, query, orderBy } from "https://www.gstatic.com/fir
         'ihminen': { ethics: 70 }
     };
 
-    /* ===================== ALUSTUSLOGIIKKA ===================== */
+    /* ===================== INIT ===================== */
 
-    async function init() {
-        container = document.getElementById(containerId);
-        if (!container) return;
-
-        container.innerHTML = "<div class='loading-state'><p>Ladataan sisältöä...</p></div>";
-
-        try {
-            await loadChaptersFromFirebase();
-            if (!chapters.length) {
-                container.innerHTML = "<p>Tietokanta on tyhjä.</p>";
-                return;
-            }
-
-            render();
-            setupCognitiveTracking();
-            setupNarrativeScroll();
-            setupButtons();
-            
-            dispatchReady();
-            dispatchChapterChange();
-
-        } catch (err) {
-            console.error("TextEngine Error:", err);
-            container.innerHTML = `<div class='error-state'><p>Lataus epäonnistui.</p></div>`;
-        }
-    }
-
-    /* ===================== DATAN LATAUS ===================== */
-
-    async function loadChaptersFromFirebase() {
-        try {
-            if (!window.db) throw new Error("Firestore-yhteyttä ei löydy.");
-
-            console.log("📥 Haetaan lukuja Firebasesta...");
-            const esseetRef = collection(window.db, "esseet");
-            const q = query(esseetRef, orderBy("id"));
-
-            const querySnapshot = await getDocs(q);
-            const rawData = [];
-
-            querySnapshot.forEach((doc) => {
-                const data = doc.data();
-                if (!data.id) data.id = doc.id; 
-                rawData.push(data);
-            });
-
-            console.log(`✅ Vastaanotettiin ${rawData.length} raakaa dokumenttia.`);
-            chapters = rawData.map(normalizeChapter).filter(Boolean);
-            filteredIds = chapters.map(c => c.id);
-
-            console.log(`📚 TextEngine valmis: ${chapters.length} lukua käsitelty.`);
-        } catch (err) {
-            console.error("❌ Virhe ladattaessa lukuja Firebasesta:", err);
-            throw err;
-        }
-    }
-
-    function normalizeChapter(c) {
-        if (!c || c.id === undefined || c.id === null) return null;
-
-        const standardizedId = String(c.id).padStart(3, "0");
-
-        return {
-            ...c,
-            id: standardizedId,
-            title: c.meta?.title || c.title || `Luku ${c.id}`,
-            tags: Array.isArray(c.tags) ? c.tags : (Array.isArray(c.meta?.tags) ? c.meta.tags : []),
-            versions: {
-                narrative: c.views?.narrative?.body_md 
-                    ? { body_md: c.views.narrative.body_md } 
-                    : (c.content ? { body_md: c.content } : null),
-                analysis: c.views?.analysis?.body_md 
-                    ? { body_md: c.views.analysis.body_md } 
-                    : null,
-                reflection: c.views?.reflection?.body_md 
-                    ? { body_md: c.views.reflection.body_md } 
-                    : null
-            }
-        };
-    }
-
-    /* ===================== RENDERÖINTI ===================== */
-
-function render() {
+async function init() {
+    container = document.getElementById(containerId);
     if (!container) return;
-    
-    // 1. TYHJENNETÄÄN KAIKKI VANHA
-    container.innerHTML = "";
-    
-    console.log("Renderöidään näkymää:", currentView);
 
-    // 2. VALITAAN NÄYTETTÄVÄT LUVUT
-    // Narratiivissa kaikki suodatetut, muuten vain aktiivinen luku
-    const itemsToRender = (currentView === "narrative") 
-        ? chapters.filter(ch => filteredIds.includes(ch.id))
-        : [chapters[activeIndex]];
+    container.innerHTML = "<div class='loading-state'><p>Ladataan sisältöä...</p></div>";
 
-    itemsToRender.forEach((ch) => {
-        if (!ch) return;
+    try {
+        // 🔑 ODOTETAAN OIKEASTI FIRESTOREA
+        await waitForFirestore();
 
-        // 3. HAETAAN VERSIODATA (varmistetaan fallback narratiiviin jos puuttuu)
-        const versionData = ch.versions[currentView] || ch.versions.narrative;
-        const bodyContent = versionData ? versionData.body_md : "Ei sisältöä.";
+        await loadChaptersFromFirebase();
 
-        // 4. LUODAAN ELEMENTTI
-        // Käytetään moduulia pohjana, mutta luodaan puhdas versio
-        const chapterEl = document.createElement('article');
-        chapterEl.className = `chapter-container view-${currentView}`;
-        chapterEl.dataset.chapterId = ch.id;
+        if (!chapters.length) {
+            container.innerHTML = "<p>Tietokanta on tyhjä.</p>";
+            return;
+        }
 
-        // Otsikko
-        const header = document.createElement('h1');
-        header.innerHTML = highlightText(ch.title, searchQuery);
-        chapterEl.appendChild(header);
+        render();
+        setupScrollTracking();
+        setupCognitiveTracking();
+        setupButtons();
 
-        // Tekstisisältö
-        const bodyDiv = document.createElement('div');
-        bodyDiv.className = 'chapter-body';
-        
-        // Jaetaan kappaleisiin ja piirretään
-        const paragraphs = bodyContent.split(/\r?\n\n/).filter(Boolean);
-        bodyDiv.innerHTML = paragraphs
-            .map(p => `<p>${highlightText(p.trim(), searchQuery)}</p>`)
-            .join("");
-        
-        chapterEl.appendChild(bodyDiv);
+        dispatchReady();
+        dispatchChapterChange();
 
-        // 5. LISÄTÄÄN ELEMENTTI SÄILIÖÖN
-        container.appendChild(chapterEl);
-    });
+    } catch (err) {
+        // 🔥 TÄRKEÄ: tulosta oikea virhe
+        console.error("❌ TextEngine Error:", err?.message || err);
+        console.error(err);
 
-    // 6. SKROLLATAAN AKTIIVISEEN LUKUUN
-    if (currentView !== "narrative") {
-        container.scrollTop = 0; // Analyysissä ja reflektiossa aina alkuun
+        container.innerHTML = `
+            <div class="error-state">
+                <p>Lataus epäonnistui.</p>
+                <pre style="opacity:.6">${err?.message || "Tuntematon virhe"}</pre>
+            </div>
+        `;
     }
 }
 
-    function highlightText(text, query) {
-        if (!query || query.length < 2) return text;
-        const escaped = query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-        const regex = new RegExp(`(${escaped})`, 'gi');
-        return text.replace(regex, '<mark class="highlight">$1</mark>');
+
+    /* ===================== DATA ===================== */
+
+    async function loadChaptersFromFirebase() {
+        if (!window.db) throw new Error("Firestore-yhteyttä ei löydy.");
+
+        const ref = collection(window.db, "esseet");
+        const q = query(ref, orderBy("id"));
+        const snap = await getDocs(q);
+
+        const raw = [];
+        snap.forEach(doc => {
+            const d = doc.data();
+            raw.push({ ...d, id: d.id ?? doc.id });
+        });
+
+        chapters = raw.map(normalizeChapter).filter(Boolean);
+        filteredIds = chapters.map(c => c.id);
+
+        console.log(`📚 TextEngine: ${chapters.length} lukua ladattu.`);
     }
 
-    /* ===================== SEURANTA JA PAINIKKEET ===================== */
+    function normalizeChapter(c) {
+        if (!c || c.id == null) return null;
+
+        const id = String(c.id).padStart(3, "0");
+        return {
+            ...c,
+            id,
+            title: c.meta?.title || c.title || `Luku ${id}`,
+            tags: c.tags || c.meta?.tags || [],
+            versions: {
+                narrative: c.views?.narrative?.body_md || c.content || "",
+                analysis: c.views?.analysis || null,
+                reflection: c.views?.reflection || null
+            }
+        };
+    }
+    
+    function waitForFirestore(timeout = 5000) {
+    return new Promise((resolve, reject) => {
+        const start = performance.now();
+
+        const tick = () => {
+            if (window.db) {
+                resolve(window.db);
+                return;
+            }
+            if (performance.now() - start > timeout) {
+                reject(new Error("Firestore ei alustunut ajoissa"));
+                return;
+            }
+            requestAnimationFrame(tick);
+        };
+
+        tick();
+    });
+}
+
+    
+    function updateActiveChapterFromScroll() {
+    const articles = container.querySelectorAll("article.chapter-container");
+    if (!articles.length) return;
+
+    const viewportMid = container.getBoundingClientRect().top + container.clientHeight * 0.35;
+
+    let closest = null;
+    let minDist = Infinity;
+
+    articles.forEach(article => {
+        const rect = article.getBoundingClientRect();
+        const mid = rect.top + rect.height / 2;
+        const dist = Math.abs(mid - viewportMid);
+
+        if (dist < minDist) {
+            minDist = dist;
+            closest = article;
+        }
+    });
+
+    if (!closest) return;
+
+    const chapterId = closest.dataset.chapterId;
+    const newIndex = chapters.findIndex(c => c.id === chapterId);
+
+    if (newIndex !== -1 && newIndex !== activeIndex) {
+        activeIndex = newIndex;
+        dispatchChapterChange();
+    }
+}
+
+
+    /* ===================== RENDER ===================== */
+
+    function render() {
+        if (!container) return;
+        container.innerHTML = "";
+
+        // Päätetään näytettävät luvut: Narratiivissa koko polku/suodatus, muissa vain aktiivinen
+        const items = currentView === "narrative" 
+            ? chapters.filter(ch => filteredIds.includes(ch.id)) 
+            : [chapters[activeIndex]];
+
+        items.forEach(ch => {
+            if (!ch) return;
+
+            const raw = ch.versions[currentView] || ch.versions.narrative || "";
+            const text = typeof raw === "string" ? raw : raw.body_md || "";
+
+            const article = document.createElement("article");
+            article.className = `chapter-container view-${currentView}`;
+            article.dataset.chapterId = ch.id;
+
+            const h1 = document.createElement("h1");
+            h1.innerHTML = highlightText(ch.title, searchQuery);
+            article.appendChild(h1);
+
+            const body = document.createElement("div");
+            body.className = "chapter-body";
+
+            const paragraphs = text.split(/\n\s*\n/).filter(Boolean);
+            paragraphs.forEach((p, i) => {
+                const el = document.createElement("p");
+                el.innerHTML = highlightText(p.trim(), searchQuery);
+                el.dataset.index = i;
+
+                if (i === 0) el.classList.add("paragraph--opening");
+                else if (i === paragraphs.length - 1) el.classList.add("paragraph--echo");
+                else el.classList.add("paragraph--core");
+
+                body.appendChild(el);
+            });
+
+            article.appendChild(body);
+            container.appendChild(article);
+        });
+
+        if (searchQuery.length > 1) {
+            const firstHit = container.querySelector("mark");
+            if (firstHit) firstHit.scrollIntoView({ behavior: "smooth", block: "center" });
+
+            window.EventBus?.emit("text:searchComplete", {
+                query: searchQuery,
+                hits: container.querySelectorAll("mark").length
+            });
+        }
+    }
+
+    function highlightText(text, query) {
+        if (!query || query.trim().length < 2) return text;
+        const esc = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`(${esc})`, 'gi');
+        return text.replace(regex, '<mark>$1</mark>');
+    }
+
+    /* ===================== LUKUTILA ===================== */
+
+function setupScrollTracking() {
+    container.addEventListener("scroll", () => {
+        if (currentView !== "narrative") return;
+
+        const now = performance.now();
+        const top = container.scrollTop;
+
+        const dy = Math.abs(top - lastScrollTop);
+        const dt = Math.max(now - lastScrollTime, 16);
+
+        const velocity = dy / dt;
+        scrollEnergy = Math.min(1, velocity * 8);
+
+        lastScrollTop = top;
+        lastScrollTime = now;
+
+        updateActiveParagraph();
+        updateActiveChapterFromScroll(); // 🔑 TÄMÄ PUUTTUI
+
+        window.EventBus?.emit("readingStateChanged", {
+            chapterId: chapters[activeIndex]?.id,
+            paragraphIndex: activeParagraphIndex,
+            scrollEnergy
+        });
+
+    }, { passive: true });
+}
+
+    function updateActiveParagraph() {
+        const midY = container.getBoundingClientRect().top + container.clientHeight * 0.4;
+        const els = document.elementsFromPoint(window.innerWidth / 2, midY);
+        const p = els.find(e => e.tagName === "P");
+
+        if (p?.dataset.index) {
+            activeParagraphIndex = Number(p.dataset.index);
+        }
+    }
 
     function setupCognitiveTracking() {
         container.addEventListener("scroll", () => {
             clearTimeout(dwellTimer);
             dwellTimer = setTimeout(() => {
-                const focusY = container.getBoundingClientRect().top + 150;
-                const elements = document.elementsFromPoint(window.innerWidth / 2, focusY);
-                const el = elements.find(e => e.tagName === 'P');
-                if (el) {
-                    const text = el.textContent.toLowerCase();
-                    Object.keys(keywords).forEach(key => {
-                        if (text.includes(key)) {
-                            window.AppState?.updateReflection({ lastInsight: key });
-                        }
-                    });
-                }
+                const els = document.elementsFromPoint(window.innerWidth / 2, window.innerHeight / 2);
+                const p = els.find(e => e.tagName === "P");
+                if (!p) return;
+
+                const t = p.textContent.toLowerCase();
+                Object.keys(keywords).forEach(k => {
+                    if (t.includes(k)) {
+                        window.AppState?.updateReflection({ lastInsight: k });
+                    }
+                });
             }, 3000);
         }, { passive: true });
     }
 
-    function setupNarrativeScroll() {
-        container.addEventListener("scroll", () => {
-            if (currentView !== "narrative") return;
-        }, { passive: true });
-    }
+    /* ===================== NAVIGAATIO ===================== */
 
     function setupButtons() {
-        const nextBtn = document.getElementById("nextBtn");
-        const prevBtn = document.getElementById("prevBtn");
-
-        if (nextBtn) nextBtn.onclick = (e) => { e.preventDefault(); window.TextEngine.nextChapter(); };
-        if (prevBtn) prevBtn.onclick = (e) => { e.preventDefault(); window.TextEngine.prevChapter(); };
+        document.getElementById("nextBtn")?.addEventListener("click", e => {
+            e.preventDefault();
+            window.TextEngine.nextChapter();
+        });
+        document.getElementById("prevBtn")?.addEventListener("click", e => {
+            e.preventDefault();
+            window.TextEngine.prevChapter();
+        });
     }
 
-    /* ===================== JULKINEN API ===================== */
 
-    function dispatchChapterChange() {
-        const ch = chapters[activeIndex];
-        if (!ch) return;
+function dispatchReady() {
+    document.dispatchEvent(new CustomEvent("textEngineReady", {
+        detail: {
+            count: chapters.length
+        }
+    }));
+}
 
-        // Päivitetään sivupaneelit
-        if (currentView === "narrative") NarrativeModules.updateSidePanel(ch);
-        else if (currentView === "analysis") AnalysisModules.updatePanel?.(ch);
-        else if (currentView === "reflection") ReflectionModules.updatePanel?.(ch, window.AppState);
 
-        // 🔑 ILMOITUS ANALYTIIKALLE (BehaviorTracker kuuntelee tätä)
-        document.dispatchEvent(new CustomEvent("chapterChange", {
-            detail: { chapterId: ch.id, view: currentView }
-        }));
+/* text-engine.js – KORJATTU JA VARMISTETTU FUNKTIO */
+function dispatchChapterChange() {
+    const ch = chapters[activeIndex];
+    if (!ch) return;
 
-        window.EventBus?.emit("chapter:change", { chapterId: ch.id });
-    }
+    // 🔑 Päivitetään älykkäät moduulit globaalin window-objektin kautta
+    // Käytetään setTimeoutia (0ms), jotta varmistetaan näkymän vaihdon (DOM) valmistuminen
+    setTimeout(() => {
+        if (currentView === "analysis" && window.AnalysisModules) {
+            console.log("📊 Päivitetään analyysimoduuli luvulle:", ch.id);
+            window.AnalysisModules.updatePanel(ch, currentView);
+        } 
+        else if (currentView === "reflection" && window.ReflectionModules) {
+            console.log("💭 Päivitetään reflektiomoduuli luvulle:", ch.id);
+            window.ReflectionModules.updatePanel(ch, window.AppState);
+        }
+    }, 0);
 
-    function dispatchReady() {
-        document.dispatchEvent(new CustomEvent("textEngineReady", { detail: { count: chapters.length } }));
-    }
+    // Ilmoitetaan järjestelmälle luvun vaihtumisesta (mm. BehaviorTracker kuuntelee tätä)
+    document.dispatchEvent(new CustomEvent("chapterChange", {
+        detail: { chapterId: ch.id, view: currentView }
+    }));
+
+    // Ilmoitetaan EventBusin kautta (mm. Starfield-käsitekartta kuuntelee tätä)
+    window.EventBus?.emit("chapter:change", { chapterId: ch.id });
+}
+    /* ===================== PUBLIC API ===================== */
 
     window.TextEngine = {
         init,
-        nextChapter: () => {
-            const currentId = chapters[activeIndex]?.id;
-            const currentInFilteredIdx = filteredIds.indexOf(currentId);
-            if (currentInFilteredIdx !== -1 && currentInFilteredIdx < filteredIds.length - 1) {
-                window.TextEngine.loadChapter(filteredIds[currentInFilteredIdx + 1]);
-            }
+        nextChapter() {
+            const id = chapters[activeIndex]?.id;
+            const i = filteredIds.indexOf(id);
+            if (i < filteredIds.length - 1) this.loadChapter(filteredIds[i + 1]);
         },
-        prevChapter: () => {
-            const currentId = chapters[activeIndex]?.id;
-            const currentInFilteredIdx = filteredIds.indexOf(currentId);
-            if (currentInFilteredIdx > 0) {
-                window.TextEngine.loadChapter(filteredIds[currentInFilteredIdx - 1]);
-            }
+        prevChapter() {
+            const id = chapters[activeIndex]?.id;
+            const i = filteredIds.indexOf(id);
+            if (i > 0) this.loadChapter(filteredIds[i - 1]);
         },
-        loadChapter: (id) => {
-            const targetId = String(id).padStart(3, "0");
-            const idx = chapters.findIndex(c => c.id === targetId);
-            if (idx !== -1) {
-                activeIndex = idx;
+        loadChapter(id) {
+            const tid = String(id).padStart(3, "0");
+            const i = chapters.findIndex(c => c.id === tid);
+            if (i !== -1) {
+                activeIndex = i;
                 render();
                 dispatchChapterChange();
-                const el = container.querySelector(`[data-chapter-id="${targetId}"]`);
-                if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                container.querySelector(`[data-chapter-id="${tid}"]`)
+                    ?.scrollIntoView({ behavior: "smooth", block: "start" });
             }
         },
-        setView: (view) => {
+        // 🔑 TOCEngine tarvitsee tätä suodattamaan polut (teemat/haku)
+        setFilter(ids) {
+            if (Array.isArray(ids) && ids.length > 0) {
+                filteredIds = ids.map(id => String(id).padStart(3, "0"));
+            } else {
+                filteredIds = chapters.map(c => c.id);
+            }
+            render();
+        },
+        setView(view) {
             currentView = view;
             render();
             dispatchChapterChange();
         },
-        setSearchQuery: (q) => {
+        setSearchQuery(q) {
             searchQuery = q;
             render();
         },
         getAllChapters: () => chapters,
-        getActiveChapterId: () => chapters[activeIndex]?.id || "001",
-        getChapterMeta: (id) => chapters.find(c => c.id === String(id).padStart(3, "0"))
+        getActiveChapterId: () => chapters[activeIndex]?.id,
+        getChapterMeta: (id) => {
+            const cid = String(id).padStart(3, "0");
+            return chapters.find(c => c.id === cid) || null;
+        }
     };
 
     init();
-
 })();

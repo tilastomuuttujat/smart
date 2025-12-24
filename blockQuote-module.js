@@ -1,59 +1,64 @@
 /* ============================================================
-   blockQuote-module.js – DYNAAMINEN AGENTTI-VERSIO
+   blockQuote-module.js – DYNAAMINEN AGENTTI-VERSIO (V6.1)
    Vastuu: Tekstinostojen dynaaminen renderöinti ja tyylittely.
    ============================================================ */
 
-export const BlockQuoteModule = {
+const BlockQuoteModule = {
     id: "blockquote",
     title: "Nosto",
-    host: null,
     active: false,
-    currentChapter: null,
+    el: null, // Säilytetään elementti uudelleenkäyttöä varten
 
-    /* ===================== 🧠 DYNAAMINEN SIJOITTUMINEN ===================== */
+    /* ===================== 🧠 SIJOITTELULOGIIKKA ===================== */
 
-    getPreferredPanel(viewMode) {
-        // Nosto on ensisijaisesti osa Narratiivi-kokemusta
-        if (viewMode === "narrative") return "narrativePanel";
-        // Voidaan näyttää myös reflektiossa syventävänä elementtinä
-        if (viewMode === "reflection") return "reflectionPanel";
-        return null;
+    isAvailable(viewMode) {
+        // Nosto on käytössä narratiivi- ja reflektio-näkymissä
+        return viewMode === "narrative" || viewMode === "reflection";
     },
 
-    mount(targetEl) {
-        if (!targetEl || this.host === targetEl) return;
-        
-        console.log(`📜 BlockQuote: Kiinnitetään isäntään: ${targetEl.id}`);
-        this.host = targetEl;
+    /**
+     * ModuleRegistry V2.3 vaatii render-metodin, joka palauttaa 
+     * moduulin pysyvän elementin.
+     */
+    render() {
+        if (this.el) return this.el;
 
-        // Luodaan dynaaminen wrapperi, jotta moduuli on itsenäinen
-        const wrapper = document.createElement("div");
-        wrapper.className = "lincoln-style-wrapper";
-        wrapper.style.cssText = `
-            opacity: 0;
-            transition: all 0.8s ease;
-            margin: 20px 0;
-            padding: 20px;
-            border-left: 2px solid rgba(250, 200, 130, 0.4);
+        this.el = document.createElement("div");
+        this.el.className = "module-card quote-module-container";
+        this.el.style.cssText = `
+            opacity: 1;
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            margin: 10px 0;
+            padding: 24px;
+            border-left: 3px solid var(--accent);
             background: rgba(255, 255, 255, 0.03);
             font-style: italic;
         `;
         
-        this.host.appendChild(wrapper);
+        // Luodaan sisäelementti tekstille
+        const quoteEl = document.createElement("blockquote");
+        quoteEl.id = "blockquote-text";
+        quoteEl.className = "dynamic-typography";
+        quoteEl.style.cssText = "color: var(--accent-gold); margin: 0; font-size: 1.1rem; line-height: 1.5;";
+        
+        this.el.appendChild(quoteEl);
+        return this.el;
     },
 
     /* ===================== ELINKAARI ===================== */
 
     init() {
-        // Kuunnellaan hermoverkon contextUpdate-viestejä
+        // Kuunnellaan kognitiivisen tilan muutoksia
         document.addEventListener('contextUpdate', (e) => {
             if (this.active) this.reactToContext(e.detail);
         });
 
-        // Kuunnellaan luvun vaihtumista
-        document.addEventListener("chapterChange", (e) => {
-            if (this.active) this.updateQuote(e.detail.chapterId);
+        // Kuunnellaan luvun vaihtumista (tehosekoitin-efektin synkronointi)
+        window.EventBus?.on("chapter:change", ({ chapterId }) => {
+            if (this.active) this.updateQuote(chapterId);
         });
+        
+        console.log("📜 BlockQuote: Agentti valmiudessa.");
     },
 
     activate() {
@@ -64,58 +69,57 @@ export const BlockQuoteModule = {
 
     deactivate() {
         this.active = false;
-        if (this.host) {
-            this.host.innerHTML = ''; // Siivotaan dynaaminen sisältö
-        }
-        this.host = null;
     },
 
     /* ===================== VISUAALINEN LOGIIKKA ===================== */
 
     updateQuote(chapterId) {
-        if (!this.host) return;
-        const wrapper = this.host.querySelector('.lincoln-style-wrapper');
-        if (!wrapper) return;
+        if (!this.el) return;
+        const quoteEl = this.el.querySelector('#blockquote-text');
+        if (!quoteEl) return;
 
         const ch = window.TextEngine?.getChapterMeta(chapterId);
-        const quoteText = ch?.quote || ch?.views?.quote || "";
+        // Haetaan nostoteksti eri mahdollisista datalähteistä
+        const quoteText = ch?.quote || ch?.views?.quote || ch?.meta?.quote || "";
 
         if (!quoteText) {
-            wrapper.style.display = "none";
+            this.el.style.display = "none";
             return;
         }
 
-        wrapper.style.opacity = "0";
+        // Animoidaan tekstin vaihto
+        this.el.style.opacity = "0";
+        this.el.style.transform = "translateX(10px)";
         
         setTimeout(() => {
-            wrapper.style.display = "block";
-            wrapper.innerHTML = `<blockquote class="dynamic-typography" style="color: rgba(250, 200, 130, 0.8); margin: 0;">
-                "${quoteText}"
-            </blockquote>`;
-            wrapper.style.opacity = "1";
-        }, 150);
+            this.el.style.display = "block";
+            quoteEl.innerHTML = `"${quoteText}"`;
+            this.el.style.opacity = "1";
+            this.el.style.transform = "translateX(0)";
+        }, 200);
     },
 
-    // 🧠 ÄLYKÄS REAKTIO: Muuttaa noston ilmettä lennosta
+    // 🧠 ÄLYKÄS REAKTIO: Muuttaa noston ilmettä järjestelmän jännite-tilan mukaan
     reactToContext(stateData) {
-        if (!this.host) return;
-        const wrapper = this.host.querySelector('.lincoln-style-wrapper');
-        const quoteText = this.host.querySelector('.dynamic-typography');
+        if (!this.el) return;
+        const quoteEl = this.el.querySelector('#blockquote-text');
         
-        if (!wrapper || !quoteText) return;
-
         if (stateData.systemMode === 'tension') {
-            wrapper.style.boxShadow = "0 0 30px rgba(255, 0, 0, 0.15)";
-            wrapper.style.borderColor = "rgba(255, 100, 100, 0.5)";
-            quoteText.style.color = "#ff9999";
+            this.el.style.boxShadow = "inset 0 0 20px rgba(255, 100, 100, 0.1)";
+            this.el.style.borderColor = "#ff6b6b";
+            if (quoteEl) quoteEl.style.color = "#ff9999";
         } else {
-            wrapper.style.boxShadow = "none";
-            wrapper.style.borderColor = "rgba(250, 200, 130, 0.4)";
-            quoteText.style.color = "rgba(250, 200, 130, 0.8)";
+            this.el.style.boxShadow = "none";
+            this.el.style.borderColor = "var(--accent)";
+            if (quoteEl) quoteEl.style.color = "var(--accent-gold)";
         }
     }
 };
 
+// Tehdään moduuli saavutettavaksi globaalisti iPad-ympäristössä
+window.BlockQuoteModule = BlockQuoteModule;
+
+// Rekisteröidään moduuli
 if (window.ModuleRegistry) {
     window.ModuleRegistry.register(BlockQuoteModule);
 }

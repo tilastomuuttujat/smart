@@ -1,77 +1,86 @@
 /* ============================================================
-   mosaic-module.js – DYNAAMINEN AGENTTI-VERSIO
+   mosaic-module.js – DYNAAMINEN AGENTTI-VERSIO (V6.1)
    Vastuu: Infografiikoiden dynaaminen haku ja injektio.
    ============================================================ */
 
-export const MosaicModule = {
+const MosaicModule = {
     id: "mosaic",
     title: "Infografiikka",
-    host: null,
-    surface: null,
     active: false,
     currentChapter: null,
+    el: null, // Pysyvä elementti
+    surface: null,
     extensions: ['svg', 'png', 'jpg', 'SVG', 'PNG', 'JPG'],
 
-    /* ===================== 🧠 DYNAAMINEN SIJOITTUMINEN ===================== */
+    /* ===================== 🧠 SIJOITTELULOGIIKKA ===================== */
 
-    getPreferredPanel(viewMode) {
-        // Mosaic viihtyy ensisijaisesti narratiivipaneelissa tuomassa visuaalisuutta
-        if (viewMode === "narrative") return "narrativePanel";
-        // Voi näkyä myös analyysissä, jos tilaa on
-        if (viewMode === "analysis") return "analysisPanel";
-        return null;
+    isAvailable(viewMode) {
+        // Mosaic näytetään narratiivi- ja analyysinäkymissä
+        return viewMode === "narrative" || viewMode === "analysis";
     },
 
-    mount(targetEl) {
-        if (!targetEl || this.host === targetEl) return;
-        
-        console.log(`🖼️ Mosaic: Kiinnitetään isäntään: ${targetEl.id}`);
-        this.host = targetEl;
+    /**
+     * ModuleRegistry V2.3 vaatii render-metodin, joka palauttaa moduulin elementin.
+     */
+    render() {
+        if (this.el) return this.el;
 
-        // Luodaan tarvittava HTML-rakenne isännän sisälle
-        // Huom: Käytetään wrapperia, jotta ei ylikirjoiteta koko paneelia jos siellä on muuta
-        const wrapper = document.createElement("div");
-        wrapper.id = "mosaic-container";
-        wrapper.style.width = "100%";
-        wrapper.style.height = "300px"; // Oletuskorkeus
-        wrapper.style.position = "relative";
-        wrapper.style.overflow = "hidden";
-        
-        const s = document.createElement("div");
-        s.className = "mosaic-image-surface";
-        s.style.cssText = `
+        // Luodaan moduulikortti
+        this.el = document.createElement("div");
+        this.el.className = "module-card mosaic-module-container";
+        this.el.style.cssText = `
             width: 100%;
-            height: 100%;
+            min-height: 200px;
+            position: relative;
+            overflow: hidden;
+            background: rgba(15, 15, 15, 0.4);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 15px;
+        `;
+
+        // Otsikko
+        const header = document.createElement("h3");
+        header.textContent = this.title;
+        header.style.marginBottom = "15px";
+        this.el.appendChild(header);
+        
+        // Kuvan pinta
+        this.surface = document.createElement("div");
+        this.surface.className = "mosaic-image-surface";
+        this.surface.style.cssText = `
+            width: 100%;
+            height: 250px;
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
-            transition: all 0.5s ease-in-out;
+            transition: all 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+            opacity: 0;
         `;
         
-        wrapper.appendChild(s);
-        this.host.appendChild(wrapper);
-        this.surface = s;
+        this.el.appendChild(this.surface);
+        return this.el;
     },
 
     /* ===================== ELINKAARI ===================== */
 
     init() {
-        // Älykäs hermoverkko-reaktio (kuunnellaan jännitettä)
+        // Hermoverkko-reaktio jännitteeseen (tension)
         document.addEventListener('contextUpdate', (e) => {
             if (!this.active || !this.surface) return;
             const { systemMode } = e.detail;
             
-            if (systemMode === 'tension') {
-                this.surface.style.filter = 'sepia(0.8) hue-rotate(-30deg) saturate(1.5) blur(0.5px)';
-            } else {
-                this.surface.style.filter = 'none';
-            }
+            this.surface.style.filter = (systemMode === 'tension') 
+                ? 'sepia(0.8) hue-rotate(-30deg) saturate(1.5) contrast(1.1)' 
+                : 'none';
         });
 
-        // Kuunnellaan luvun vaihtumista
-        document.addEventListener("chapterChange", (e) => {
-            if (this.active) this.updateImage(e.detail.chapterId);
+        // Kuunnellaan luvun vaihtumista EventBusin kautta
+        window.EventBus?.on("chapter:change", ({ chapterId }) => {
+            if (this.active) this.updateImage(chapterId);
         });
+        
+        console.log("🖼️ Mosaic: Agentti valmiudessa.");
     },
 
     activate() {
@@ -82,11 +91,6 @@ export const MosaicModule = {
 
     deactivate() {
         this.active = false;
-        if (this.host) {
-            this.host.innerHTML = ''; // Siivotaan dynaaminen sisältö
-        }
-        this.surface = null;
-        this.host = null;
     },
 
     /* ===================== VISUAALINEN LOGIIKKA ===================== */
@@ -95,8 +99,9 @@ export const MosaicModule = {
         if (this.currentChapter === chapterId || !this.surface) return;
         this.currentChapter = chapterId;
 
+        // Häivytys ennen uutta kuvaa
         this.surface.style.opacity = "0";
-        this.surface.style.transform = "scale(0.95)";
+        this.surface.style.transform = "scale(0.97)";
 
         const foundUrl = await this.findValidImage(chapterId);
 
@@ -105,6 +110,9 @@ export const MosaicModule = {
                 this.surface.style.backgroundImage = `url('${foundUrl}')`;
                 this.surface.style.opacity = "1";
                 this.surface.style.transform = "scale(1)";
+            } else if (this.surface) {
+                // Jos kuvaa ei löydy, piilotetaan moduuli kortteineen
+                this.el.style.display = "none";
             }
         }, 300);
     },
@@ -114,6 +122,7 @@ export const MosaicModule = {
         for (const ext of this.extensions) {
             const url = `images/${chapterId}.${ext}`;
             try {
+                // Tarkistetaan tiedoston olemassaolo ilman koko latausta
                 const response = await fetch(url, { method: 'HEAD' });
                 if (response.ok) return url;
             } catch (e) { continue; }
@@ -122,6 +131,10 @@ export const MosaicModule = {
     }
 };
 
+// Varmistetaan globaali näkyvyys iPad-ympäristössä
+window.MosaicModule = MosaicModule;
+
+// Rekisteröidään moduuli keskitettyyn rekisteriin
 if (window.ModuleRegistry) {
     window.ModuleRegistry.register(MosaicModule);
 }

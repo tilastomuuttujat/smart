@@ -1,128 +1,154 @@
 /* ============================================================
-   anatomy-module.js – DYNAAMINEN AGENTTI-VERSIO
-   Vastuu: Tekstin rakenteellinen purku (teesit, päätelmät).
+   anatomy-module.js – RAKENTEELLINEN ASIANTUNTIJA (V7.0)
+   Vastuu: 
+   - Tekstin rakenteellinen purku (teesit, päätelmät)
+   - Reagointi ModuleRegistryn dispatch-käskyihin
+   - Kognitiivisen viipymän (Deep Focus) visualisointi
    ============================================================ */
 
-export const AnatomyModule = {
+const AnatomyModule = {
     id: "anatomy",
     title: "Tekstin anatomia",
-    host: null,
+    category: "structure", // 🧠 Tyypitys ModuleRegistrylle
     active: false,
+    el: null,
+    currentMode: "describe",
 
-    /* ===================== 🧠 DYNAAMINEN SIJOITTUMINEN ===================== */
+    /* ===================== 🧠 SIJOITTELU ===================== */
 
-    getPreferredPanel(viewMode) {
-        // Anatomia on analyysinäkymän ydin, mutta voi tarvittaessa
-        // nousta esiin reflektiossa, jos lukija kaipaa faktoja.
-        if (viewMode === "analysis") return "analysisPanel";
-        if (viewMode === "reflection") return "reflectionPanel";
-        return null;
+    isAvailable(viewMode) {
+        // Asiantuntija on saatavilla analyysi- ja reflektio-näkymissä
+        return viewMode === "analysis" || viewMode === "reflection";
     },
 
-    mount(targetEl) {
-        if (!targetEl || this.host === targetEl) return;
-        
-        console.log(`🧬 Anatomy: Kiinnitetään isäntään: ${targetEl.id}`);
-        this.host = targetEl;
+    render() {
+        if (this.el) return this.el;
 
-        // Luodaan dynaaminen säiliö anatomian korostuksille
-        const anatomyTarget = document.createElement("div");
-        anatomyTarget.id = "anatomy-target";
-        anatomyTarget.style.cssText = `
+        this.el = document.createElement("div");
+        this.el.id = "anatomy-module-root";
+        this.el.className = "module-card anatomy-container";
+        this.el.style.cssText = `
             margin-bottom: 20px;
-            padding: 15px;
-            border-left: 1px solid rgba(255,255,255,0.1);
-            animation: fadeIn 0.5s ease-out;
+            padding: 20px;
+            border-left: 3px solid var(--accent);
+            background: rgba(255, 255, 255, 0.03);
+            transition: all 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+            display: none;
         `;
+
+        return this.el;
+    },
+
+    /* ===================== 🤖 ÄLYKÄS DISPATCH-REAKTIOT ===================== */
+
+    /**
+     * Bongaa lukijan syvän keskittymisen.
+     * Kutsutaan ModuleRegistry.dispatch() kautta.
+     */
+    onDeepFocus(payload) {
+        if (!this.active || !this.el) return;
         
-        // Sijoitetaan paneelin alkuun (prepend), jotta se on näkyvissä heti
-        this.host.prepend(anatomyTarget);
+        console.log(`🧬 Anatomy: Bongattu syvä keskittyminen kappaleessa ${payload.paragraphIndex}`);
+        
+        // Korostetaan moduulia asiantuntijana
+        this.el.style.borderColor = "var(--accent-gold)";
+        this.el.style.background = "rgba(208, 180, 140, 0.08)";
+        this.el.style.transform = "scale(1.03)";
+        
+        // Palautetaan tila pienen viiveen jälkeen
+        setTimeout(() => {
+            if (this.el) {
+                this.el.style.transform = "scale(1)";
+                this.el.style.background = "rgba(255, 255, 255, 0.03)";
+            }
+        }, 3000);
+    },
+
+    /**
+     * Vastaa yleiseen bongauspyyntöön.
+     */
+    onBongattu(data) {
+        console.log("🧬 Anatomy: Vastaanotettu asiantuntija-heräte:", data.reason);
+        this.updateUI("interpret"); // Vaihdetaan asiantuntijatilaan automaattisesti
     },
 
     /* ===================== ELINKAARI ===================== */
 
     init() {
-        // Kuunnellaan luvun vaihtumista, jotta anatomia päivittyy lennosta
-        document.addEventListener("chapterChange", () => {
-            if (this.active) this.render();
+        // Luvun vaihtumisen seuranta lennosta tapahtuvaan päivitykseen
+        window.EventBus?.on("chapter:change", () => {
+            if (this.active) this.updateUI();
         });
-        console.log("🧬 Anatomy: Agentti valmiudessa.");
+        
+        console.log("🧬 Anatomy: Rakenteellinen asiantuntija valmiudessa.");
     },
 
     activate(ctx) {
         this.active = true;
-        this.render(ctx?.framework, ctx?.mode || "describe");
+        this.currentMode = ctx?.mode || "describe";
+        this.updateUI();
     },
 
     deactivate() {
         this.active = false;
-        if (this.host) {
-            this.host.innerHTML = ''; 
-        }
-        this.host = null;
     },
 
-    onModeChange(mode, framework) {
-        if (this.active) this.render(framework, mode);
-    },
+    /* ===================== VISUAALINEN LOGIIKKA ===================== */
 
-    /* ===================== RENDERÖINTI ===================== */
+    updateUI(mode = null) {
+        if (mode) this.currentMode = mode;
+        if (!this.el) return;
 
-    render(framework, mode = "describe") {
-        const container = this.host?.querySelector("#anatomy-target");
-        if (!container) return;
-
-        const activeChapter = window.TextEngine ? 
-            window.TextEngine.getChapterMeta(window.TextEngine.getActiveChapterId()) : null;
+        const activeId = window.TextEngine?.getActiveChapterId();
+        const activeChapter = window.TextEngine?.getChapterMeta(activeId);
         const anatomy = activeChapter?.anatomy;
 
         if (!anatomy) {
-            container.innerHTML = "";
+            this.el.style.display = "none";
             return;
         }
 
+        this.el.style.display = "block";
         let label = "";
         let content = "";
 
         // Valitaan sisältö analyysitilan mukaan
-        switch(mode) {
+        switch(this.currentMode) {
             case "interpret":
-                label = "Johtopäätös";
+                label = "Asiantuntijan johtopäätös";
                 content = anatomy.conclusions?.explicit?.[0] || "Ei eksplisiittistä johtopäätöstä.";
                 break;
             case "hypothesis":
                 label = "Piilevä vaikutus";
                 content = anatomy.conclusions?.implicit?.[0] || "Ei tunnistettua implisiittistä vaikutusta.";
                 break;
-            default: // "describe"
+            default:
                 label = "Keskeinen teesi";
                 content = anatomy.main_thesis;
         }
 
-        if (content) {
-            container.innerHTML = `
-                <div class="anatomy-highlight-box" style="
-                    background: rgba(255, 255, 255, 0.05);
-                    padding: 12px;
-                    border-radius: 4px;
-                ">
-                    <div class="anatomy-label" style="
-                        font-size: 10px;
-                        text-transform: uppercase;
-                        letter-spacing: 1px;
-                        color: #d0b48c;
-                        margin-bottom: 5px;
-                    ">${label}</div>
-                    <div class="anatomy-content" style="
-                        font-size: 14px;
-                        line-height: 1.4;
-                        color: rgba(255,255,255,0.9);
-                    ">${content}</div>
-                </div>
-            `;
-        }
+        this.el.innerHTML = `
+            <div class="anatomy-content-wrapper anim-fade-in">
+                <div class="anatomy-label" style="
+                    font-size: 10px;
+                    text-transform: uppercase;
+                    letter-spacing: 1.5px;
+                    color: var(--accent);
+                    margin-bottom: 8px;
+                    font-weight: bold;
+                ">${label}</div>
+                <div class="anatomy-body" style="
+                    font-size: 14px;
+                    line-height: 1.5;
+                    color: rgba(255,255,255,0.9);
+                ">${content}</div>
+            </div>
+        `;
     }
 };
+
+// Varmistetaan globaali näkyvyys
+window.AnatomyModule = AnatomyModule;
 
 if (window.ModuleRegistry) {
     window.ModuleRegistry.register(AnatomyModule);

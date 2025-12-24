@@ -1,6 +1,9 @@
 /* ============================================================
-   behavior-tracker.js – ÄLYKÄS ANALYYTIKKO-AGENTTI (V5.2)
-   Optimointi: Uniikki käyttäjä-ID + Dynaaminen näkymäseuranta
+   behavior-tracker.js – KOGNITIIVINEN ANALYYTIKKO (V6.0)
+   Vastuu:
+   - Lukijan kognitiivinen profilointi ja tyypitys
+   - Keskitetty "bongaus-reititys" ModuleRegistryn kautta
+   - Viipymän (dwell time) muuntaminen moduulikäskyiksi
    ============================================================ */
 
 const BehaviorTracker = {
@@ -8,59 +11,96 @@ const BehaviorTracker = {
     title: "Analytiikka-ajuri",
     logs: [],
     sessionStart: Date.now(),
+    lastLogTime: Date.now(),
     
-    // Luodaan tai palautetaan pysyvä uniikki ID tälle selaimelle
     userId: localStorage.getItem("tulkintakone_user_id") || 
             "user_" + Math.random().toString(36).substr(2, 9) + "_" + Date.now().toString(36),
 
-    // Google Apps Script Web App URL
     targetUrl: "https://script.google.com/macros/s/AKfycbyrtFHU2E6QcyplYnOGOJWBzbBDERrNkXsbXgCSHXWUD7FtArslNMKUh8d_nvKI4Qs/exec",
 
     init() {
-        // Tallennetaan ID heti muistiin
         localStorage.setItem("tulkintakone_user_id", this.userId);
-        
-        console.log(`📊 Tracker: Aktivoitu. Käyttäjä-ID: ${this.userId}`);
+        console.log(`📊 Tracker: Kognitiivinen analyysi aktivoitu. ID: ${this.userId}`);
 
-        // 1. NAVIGOINTI JA VIIPYMÄ
+        // 1. BONGAUS: Lukutilan muutokset (Skrollaus & Kappaleet)
+        window.EventBus?.on("readingStateChanged", (state) => {
+            this.analyzeDwellTime(state);
+        });
+
+        // 2. BONGAUS: Luvun vaihto ja tyypitys
         document.addEventListener("chapterChange", (e) => {
             const duration = this.getDurationSinceLast();
             const chapterId = e.detail.chapterId;
+            const view = e.detail.view || window.AppState?.ui?.view || "narrative";
             
-            console.log(`📖 Luku vaihtui: ${chapterId} (viipymä: ${duration}s)`);
+            // Tyypitetään luku ja välitetään asiantuntijuus-pyynnöt
+            this.processChapterExpertise(chapterId);
 
             this.log("NAVIGATE", { 
                 chapterId: chapterId,
                 durationSeconds: duration,
-                currentView: e.detail.view || "narrative"
+                currentView: view
             });
 
             this.updateInterestProfile(chapterId, duration);
-
-            // Lähetetään päivitys Sheetsiin heti kun luku vaihtuu
             this.dispatchData();
         });
 
-        // 2. KOGNITIIVINEN KUORMA
-        window.EventBus?.on("ui:interventionStarted", (data) => {
-            this.log("COGNITIVE_OVERLOAD", { 
-                type: data.type, 
-                intensity: data.score 
-            });
-        });
-
-        // 3. EETTISET VALINNAT
+        // 3. BONGAUS: Eettiset valinnat
         window.EventBus?.on("reflection:insightSaved", (data) => {
             this.log("ETHICAL_ACTION", {
                 chapterId: data.chapterId,
                 currentValues: window.AppState?.data?.reflection?.readerValues
             });
-            // Lähetetään heti, jotta eettinen painotus päivittyy Sheetsiin
             this.dispatchData();
         });
     },
 
-    /* ===================== MIELENKIINNON PROFILOINTI ===================== */
+    /**
+     * 🤖 ASIANTUNTIJUUDEN REITYTYS
+     * Jakaa luvun parametrit moduuleille näkökulmakysymyksinä.
+     */
+    processChapterExpertise(chapterId) {
+        const meta = window.TextEngine?.getChapterMeta(chapterId);
+        if (!meta) return;
+
+        // Määritellään luvun painopisteet (esim. tyypitys datasta)
+        const scores = meta.scores || { ethics: 0.5, economy: 0.5, complexity: 0.5 };
+
+        console.log(`🧠 Tracker: Reititetään asiantuntijuus luvulle ${chapterId}`, scores);
+
+        // Välitetään pyynnöt ModuleRegistryn kautta kategorioittain
+        if (scores.ethics > 0.7) {
+            window.ModuleRegistry?.dispatch({ category: 'ethics' }, 'onBongattu', { 
+                type: 'high_tension', 
+                reason: 'Eettinen lataus korkea' 
+            });
+        }
+
+        if (scores.complexity > 0.7) {
+            window.ModuleRegistry?.dispatch({ id: 'starfield' }, 'triggerTension', 0.3);
+        }
+    },
+
+    /**
+     * ⏱️ VIIPYMÄANALYYSI (Dwell Time)
+     * Bongaa, jos lukija pysähtyy tärkeään kohtaan.
+     */
+    analyzeDwellTime(state) {
+        // Jos lukija on pysähtynyt (scrollEnergy on nolla)
+        if (state.scrollEnergy === 0) {
+            const now = Date.now();
+            const dwell = now - this.lastLogTime;
+
+            // Jos viipymä ylittää 7 sekuntia tietyssä kappaleessa
+            if (dwell > 7000) {
+                window.ModuleRegistry?.dispatch(null, 'onDeepFocus', { 
+                    paragraphIndex: state.paragraphIndex,
+                    chapterId: state.chapterId
+                });
+            }
+        }
+    },
 
     updateInterestProfile(chapterId, duration) {
         const meta = window.TextEngine?.getChapterMeta(chapterId);
@@ -76,52 +116,28 @@ const BehaviorTracker = {
         localStorage.setItem("tulkintakone_interest_profile", JSON.stringify(profile));
     },
 
-    /* ===================== LÄHETYS-LOGIIKKA ===================== */
+    async dispatchData() {
+        const logs = JSON.parse(localStorage.getItem("tulkintakone_logs") || "[]");
+        if (logs.length === 0 || this.targetUrl.includes("SINUN_GOOGLE")) return;
 
-async dispatchData() {
-    const logs = JSON.parse(localStorage.getItem("tulkintakone_logs") || "[]");
-    if (logs.length === 0 || this.targetUrl.includes("SINUN_GOOGLE")) return;
+        const report = {
+            userId: this.userId, 
+            timestamp: new Date().toISOString(),
+            summary: this.getSessionSummary(),
+            fullLogs: logs 
+        };
 
-    const currentView = window.AppState?.ui?.view || "narrative";
-    
-    // 🔑 LUODAAN NÄKYMÄKOHTAINEN ID
-    // Näin Google Sheets päivittää narratiivi-rivin kun olet narratiivissa 
-    // ja analyysi-rivin kun olet analyysissä.
-    const viewSpecificId = `${this.userId}_${currentView}`;
+        try {
+            fetch(this.targetUrl, {
+                method: "POST",
+                mode: "no-cors", 
+                keepalive: true,
+                body: JSON.stringify(report)
+            });
+            if (logs.length > 50) localStorage.setItem("tulkintakone_logs", "[]");
+        } catch (e) { console.warn("❌ Tracker: Lähetysvirhe."); }
+    },
 
-    const report = {
-        userId: viewSpecificId, 
-        origin: window.location.origin,
-        timestamp: new Date().toISOString(),
-        currentView: currentView,
-        summary: this.getSessionSummary(),
-        fullLogs: logs 
-    };
-
-    try {
-        // Käytetään standardia lähetystä, mutta napataan virhe hiljaa jos se on vain CORS-ilmoitus
-        fetch(this.targetUrl, {
-            method: "POST",
-            mode: "no-cors", 
-            keepalive: true,
-            body: JSON.stringify(report)
-        }).then(() => {
-            console.log(`✅ Analytiikka (${currentView}) päivitetty.`);
-        }).catch(e => {
-            // Safari saattaa herjata tästä, vaikka data menee perille
-            console.debug("Verkkokutsu lähti matkaan.");
-        });
-
-        if (logs.length > 200) localStorage.setItem("tulkintakone_logs", "[]");
-        
-    } catch (e) {
-        console.warn("❌ Tracker: Kriittinen virhe lähetyksessä.", e);
-    }
-},
-
-    /* ===================== APUFUNKTIOT ===================== */
-
-    lastLogTime: Date.now(),
     getDurationSinceLast() {
         const now = Date.now();
         const diff = Math.round((now - this.lastLogTime) / 1000);
@@ -131,35 +147,28 @@ async dispatchData() {
 
     log(type, payload) {
         const entry = {
-            id: crypto.randomUUID(),
             timestamp: new Date().toISOString(),
             type: type,
             data: payload,
             context: {
-                framework: window.FrameworkEngine?.getActiveFramework()?.id,
-                mode: window.AppState?.ui?.view || "narrative"
+                view: window.AppState?.ui?.view || "narrative",
+                chapter: window.AppState?.ui?.activeChapterId
             }
         };
-        this.logs.push(entry);
         this.persist(entry);
     },
 
     persist(entry) {
         const existing = JSON.parse(localStorage.getItem("tulkintakone_logs") || "[]");
         existing.push(entry);
-        localStorage.setItem("tulkintakone_logs", JSON.stringify(existing.slice(-300)));
+        localStorage.setItem("tulkintakone_logs", JSON.stringify(existing.slice(-100)));
     },
 
     getSessionSummary() {
-        const navLogs = JSON.parse(localStorage.getItem("tulkintakone_logs") || []).filter(l => l.type === "NAVIGATE");
         const interestProfile = JSON.parse(localStorage.getItem("tulkintakone_interest_profile") || "{}");
-        const readerValues = window.AppState?.data?.reflection?.readerValues || { ethics: 50, economy: 50 };
-        
         return {
-            totalChaptersRead: navLogs.length,
             totalTimeSeconds: Math.round((Date.now() - this.sessionStart) / 1000),
-            topInterests: interestProfile,
-            finalValues: readerValues
+            topInterests: interestProfile
         };
     }
 };
