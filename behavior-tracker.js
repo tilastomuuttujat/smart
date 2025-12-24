@@ -19,7 +19,7 @@ const BehaviorTracker = {
     userId: localStorage.getItem("tulkintakone_user_id") || 
             "user_" + Math.random().toString(36).substr(2, 9) + "_" + Date.now().toString(36),
 
-    targetUrl: "https://script.google.com/macros/s/AKfycbz2Z-6IL6CrlarLmbxFWbd14oH7-4Ff_DZMptw-uOx-kQaz3LHY7N7ZFUGochJ5LGFC/exec",
+    targetUrl: "https://script.google.com/macros/s/AKfycbwx-nOqZqtBiebKUHlPGHERTelISJw0gc3gdb8eZ4ShneN0Z_w0Vc1uh0x9Cabd_b7k/exec",
 
     init() {
         localStorage.setItem("tulkintakone_user_id", this.userId);
