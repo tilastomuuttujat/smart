@@ -24,7 +24,33 @@ const BehaviorTracker = {
     localStorage.setItem("penna_user_id", this.userId);
     console.log(`📊 Penna Tracker: init (${this.userId})`);
 
+    this.sendPageView();
     this.bind();
+  },
+
+  /* ===================== PAGE VIEW ===================== */
+
+  sendPageView() {
+    const payload = {
+      userId: this.userId,
+      event: "PAGE_VIEW",
+      url: location.href,
+      referrer: document.referrer || null,
+      ts: new Date().toISOString()
+    };
+
+    try {
+      fetch(this.targetUrl, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify(payload),
+        keepalive: true
+      });
+      console.log("📄 Penna Tracker: PAGE_VIEW lähetetty");
+    } catch (e) {
+      console.warn("❌ Penna Tracker: PAGE_VIEW epäonnistui", e);
+    }
   },
 
   /* ===================== SIDONTA ===================== */
@@ -53,7 +79,6 @@ const BehaviorTracker = {
   /* ===================== TAPAHTUMAT ===================== */
 
   onEssayOpen(essayId) {
-    // Jos edellinen jäi auki, päätetään se
     if (this.activeEssayId) {
       this.onEssayClose();
     }
@@ -62,9 +87,7 @@ const BehaviorTracker = {
     this.essayOpenAt = Date.now();
     this.lastTick = Date.now();
 
-    this.log("ESSAY_OPEN", {
-      essayId
-    });
+    this.log("ESSAY_OPEN", { essayId });
   },
 
   onEssayClose() {
@@ -73,7 +96,6 @@ const BehaviorTracker = {
     const durationMs = Date.now() - this.essayOpenAt;
     const durationSec = Math.round(durationMs / 1000);
 
-    // Suodatetaan hyvin lyhyet avaukset
     if (durationSec >= 3) {
       this.log("ESSAY_READ", {
         essayId: this.activeEssayId,
@@ -88,10 +110,7 @@ const BehaviorTracker = {
   },
 
   onShare(essayId, method = "unknown") {
-    this.log("ESSAY_SHARE", {
-      essayId,
-      method
-    });
+    this.log("ESSAY_SHARE", { essayId, method });
   },
 
   /* ===================== LOKITUS ===================== */
@@ -102,7 +121,6 @@ const BehaviorTracker = {
       type,
       payload
     };
-
     this.persist(entry);
   },
 
@@ -115,10 +133,7 @@ const BehaviorTracker = {
     }
 
     logs.push(entry);
-    localStorage.setItem(
-      "penna_logs",
-      JSON.stringify(logs.slice(-120))
-    );
+    localStorage.setItem("penna_logs", JSON.stringify(logs.slice(-120)));
   },
 
   /* ===================== LÄHETYS ===================== */
