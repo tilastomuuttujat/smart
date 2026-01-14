@@ -1,0 +1,1506 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Esseekortit – Penna</title>
+<meta name="description" content="Genesis Esseekortit - Tutustu esseekokoelmaan ja löydä ajatuksia herättävää sisältöä.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+<script>
+  console.log("THREE exists:", typeof THREE);
+  console.log("OrbitControls exists:", typeof THREE?.OrbitControls);
+</script>
+
+<style>
+:root {
+  --background: #FFF5EE;
+  --background-800: #F8CFB1;
+  --background-900: #FBE5D5;
+  --card-border: #F8CFB1;
+  --primary-color: #720026;
+  --primary-dark-color: #542329;
+  --primary-darken-color: #420000;
+  --primary-light-color: rgba(232,204,210,0.337);
+  --secondary-color: #EA8B68;
+  --secondary-darken-color: #B45D3D;
+  --accent-color: #FF9B54;
+  --text-primary: #200D01;
+  --text-secondary: #542329;
+  --text-muted: #86868b;
+  /*--card-bg: rgba(255, 255, 255, 0.95);*/
+  --card-bg: #F6F6F5;
+  --overlay: rgba(32, 13, 1, 0.65);
+  --border-color: rgba(114, 0, 38, 0.12);
+  --shadow-sm: 0 2px 8px rgba(114, 0, 38, 0.06);
+  --shadow-md: 0 8px 24px rgba(114, 0, 38, 0.10);
+  --shadow-lg: 0 16px 48px rgba(114, 0, 38, 0.14);
+  --transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter Tight', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--background);
+  color: var(--text-primary);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ======= NAVBAR ======= */
+.navbar {
+  background: var(--background-800);
+  padding: 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--shadow-sm);
+}
+
+.navbar-content {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+}
+
+.navbar-logo {
+  width: 48px; height: 48px;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; font-weight: 700; color: #fff;
+}
+
+.navbar-title { font-size: 1.5rem; font-weight: 700; color: var(--primary-dark-color); }
+
+.search-container { position: relative; flex: 1; max-width: 400px; }
+.search-icon { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; }
+
+#essaySearch {
+  width: 100%; padding: 0.75rem 1rem 0.75rem 2.75rem;
+  border-radius: 980px; border: 2px solid var(--border-color);
+  background: var(--card-bg); font-family: inherit; font-size: 0.95rem;
+  transition: var(--transition); color: var(--text-primary);
+}
+
+#essaySearch:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 4px rgba(114, 0, 38, 0.1); }
+
+/* ======= HERO & CATEGORIES ======= */
+.hero-section { background: var(--background-800); padding: 2rem 0 3rem; }
+.hero-content { max-width: 1600px; margin: 0 auto; padding: 0 2rem; text-align: center; }
+.hero-label { font-size: 0.875rem; font-weight: 600; color: var(--primary-dark-color); margin-bottom: 1rem; letter-spacing: 0.05em; }
+.hero-title { font-size: clamp(2rem, 5vw, 4rem); font-weight: 700; margin-bottom: 1rem; line-height: 1.1; }
+.hero-subtitle { font-size: 1.125rem; color: var(--text-secondary); max-width: 600px; margin: 0 auto 2rem; }
+
+.categories-section { padding: 2rem; max-width: 1600px; margin: 0 auto; }
+.section-label { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 1rem; }
+.categories-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.5rem; }
+
+.category-card {
+  background: var(--background-900); border-radius: 16px; padding: 1.25rem 1rem;
+  text-align: center; border: 2px solid transparent; transition: var(--transition); cursor: pointer;
+  position: relative; overflow: hidden;
+}
+
+.category-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); background: var(--card-bg); }
+.category-card.selected { background: var(--primary-color); color: #fff; }
+.category-card.selected * { color: #fff !important; }
+
+.category-icon { 
+    width: 48px; height: 48px; margin: 0 auto 0.75rem; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center; font-size: 1.25rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: #fff;
+}
+
+/* ======= FILTERS ======= */
+.filters-section {
+  padding: 1rem 2rem;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.filters-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.filter-chip {
+  padding: 0.6rem 1.2rem;
+  background: var(--background-900);
+  border: 2px solid transparent;
+  border-radius: 980px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.875rem;
+  font-family: inherit;
+  transition: var(--transition);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filter-chip:hover {
+  background: var(--background-800);
+  border-color: var(--border-color);
+}
+
+.filter-chip.active {
+  background: var(--primary-color);
+  color: #fff;
+  border-color: var(--primary-darken-color);
+}
+
+.filter-chip i {
+  font-size: 0.8rem;
+}
+
+/* ======= GRID & CARDS ======= */
+/* Säädä korttien leveyttä tästä: 
+   Pienempi arvo (esim. 280px) = enemmän kortteja rivissä.
+   Suurempi arvo (esim. 450px) = leveämmät kortit. */
+   
+.grid{
+  max-width:1200px;
+  margin: 1.5rem auto 2.5rem auto;
+  padding: 0 1.5rem;
+
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+
+/* Varmista, että overlay on oletuksena piilotettu ja aktiivisena joustava */
+.overlay {
+  position: fixed; 
+  inset: 0; 
+  background: var(--overlay); 
+  backdrop-filter: blur(12px);
+  display: none; /* TÄRKEÄ: Oletuksena piilossa */
+  align-items: center; 
+  justify-content: center; 
+  z-index: 1000; 
+  padding: 1rem;
+}
+
+.overlay.active { 
+  display: flex !important; /* TÄRKEÄ: Pakota näkyviin kun aktiivinen */
+}
+
+.card {
+  background: var(--card-bg); border-radius: 20px; overflow: hidden;
+  cursor: pointer; transition: var(--transition); box-shadow: var(--shadow-sm); border: 6px solid var(--card-border);
+}
+
+.card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
+.card img { width: 100%; height: 200px; object-fit: cover; }
+.card-content { padding: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem; }
+.card-kicker { 
+    display: inline-flex; align-self: flex-start; font-size: 0.65rem; font-weight: 700;
+    color: var(--primary-dark-color); padding: 6px 12px; border-radius: 999px;
+    background: var(--primary-light-color); text-transform: uppercase;
+}
+.card-title { font-size: 1.05rem; font-weight: 700; color: var(--text-primary); }
+
+/* ======= MODAL ======= */
+
+.modal {
+  width: min(900px, 94vw); height: 90vh; background: var(--card-bg);
+  border-radius: 24px; overflow: hidden; display: flex; flex-direction: column; position: relative;
+}
+
+.modal-header { height: 35%; min-height: 120px; position: relative; }
+.modal-header img { width: 100%; height: 100%; object-fit: cover; }
+
+
+/* ======= MODAL ESSAY HEADER (q10-tyyli) ======= */
+
+.modal-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 1.25rem;
+}
+
+.modal-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.modal-meta i {
+  font-size: 0.75rem;
+  color: var(--primary-color);
+}
+
+/* Varsinainen otsikko */
+.modal-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  font-weight: 600;
+  line-height: 1.15;
+  color: var(--primary-dark-color);
+  margin-bottom: 1.75rem;
+}
+
+.close {
+  position: absolute; top: 1rem; right: 1rem; width: 40px; height: 40px;
+  border-radius: 50%; background: rgba(0,0,0,0.5); color: #fff; border: none;
+  cursor: pointer; z-index: 100; font-size: 1.5rem; display: flex; align-items: center; justify-content: center;
+}
+
+.modal-body { flex: 1; overflow-y: auto; padding: 2rem; }
+.essay-paragraph { margin-bottom: 1.25rem; font-size: 1.05rem; line-height: 1.8; }
+
+.prev-next-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 3rem; }
+.nav-item { padding: 1rem; border: 2px solid var(--border-color); border-radius: 16px; cursor: pointer; background: var(--background-900); }
+.nav-item:hover { border-color: var(--primary-color); background: var(--primary-light-color); }
+
+.footer { background: var(--primary-color); color: #fff; padding: 3rem 2rem; margin-top: 4rem; text-align: center; }
+
+#modalBody {
+  overflow-y: auto;
+}
+
+#moduleStack {
+  display: block;
+  margin-top: 48px;
+}
+
+/* ======= ESSAY TYPOGRAPHY ======= */
+
+/* Peruskappale */
+.essay-paragraph {
+  font-size: 1.05rem;
+  line-height: 1.85;
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+  text-align: justify;
+  hyphens: auto;
+}
+
+/* Ensimmäisen kappaleen iso alkukirjain */
+.essay-paragraph.first::first-letter {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 3.5rem;
+  font-weight: 600;
+  float: left;
+  line-height: 1;
+  margin-right: 0.75rem;
+  margin-top: 0.15rem;
+  color: var(--primary-color);
+}
+
+/* Blockquote-tyyli (q10.html-henkinen) */
+.essay-blockquote {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.15rem;
+  font-style: italic;
+  color: var(--primary-color);
+  padding: 1.25rem 1.5rem;
+  background: var(--primary-light-color);
+  border-left: 4px solid var(--primary-color);
+  border-radius: 0 12px 12px 0;
+  margin: 1.75rem 0;
+  line-height: 1.6;
+}
+
+.card-kicker-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;              /* väli pillereiden väliin */
+  white-space: nowrap;  /* estää rivinvaihdon */
+}
+
+.card-kicker,
+.card-badge {
+  flex-shrink: 0;
+}
+
+.split-handle {
+  height: 12px;
+  background: var(--background-900);
+  cursor: row-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-top: 1px solid var(--border-color);
+}
+
+.split-handle::after {
+  content: "";
+  width: 48px;
+  height: 4px;
+  background: var(--primary-light-color);
+  border-radius: 2px;
+}
+/* ======= SHARE BAR ======= */
+
+.share-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.75rem 0 1.5rem 0;
+}
+
+.share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: var(--background-900);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.share-btn i {
+  font-size: 0.8rem;
+}
+
+.share-btn:hover {
+  background: var(--primary-color);
+  color: #fff;
+  border-color: var(--primary-darken-color);
+}
+
+.share-btn.copy {
+  background: var(--primary-light-color);
+}
+
+.share-btn.copy.copied {
+  background: var(--primary-color);
+  color: #fff;
+}
+
+</style>
+</head>
+
+<body>
+
+<nav class="navbar">
+  <div class="navbar-content">
+    <a href="#" class="navbar-brand">
+    
+      <div class="navbar-logo"><i class="fas fa-feather-alt"></i></div>
+      <span class="navbar-title">Penna</span>
+    </a>
+    <div class="search-container">
+      <i class="fas fa-search search-icon"></i>
+      <input type="text" id="essaySearch" placeholder="Etsi esseitä...">
+    </div>
+  </div>
+</nav>
+
+<section class="hero-section">
+  <div class="hero-content">
+
+        <span class="hero-label"><i class="fas fa-feather-alt"></i> Penna esseekortit</span>
+    <h1 class="hero-title">Tutustu Ajatteluun</h1>
+    <p class="hero-subtitle">Esseitä vallasta, rakenteista ja vaikutuksista</p>
+  </div>
+</section>
+
+<section class="categories-section">
+  <p class="section-label">Valitse osio</p>
+  <div class="categories-grid" id="categoriesGrid"></div>
+</section>
+
+<!-- FILTERS -->
+<section class="filters-section">
+  <div class="filters-container" id="filtersContainer"></div>
+</section>
+
+<div class="grid" id="grid"></div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <button class="close" id="closeBtn">×</button>
+    <div class="modal-header" id="modalHeader"><img id="modalImg" src=""></div>
+        <div class="split-handle" id="splitHandle"></div>
+
+
+    <div class="modal-body" id="modalBody">
+      <div id="modalText"></div>
+<div id="moduleStack" class="module-stack"></div>
+
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <h3>Penna Esseekortit</h3>
+  <p>© 2026 Ajattelun kokoelma</p>
+</footer>
+
+<script>
+/* ===================== DeviceContext ===================== */
+function detectDevice() {
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+
+  const isTouch =
+    "ontouchstart" in window ||
+    navigator.maxTouchPoints > 0;
+
+  return {
+    width,
+    height,
+    isTouch,
+
+    isMobile: width <= 640,
+    isTablet: width > 640 && width <= 1024,
+    isDesktop: width > 1024,
+
+    prefersReducedMotion: window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches
+  };
+}
+
+window.DeviceContext = detectDevice();
+console.log("📱 DeviceContext init:", window.DeviceContext);
+
+let resizeTimeout;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimeout);
+  resizeTimeout = setTimeout(() => {
+    window.DeviceContext = detectDevice();
+    console.log("📱 DeviceContext updated:", window.DeviceContext);
+  }, 150);
+});
+</script>
+
+<script>
+/* ===================== AnalysisIndex ===================== */
+/* Jaettu analyysimuisti moduulien välillä */
+
+window.AnalysisIndex = (function () {
+  const store = new Map();
+  let ready = false;
+
+  return {
+    isReady() {
+      return ready;
+    },
+
+    setAll(results = []) {
+      store.clear();
+      results.forEach(r => {
+        if (r?.id) {
+          store.set(r.id, r);
+        }
+      });
+      ready = true;
+      console.log("📊 AnalysisIndex set:", store.size, "entries");
+    },
+
+    getAll() {
+      return Array.from(store.values());
+    },
+
+    get(id) {
+      return store.get(id);
+    },
+
+    clear() {
+      store.clear();
+      ready = false;
+    }
+  };
+})();
+</script>
+
+//001-G
+//002-24F7
+//003-2FC
+//004-7
+//005-2
+
+<!-- Moduulit (pidetään ennallaan) -->
+<script src="amodule-registry.js"></script>
+<script src="amodule-dispatcher.js"></script>
+<script src="amodule-loader.js"></script>
+<script src="abehavior-tracker.js"></script>
+<script src="questionFlowRenderer.js"></script>
+<script src="statistics1.js"></script>
+<script src="statistics-module.js"></script>
+
+<script src="1astarfield-module.js"></script>
+<script src="counter-matrix.js"></script>
+<script src="3aspatialObserver-module.js"></script>
+<script src="4negativeSDOFmap-module.js"></script>
+<script src="5ablockQuote-module.js"></script>
+<script src="6awordcloud-module.js"></script>
+<script src="7systemRings-module.js"></script>
+<script src="8MItransitions-module.js"></script>
+<script src="9systemDelta-module.js"></script>
+<script src="ACAV-module.js"></script>
+<script src="BreaderReflection-module.js"></script>
+<script src="CanalysisWorkspace-module.js"></script>
+<script src="DcFlower-module.js"></script>
+<script src="EnFlower-module.js"></script>
+<script src="FcausalLoop-module.js"></script>
+<script src="GreflectiveOrientation-module.js"></script>
+
+
+<script>
+/* Split Handle Logic */
+let isResizing = false;
+const splitHandle = document.getElementById("splitHandle");
+const modalHeader = document.getElementById("modalHeader");
+const modalElement = document.querySelector(".modal");
+
+splitHandle.onpointerdown = (e) => {
+  isResizing = true;
+  splitHandle.setPointerCapture(e.pointerId);
+  document.body.style.cursor = "row-resize";
+};
+window.onpointermove = (e) => {
+  if (!isResizing) return;
+  const modalRect = modalElement.getBoundingClientRect();
+  const relativeY = e.clientY - modalRect.top;
+  let percentage = (relativeY / modalRect.height) * 100;
+  if (percentage < 15) percentage = 15;
+  if (percentage > 70) percentage = 70;
+  modalHeader.style.height = percentage + "%";
+};
+window.onpointerup = () => {
+  isResizing = false;
+  document.body.style.cursor = "default";
+};
+</script>
+
+
+<script type="module">
+
+/* Järjestelmän tunnistetiedot */
+// 001-G | 002-24F7 | 003-2FC | 004-7 | 005-2
+
+window.AnalysisIndex = (function () {
+  const store = new Map();
+  return {
+    setAll(results = []) { store.clear(); results.forEach(r => r.id && store.set(r.id, r)); },
+    getAll() { return Array.from(store.values()); },
+    get(id) { return store.get(id); }
+  };
+})();
+
+const CONFIG = {
+  categories: [
+    { id: "all", number: "I–VII", name: "Kaikki", description: "Kaikki esseet", icon: "fas fa-layer-group" },
+    { id: "I", number: "I", name: "Mitä?", description: "Ilmiön kuvaus", icon: "fas fa-question" },
+    { id: "II", number: "II", name: "Miten?", description: "Mekanismit", icon: "fas fa-cogs" },
+    { id: "III", number: "III", name: "Kenelle?", description: "Kokemukset", icon: "fas fa-users" },
+    { id: "IV", number: "IV", name: "Hinta?", description: "Kustannukset", icon: "fas fa-money-bill-wave" },
+    { id: "V", number: "V", name: "Miksi?", description: "Syyt", icon: "fas fa-brain" },
+    { id: "VI", number: "VI", name: "Nyt?", description: "Nykyhetki", icon: "fas fa-clock" },
+    { id: "VII", number: "VII", name: "Tieto?", description: "Perusteet", icon: "fas fa-flask" }
+  ]
+};
+
+const FILTERS = [
+  { id: "all", label: "Kaikki", icon: "fas fa-filter" },
+  { id: "structure", label: "Rakenteet", icon: "fas fa-project-diagram" },
+  { id: "mechanisms", label: "Mekanismit", icon: "fas fa-cogs" },
+  { id: "experience", label: "Kokemukset", icon: "fas fa-user-circle" },
+  { id: "cost", label: "Kustannukset", icon: "fas fa-chart-line" },
+  { id: "change", label: "Muutos", icon: "fas fa-sync-alt" }
+];
+
+let allEssays = [];
+let activeSectionFilter = "all";
+let activeFocusFilter = "all"; // ← LISÄÄ
+
+function mdToHtml(md = "") {
+  const blocks = md.split(/\n\s*\n+/).map(b => b.trim()).filter(Boolean);
+
+  let firstParagraphUsed = false;
+
+  return blocks.map(block => {
+    // Blockquote Markdown-tyyliin
+    if (block.startsWith(">")) {
+      return `<blockquote class="essay-blockquote">
+        ${block.replace(/^>\s?/, "").replace(/\n/g, "<br>")}
+      </blockquote>`;
+    }
+
+    // Normaali kappale
+    const cls = !firstParagraphUsed ? "essay-paragraph first" : "essay-paragraph";
+    firstParagraphUsed = true;
+
+    return `<p class="${cls}">
+      ${block.replace(/\n/g, "<br>")}
+    </p>`;
+  }).join("");
+}
+
+
+/*
+
+function getSystemSection(essay) {
+  const s = essay?.system_classification?.section;
+  if (s) return s;
+  const m = (essay?.meta?.part || "").match(/^(I|II|III|IV|V|VI|VII)\b/);
+  return m ? m[1] : "";
+}
+*/
+
+function buildCategories() {
+  const container = document.getElementById('categoriesGrid');
+  container.innerHTML = '';
+  CONFIG.categories.forEach(cat => {
+    const card = document.createElement('div');
+    card.className = `category-card ${activeSectionFilter === cat.id ? 'selected' : ''}`;
+    card.innerHTML = `<div class="category-icon"><i class="${cat.icon}"></i></div>
+                      <div class="category-number">${cat.number}</div>
+                      <h3 class="category-name">${cat.name}</h3>`;
+    card.onclick = () => { activeSectionFilter = cat.id; buildCategories(); applyFilters(); };
+    container.appendChild(card);
+  });
+}
+
+function getFocusScore(essay, focusId) {
+  const f = essay?.entry_focus || {};
+
+  // Fokus-ID -> hyväksyttävät avaimet datassa
+  const KEYMAP = {
+    structure:   ["structure", "rakenne", "rakenteet"],
+    mechanisms:  ["mechanisms", "mechanism", "mekanismi", "mekanismit"],
+    experience:  ["experience", "kokemus", "kokemukset"],
+    cost:        ["cost", "kustannus", "kustannukset"],
+    change:      ["change", "muutos", "muutokset"]
+  };
+
+  const keys = KEYMAP[focusId] || [focusId];
+
+  for (const k of keys) {
+    if (f[k] !== undefined && f[k] !== null) {
+      const n = Number(f[k]);
+      if (!Number.isNaN(n)) return n;
+      if (f[k] === true) return 1;
+    }
+  }
+  return 0;
+}
+
+
+function applyFilters() {
+
+const term = (document.getElementById("essaySearch")?.value || "").toLowerCase();
+
+const filtered = allEssays.filter(es => {
+  const section = getSystemSection(es);
+  const matchSection =
+    activeSectionFilter === "all" || section === activeSectionFilter;
+
+  const matchFocus =
+    activeFocusFilter === "all"
+    || getTopFocus(es) === activeFocusFilter;
+
+  const title = (es.meta?.title || "").toLowerCase();
+  const lead = (es.card?.lead || "").toLowerCase();
+  const matchSearch = title.includes(term) || lead.includes(term);
+
+  return matchSection && matchFocus && matchSearch;
+});
+
+
+  renderGrid(filtered);
+}
+
+
+
+function buildFilters() {
+  const container = document.getElementById("filtersContainer");
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  FILTERS.forEach(f => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "filter-chip";
+    chip.dataset.filter = f.id;
+    chip.innerHTML = `<i class="${f.icon}"></i>${f.label}`;
+
+    // Aseta aktiivinen ulkoasu
+    if (f.id === activeFocusFilter) chip.classList.add("active");
+
+    // TÄRKEÄ: suora click-handler (ei delegointia)
+    chip.addEventListener("click", (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+
+      activeFocusFilter = f.id;
+
+      // Päivitä aktiiviset luokat
+      container.querySelectorAll(".filter-chip").forEach(b => b.classList.remove("active"));
+      chip.classList.add("active");
+
+      console.log("Suodatetaan fokuksella:", activeFocusFilter);
+      applyFilters();
+    });
+
+    container.appendChild(chip);
+  });
+}
+
+
+
+/*
+function bindFilterEvents() {
+  const container = document.getElementById("filtersContainer");
+  if (!container) return;
+
+  container.addEventListener("click", (e) => {
+    const btn = e.target.closest(".filter-chip");
+    if (!btn) return;
+
+    container.querySelectorAll(".filter-chip")
+      .forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    activeFocusFilter = btn.dataset.filter || "all";
+    applyFilters();
+  });
+}
+*/
+
+/*
+function applyFilters() {
+  const term = (document.getElementById("essaySearch").value || "").toLowerCase();
+  let result = [...allEssays];
+
+  // Section filter
+  if (activeSectionFilter !== "all") {
+    result = result.filter(es => getSystemSection(es) === activeSectionFilter);
+  }
+
+  // Focus filter
+  if (activeFocusFilter !== "all") {
+    result = result.filter(es => es.entry_focus && Number(es.entry_focus[activeFocusFilter]) > 0);
+  }
+
+  // Search
+  if (term) {
+    result = result.filter(es =>
+      (es.meta?.title || "").toLowerCase().includes(term) ||
+      String(es.card?.lead || "").toLowerCase().includes(term)
+    );
+  }
+
+  render(result);
+}
+
+
+*/
+
+
+
+/* =====================================================
+   APUFUNKTIOT
+   ===================================================== */
+   
+
+
+ 
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+}
+/*
+function estimateReadingTime(text) {
+  const words = (text || '').split(/\s+/).length;
+  const minutes = Math.ceil(words / 200);
+  return minutes || 1;
+}
+*/
+function getSystemSection(essay) {
+  const s1 = (essay?.system_classification?.section || "").trim();
+  if (["I","II","III","IV","V","VI","VII"].includes(s1)) return s1;
+  
+  const part = (essay?.meta?.part || "").trim();
+  const m = part.match(/^(I|II|III|IV|V|VI|VII)\b/);
+  if (m) return m[1];
+  
+  return "";
+}
+
+function getTopFocus(essay) {
+  const focusData = essay.entry_focus || {};
+  let topFocus = "structure";
+  let maxVal = 0;
+  for (const [key, val] of Object.entries(focusData)) {
+    if (Number(val) > maxVal) {
+      maxVal = Number(val);
+      topFocus = key;
+    }
+  }
+  return topFocus;
+}
+
+function getFocusIcon(focus) {
+  const icons = {
+    structure: 'cubes',
+    mechanisms: 'cogs',
+    experience: 'user-circle',
+    cost: 'chart-line',
+    change: 'sync-alt',
+    theory: 'atom',
+    practice: 'tools'
+  };
+  return icons[focus] || 'file-alt';
+}
+
+function getFocusLabel(focus) {
+  const labels = {
+    structure: 'Rakenne',
+    mechanisms: 'Mekanismi',
+    experience: 'Kokemus',
+    cost: 'Kustannus',
+    change: 'Muutos',
+    theory: 'Teoria',
+    practice: 'Käytäntö'
+  };
+  return labels[focus] || focus;
+}
+
+function formatDate(dateString) {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('fi-FI', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+}
+
+function renderGrid(list) {
+  const grid = document.getElementById("grid");
+  grid.innerHTML = list.length ? "" : "<p>Ei tuloksia.</p>";
+  list.forEach(es => {
+    const card = document.createElement("div");
+    card.className = "card";
+const topFocus = getTopFocus(es);
+
+card.innerHTML = `
+  <img src="images/${es.id}.JPG" onerror="this.src='https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=400'">
+
+  <div class="card-content">
+    <div class="card-kicker-row">
+      <div class="card-kicker">OSA ${getSystemSection(es) || es.id}</div>
+
+      <div class="essay-badge card-badge">
+        <i class="fas fa-${getFocusIcon(topFocus)}"></i>
+        ${getFocusLabel(topFocus)}
+      </div>
+    </div>
+
+    <h3 class="card-title">${es.meta?.title || "Nimetön"}</h3>
+    <p>${es.card?.lead || ""}</p>
+  </div>
+`;
+
+    card.onclick = () => openModal(es, es.id);
+    grid.appendChild(card);
+  });
+}
+
+/* ======= Apuohjelmat ======= */
+function estimateReadingTime(text) {
+    if (!text) return "0 min";
+    const words = text.split(/\s+/).length;
+    const minutes = Math.ceil(words / 200);
+    return `${minutes} min`;
+}
+
+function closeModal() {
+  const overlay = document.getElementById("overlay");
+  if (overlay) overlay.classList.remove("active");
+
+  document.body.style.overflow = "";
+}
+
+
+
+/* ======= Modal ======= */
+window.openModal = async function(d, docId) {
+
+const baseUrl =
+  window.location.origin +
+  window.location.pathname +
+  `#essee-${docId}`;
+
+const shareUrl = encodeURIComponent(baseUrl);
+
+const shareTitleRaw =
+  d.meta?.title || "Penna – essee";
+
+const shareSummaryRaw =
+  d.summary || d.card?.lead || "";
+
+const shareTextRaw =
+  shareSummaryRaw || shareTitleRaw;
+
+const shareTitle = encodeURIComponent(shareTitleRaw);
+const shareText  = encodeURIComponent(shareTextRaw);
+
+// 🔗 automaattinen kopiointi ensimmäisellä avauksella
+if (!window.__SHARE_AUTO_COPIED__) {
+  const autoShareText =
+`${shareTitleRaw}
+
+${shareSummaryRaw}
+
+${baseUrl}`;
+
+  navigator.clipboard.writeText(autoShareText).catch(() => {});
+  window.__SHARE_AUTO_COPIED__ = true;
+}
+
+const nativeBtn = document.getElementById("nativeShare");
+if (nativeBtn && navigator.share) {
+  nativeBtn.onclick = () => {
+    navigator.share({
+      title: shareTitleRaw,
+      text: shareSummaryRaw,
+      url: baseUrl
+    });
+  };
+}
+
+
+  const overlay = document.getElementById("overlay");
+  if (!overlay) return;
+
+  overlay.classList.add("active");
+  document.body.style.overflow = "hidden";
+    
+    const modalText = document.getElementById("modalText");
+    const moduleStack = document.getElementById("moduleStack");
+    const modalImg = document.getElementById("modalImg");
+    
+    const modalBody = document.getElementById("modalBody");
+    const isQuestionFlow = d.meta?.tags?.includes("question_flow");
+
+    // Käynnistetään näkymä
+    modalText.style.display = "block";
+    //document.getElementById("viewActions").style.display = isQuestionFlow ? "none" : "flex";
+    
+
+    const rawText = d.body_md || d.views?.narrative?.body_md || "";
+    modalText.dataset.rawText = rawText;
+    
+    const readingTime = estimateReadingTime(rawText);
+    const tags = d.meta?.tags || "";
+
+    // Kuvan lataus ja virheenkäsittely
+    modalImg.src = `images/${docId}.JPG`;
+    modalImg.onerror = () => {
+        modalImg.src = "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=900";
+    };
+
+    // Tekstikerroksen alustus morph-animaatiolla
+    const topFocus = getTopFocus(d);
+/*
+    modalText.innerHTML = `
+        <div class="essay-length">◷ ${readingTime} lukuaika ⟡ ${tags}</div>
+                <div class="essay-badge">
+          <i class="fas fa-${getFocusIcon(topFocus)}"></i>
+          ${getFocusLabel(topFocus)}
+        </div>
+        <div class="morph-layer enter-morph"></div>
+    `;
+*/    
+    
+    const quote = d.meta?.quote;
+
+
+
+modalText.innerHTML = `
+  <div class="modal-meta">
+    <span>OSA ${getSystemSection(d)}</span>
+    <span>
+      <i class="fas fa-${getFocusIcon(topFocus)}"></i>
+      ${getFocusLabel(topFocus)}
+    </span>
+    <span>
+      <i class="fas fa-clock"></i>
+      ${readingTime}
+    </span>
+  </div>
+
+  <h1 class="modal-title">
+    ${d.meta?.title || "Nimetön"}
+  </h1>
+
+<div class="share-bar">
+  <a class="share-btn" target="_blank"
+     href="https://www.facebook.com/sharer/sharer.php?u=${shareUrl}&quote=${shareText}">
+    <i class="fab fa-facebook-f"></i> Facebook
+  </a>
+
+  <a class="share-btn" target="_blank"
+     href="https://twitter.com/intent/tweet?url=${shareUrl}&text=${shareText}">
+    <i class="fab fa-x-twitter"></i> X
+  </a>
+
+  <a class="share-btn" target="_blank"
+     href="https://www.linkedin.com/sharing/share-offsite/?url=${shareUrl}&summary=${shareText}&title=${shareTitle}">
+    <i class="fab fa-linkedin-in"></i> LinkedIn
+  </a>
+
+  <a class="share-btn" target="_blank"
+     href="https://www.suomi24.fi/">
+    <i class="fas fa-comments"></i> Suomi24
+  </a>
+  
+  <button class="share-btn" id="nativeShare">
+  <i class="fas fa-share-alt"></i> Jaa
+</button>
+
+
+  <button class="share-btn copy" id="copyShareLink">
+    <i class="fas fa-link"></i> Kopioi linkki
+  </button>
+</div>
+
+
+  <div class="morph-layer enter-morph"></div>
+`;
+
+    const morphLayer = modalText.querySelector(".enter-morph");
+
+    // Renderöidään joko kysymysvirta tai standardi markdown
+    if (isQuestionFlow && typeof window.QuestionFlowRenderer === "function") {
+        const flowRoot = window.QuestionFlowRenderer({ source: rawText, essay: d, docId });
+        morphLayer.appendChild(flowRoot);
+    } else {
+        morphLayer.innerHTML = mdToHtml(rawText);
+    }
+
+    setTimeout(() => morphLayer.classList.add("active"), 50);
+    moduleStack.innerHTML = "";
+
+    // --- GENESIS DATA-ADAPTERI MODUULEILLE ---
+    const globalGraph = window.GlobalGraph || { nodes: [], links: [] };
+    const relatedLinks = (globalGraph.links || []).filter(l => l.source === docId || l.target === docId);
+    
+    // Alustetaan MI-profiili ja varmistetaan visuaalinen flow
+    const baseMiProfile = d.mi_profile || { present_levels: [], missing_levels: [], mi_flow: [] };
+    if (baseMiProfile.mi_flow.length === 0 && relatedLinks.length > 0) {
+        baseMiProfile.mi_flow = relatedLinks.slice(0, 5).map(l => l.target === docId ? l.source : l.target);
+    }
+
+const moduleContext = {
+  ...d,
+
+  id: String(docId),
+  view: "narrative", // ← KRIITTINEN ja oikein
+
+  meta: {
+    ...(d.meta || {}),
+    modules: Array.isArray(d.meta?.modules)
+      ? d.meta.modules
+      : typeof d.meta?.modules === "string"
+        ? [d.meta.modules]
+        : []
+  },
+
+  graph: globalGraph,
+  links: relatedLinks,
+
+  mi_profile: baseMiProfile,
+  mi: { profile: baseMiProfile },
+
+  views: {
+    narrative:  { body_md: rawText },
+    analysis:   { body_md: rawText },
+    reflection: { body_md: rawText }
+  },
+
+  chapter: {
+    id: String(docId),
+    meta: d.meta || {},
+    views: {
+      narrative:  { body_md: rawText },
+      analysis:   { body_md: rawText },
+      reflection: { body_md: rawText }
+    }
+  },
+
+  sdof: d.sdof || {
+    structure: "",
+    dynamics: "",
+    outcomes: [],
+    feedback: []
+  },
+
+  system_classification: d.system_classification || {}
+};
+
+const copyBtn = document.getElementById("copyShareLink");
+if (copyBtn) {
+  copyBtn.onclick = async () => {
+    const fullShareText =
+`${shareTitleRaw}
+
+${shareSummaryRaw}
+
+${baseUrl}`;
+
+    try {
+      await navigator.clipboard.writeText(fullShareText);
+      copyBtn.classList.add("copied");
+      copyBtn.innerHTML = `<i class="fas fa-check"></i> Kopioitu`;
+      setTimeout(() => {
+        copyBtn.classList.remove("copied");
+        copyBtn.innerHTML = `<i class="fas fa-link"></i> Kopioi linkki`;
+      }, 1600);
+    } catch {
+      alert("Linkin kopiointi epäonnistui");
+    }
+  };
+}
+
+
+    // --- MODUULIEN AKTIVOINTI ---
+    if (window.ModuleRegistry) {
+        window.ModuleRegistry.setContext(moduleContext);
+
+        if (window.ModuleLoader) {
+            await window.ModuleLoader.resolve(moduleContext);
+        }
+
+        if (window.ModuleDispatcher) {
+            window.ModuleDispatcher.resolve(moduleContext, moduleStack);
+        }
+    }
+
+    // --- NAVIGAATIO (EDELLINEN / SEURAAVA) ---
+    const currentIndex = allEssays.findIndex(e => e.id === docId);
+    const prevEssay = allEssays[currentIndex - 1];
+    const nextEssay = allEssays[currentIndex + 1];
+
+    if (prevEssay || nextEssay) {
+        const nav = document.createElement("div");
+        nav.className = "prev-next-nav";
+
+        // Edellinen essee
+        const prevItem = document.createElement("div");
+        prevItem.className = "nav-item prev";
+        if (prevEssay) {
+            prevItem.innerHTML = `
+                <div style="font-size:11px; color:#86868b; text-transform:uppercase; margin-bottom:1px;">← Edellinen</div>
+                <h5>${prevEssay.id}: ${prevEssay.meta?.title || ""}</h5>
+            `;
+            prevItem.onclick = () => {
+                modalBody.scrollTop = 0;
+                window.openModal(prevEssay, prevEssay.id);
+            };
+        } else {
+            prevItem.style.visibility = "hidden";
+        }
+        nav.appendChild(prevItem);
+
+        // Seuraava essee
+        const nextItem = document.createElement("div");
+        nextItem.className = "nav-item next";
+        if (nextEssay) {
+            nextItem.innerHTML = `
+                <div style="font-size:11px; color:#86868b; text-transform:uppercase; margin-bottom:1px;">Seuraava →</div>
+                <h5>${nextEssay.id}: ${nextEssay.meta?.title || ""}</h5>
+            `;
+            nextItem.onclick = () => {
+                modalBody.scrollTop = 0;
+                window.openModal(nextEssay, nextEssay.id);
+            };
+        } else {
+            nextItem.style.visibility = "hidden";
+        }
+        nav.appendChild(nextItem);
+
+        moduleStack.appendChild(nav);
+    }
+};
+
+document.getElementById("closeBtn").onclick = closeModal;
+
+document.getElementById("essaySearch").oninput = applyFilters;
+
+/*
+window.onload = () => {
+  // Testidataa jos allEssays on tyhjä (oikeassa käytössä korvataan latauksella)
+  if (allEssays.length === 0) {
+    console.log("Odotetaan dataa...");
+  }
+  buildCategories();
+  buildFilters();   // ← TÄMÄ PUUTTUU
+};
+
+*/
+document.getElementById("overlay").addEventListener("click", (e) => {
+  if (e.target.id === "overlay") {
+    closeModal();
+  }
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    closeModal();
+  }
+});
+
+
+
+
+/**
+ * Apufunktio suodatinpainikkeiden tapahtumankäsittelyyn.
+ * Erotettu init-funktiosta skooppivirheiden välttämiseksi.
+ */
+function bindFilterEvents() {
+  const container = document.getElementById("filtersContainer");
+  if (!container) return;
+
+  container.addEventListener("click", (e) => {
+    const btn = e.target.closest(".filter-chip");
+    if (!btn) return;
+
+    // Poistetaan vanha aktiivisuus ja lisätään uusi
+    container.querySelectorAll(".filter-chip").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    // Päivitetään globaali muuttuja ja ajetaan suodatus
+    activeFocusFilter = btn.dataset.filter || "all";
+    console.log("Suodatetaan fokuksella:", activeFocusFilter); // Debug-apu
+    
+    applyFilters();
+  });
+}
+
+/**
+ * Tekstianalyysimoduuli Delta-vaiheiden tunnistamiseen (r, K, Ω, α).
+ */
+window.DeltaAnalyzer = function(text = "") {
+    const PHASES = ["r", "K", "Ω", "α"];
+    const SIGNALS = {
+        r: [/kuvaus|ilmiö|havaitaan|esiintyy|näyttäytyy/gi],
+        K: [/rakenne|järjestelmä|ohjaus|mekanismi|logiikka/gi],
+        Ω: [/seuraus|vaikutus|heikkeneminen|rapautuminen|jännite/gi],
+        α: [/suunta|vaihtoehto|avautuu|vastuu|uudelleenajattelu/gi]
+    };
+
+    const raw = { r: 0, K: 0, Ω: 0, α: 0 };
+    const t = String(text).toLowerCase();
+
+    PHASES.forEach(p => {
+        SIGNALS[p].forEach(rx => {
+            const m = t.match(rx);
+            if (m) raw[p] += m.length;
+        });
+    });
+
+    const sum = PHASES.reduce((a, p) => a + raw[p], 0);
+    if (!sum) return { r: 0, K: 0, Ω: 0, α: 0, confidence: 0 };
+
+    return {
+        r: raw.r / sum,
+        K: raw.K / sum,
+        Ω: raw.Ω / sum,
+        α: raw.α / sum,
+        confidence: Math.min(1, sum / 12)
+    };
+};
+
+/**
+ * Järjestelmän alustus (Pääfunktio)
+ */
+async function init() {
+    console.log("--- Genesis Ultimate Engine δ: init ---");
+
+    // 1. Perusrakenteiden valmistelu
+    buildCategories();
+    buildFilters();
+    //bindFilterEvents();
+
+    const searchInput = document.getElementById("essaySearch");
+    if (searchInput) searchInput.oninput = applyFilters;
+
+    // 2. Datan lataus
+    try {
+        const response = await fetch("esseekortit.json");
+        if (!response.ok) throw new Error(`HTTP-virhe: ${response.status}`);
+
+        const rawText = await response.text();
+        if (!rawText.trim()) throw new Error("esseekortit.json on tyhjä.");
+
+        let data;
+        try {
+            data = JSON.parse(rawText);
+        } catch (parseError) {
+            console.error("JSON parse error:", parseError.message);
+            // Debug-apu JSON-virheen paikallistamiseen
+            const m = String(parseError.message).match(/position (\d+)/);
+            if (m) {
+                const pos = Number(m[1]);
+                console.error("Context (before):", rawText.slice(Math.max(0, pos - 50), pos));
+                console.error("Context (after):", rawText.slice(pos, pos + 50));
+            }
+            throw parseError;
+        }
+
+        // Muunnetaan data taulukoksi ja suodatetaan julkaisemattomat
+        allEssays = Array.isArray(data) ? data : Object.values(data);
+        allEssays = allEssays.filter(d => d && d.id && d.published !== false);
+
+allEssays = allEssays.map(e => {
+  const focus = e.entry_focus || {};
+
+  // normalisoidaan suomi → englanti
+  return {
+    ...e,
+    entry_focus: {
+      structure: focus.structure ?? focus.rakenne ?? 0,
+      mechanisms: focus.mechanisms ?? focus.mekanismi ?? 0,
+      experience: focus.experience ?? focus.kokemus ?? 0,
+      cost: focus.cost ?? focus.kustannus ?? 0,
+      change: focus.change ?? focus.muutos ?? 0
+    }
+  };
+});
+
+        // Järjestetään ID:n mukaan (numeerinen järjestys)
+        allEssays.sort((a, b) => Number(a.id) - Number(b.id));
+
+        // 3. Globaalin indeksin ja graafin rakentaminen
+        window.__ESSAY_INDEX__ = new Map(allEssays.map(e => [String(e.id), e]));
+
+        if (window.AnalysisIndex) {
+            const analysisPayload = allEssays.map(e => ({
+                id: e.id,
+                scores: window.DeltaAnalyzer(e.body_md || ""),
+                entry_focus: e.entry_focus || {},
+                mi_profile: e.mi_profile || {},
+                sdof: e.sdof || {},
+                system_classification: e.system_classification || {}
+            }));
+            window.AnalysisIndex.setAll(analysisPayload);
+        }
+
+        // Rakennettaan relaatiograafi tekstiviittausten ja tagien perusteella
+        window.GlobalGraph = {
+            nodes: allEssays.map(e => ({ 
+                id: String(e.id), 
+                title: e.meta?.title || "Nimetön" 
+            })),
+            links: []
+        };
+
+        allEssays.forEach(e => {
+            const sourceId = String(e.id);
+            allEssays.forEach(target => {
+                const targetId = String(target.id);
+                if (sourceId === targetId) return;
+
+                let strength = 0;
+                // Kriteeri 1: Suora tekstiviittaus ID-tunnisteeseen
+                if (e.body_md?.includes(targetId)) strength += 5;
+
+                // Kriteeri 2: Yhteiset asiasanat
+                const commonTags = e.meta?.tags?.filter(t => target.meta?.tags?.includes(t)) || [];
+                if (commonTags.length > 0) strength += commonTags.length;
+
+                if (strength > 0) {
+                    window.GlobalGraph.links.push({ 
+                        source: sourceId, 
+                        target: targetId, 
+                        value: strength 
+                    });
+                }
+            });
+        });
+
+        console.log("🕸️ Graafi valmis:", window.GlobalGraph.links.length, "linkkiä.");
+        console.log("Esseitä ladattu:", allEssays.length);
+
+        // 4. Lopullinen suodatus ja näyttö
+        applyFilters();
+
+    } catch (err) {
+        console.error("Init error:", err);
+        const grid = document.getElementById("grid");
+        if (grid) {
+            grid.innerHTML = `
+                <div style="padding:2rem; background:#fff5f5; border:2px solid #feb2b2; border-radius:12px; color:#c53030; font-family: monospace;">
+                    <h3 style="margin:0 0 10px 0;">JÄRJESTELMÄVIRHE</h3>
+                    <p><strong>Syy:</strong> ${err.message}</p>
+                    <p style="margin-top:10px; font-size:0.9rem;">Tarkista JSON-tiedoston syntaksi ja konsolin lokit.</p>
+                </div>`;
+        }
+    }
+    
+    // 🔗 avaa essee suoraan jaetusta linkistä
+function openEssayFromHash() {
+  const hash = window.location.hash;
+  if (!hash.startsWith("#essee-")) return;
+
+  const id = hash.replace("#essee-", "");
+  const essay = allEssays.find(e => String(e.id) === id);
+  if (essay) {
+    openModal(essay, essay.id);
+  }
+}
+
+// ajetaan heti initin jälkeen
+openEssayFromHash();
+
+// reagoi myös hash-muutoksiin
+window.addEventListener("hashchange", openEssayFromHash);
+
+
+}
+
+// Käynnistetään alustus
+init();
+</script>
+
+</body>
+</html>

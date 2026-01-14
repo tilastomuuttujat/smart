@@ -1,17 +1,18 @@
 /* ============================================================================
-   behavior-tracker.js – SUODATTAVA ANALYYTIKKO (V8.1 – TURVALLINEN)
+   behavior-tracker.js – ESSEEKORTTI-ANALYYTIKKO (Penna V1.0)
+   – passiivinen, turvallinen, ei oletuksia arkkitehtuurista
 ============================================================================ */
 
 const BehaviorTracker = {
-  id: "tracker",
+  id: "penna-tracker",
   sessionStart: Date.now(),
   lastTick: Date.now(),
 
-  lastChapter: null,
-  lastView: null,
+  activeEssayId: null,
+  essayOpenAt: null,
 
   userId:
-    localStorage.getItem("tulkintakone_user_id") ||
+    localStorage.getItem("penna_user_id") ||
     `user_${Math.random().toString(36).slice(2)}_${Date.now().toString(36)}`,
 
   targetUrl:
@@ -20,96 +21,77 @@ const BehaviorTracker = {
   /* ===================== INIT ===================== */
 
   init() {
-    localStorage.setItem("tulkintakone_user_id", this.userId);
-    console.log(`📊 Tracker V8.1: alustetaan (${this.userId})`);
+    localStorage.setItem("penna_user_id", this.userId);
+    console.log(`📊 Penna Tracker: init (${this.userId})`);
 
-    this.onReadingState = this.onReadingState.bind(this);
-    this.onChapterChange = this.onChapterChange.bind(this);
-    this.onReflection = this.onReflection.bind(this);
-
-    this.bindWhenReady();
+    this.bind();
   },
 
-  /* ===================== TURVALLINEN SIDONTA ===================== */
+  /* ===================== SIDONTA ===================== */
 
-  bindWhenReady() {
-    if (window.EventBus && window.ModuleRegistry && window.AppState) {
-      console.log("📊 Tracker: EventBus valmis – sidotaan tapahtumat");
+  bind() {
+    // Esseen avaus (modal)
+    document.addEventListener("penna:essayOpened", e => {
+      const { essayId } = e.detail || {};
+      if (!essayId) return;
+      this.onEssayOpen(essayId);
+    });
 
-      EventBus.on("readingStateChanged", this.onReadingState);
-      EventBus.on("chapter:change", this.onChapterChange);
-      EventBus.on("state:reflectionUpdated", this.onReflection);
+    // Esseen sulkeminen
+    document.addEventListener("penna:essayClosed", () => {
+      this.onEssayClose();
+    });
 
-      return;
-    }
-
-    // Odotetaan seuraavaa tickiä
-    setTimeout(() => this.bindWhenReady(), 50);
+    // Jako / kopiointi
+    document.addEventListener("penna:share", e => {
+      const { essayId, method } = e.detail || {};
+      if (!essayId) return;
+      this.onShare(essayId, method);
+    });
   },
 
   /* ===================== TAPAHTUMAT ===================== */
 
-  onReadingState(state) {
-    if (!state) return;
-
-    const now = Date.now();
-    const dwellMs = now - this.lastTick;
-    this.lastTick = now;
-
-    if (state.scrollEnergy === 0 && dwellMs > 8000) {
-      ModuleRegistry?.dispatch(
-        null,
-        "onDeepFocus",
-        {
-          chapterId: state.chapterId,
-          paragraphIndex: state.paragraphIndex,
-          dwellMs
-        }
-      );
-
-      this.log("DEEP_FOCUS", {
-        chapterId: state.chapterId,
-        paragraphIndex: state.paragraphIndex,
-        dwellMs
-      });
+  onEssayOpen(essayId) {
+    // Jos edellinen jäi auki, päätetään se
+    if (this.activeEssayId) {
+      this.onEssayClose();
     }
+
+    this.activeEssayId = essayId;
+    this.essayOpenAt = Date.now();
+    this.lastTick = Date.now();
+
+    this.log("ESSAY_OPEN", {
+      essayId
+    });
   },
 
-  onChapterChange({ chapterId }) {
-    if (!chapterId) return;
+  onEssayClose() {
+    if (!this.activeEssayId || !this.essayOpenAt) return;
 
-    const duration = this.getDuration();
-    const view = AppState?.ui?.view || "narrative";
+    const durationMs = Date.now() - this.essayOpenAt;
+    const durationSec = Math.round(durationMs / 1000);
 
-    if (chapterId === this.lastChapter && view === this.lastView && duration < 2) {
-      return;
+    // Suodatetaan hyvin lyhyet avaukset
+    if (durationSec >= 3) {
+      this.log("ESSAY_READ", {
+        essayId: this.activeEssayId,
+        durationSeconds: durationSec
+      });
     }
 
-    this.lastChapter = chapterId;
-    this.lastView = view;
-
-    this.log("NAVIGATE", {
-      chapterId,
-      durationSeconds: duration,
-      view
-    });
+    this.activeEssayId = null;
+    this.essayOpenAt = null;
 
     this.dispatchData();
   },
 
-  onReflection(reflectionState) {
-    if (!reflectionState) return;
-
-    this.log("REFLECTION_UPDATE", {
-      values: reflectionState.readerValues,
-      mode: reflectionState.systemMode
+  onShare(essayId, method = "unknown") {
+    this.log("ESSAY_SHARE", {
+      essayId,
+      method
     });
-
-    ModuleRegistry?.dispatch(
-      { category: "reflective" },
-      "onReflectionShift",
-      reflectionState
-    );
   },
 
   /* ===================== LOKITUS ===================== */
@@ -118,11 +100,7 @@ const BehaviorTracker = {
     const entry = {
       ts: new Date().toISOString(),
       type,
-      payload,
-      context: {
-        view: AppState?.ui?.view,
-        chapter: AppState?.ui?.activeChapterId
-      }
+      payload
     };
 
     this.persist(entry);
@@ -131,14 +109,14 @@ const BehaviorTracker = {
   persist(entry) {
     let logs = [];
     try {
-      logs = JSON.parse(localStorage.getItem("tulkintakone_logs") || "[]");
-    } catch (_) {
+      logs = JSON.parse(localStorage.getItem("penna_logs") || "[]");
+    } catch {
       logs = [];
     }
 
     logs.push(entry);
     localStorage.setItem(
-      "tulkintakone_logs",
+      "penna_logs",
       JSON.stringify(logs.slice(-120))
     );
   },
@@ -148,8 +126,8 @@ const BehaviorTracker = {
   async dispatchData() {
     let logs = [];
     try {
-      logs = JSON.parse(localStorage.getItem("tulkintakone_logs") || "[]");
-    } catch (_) {
+      logs = JSON.parse(localStorage.getItem("penna_logs") || "[]");
+    } catch {
       logs = [];
     }
 
@@ -161,7 +139,7 @@ const BehaviorTracker = {
       events: logs
     };
 
-    localStorage.setItem("tulkintakone_logs", "[]");
+    localStorage.setItem("penna_logs", "[]");
 
     try {
       fetch(this.targetUrl, {
@@ -171,19 +149,10 @@ const BehaviorTracker = {
         body: JSON.stringify(packet),
         keepalive: true
       });
-      console.log(`🚀 Tracker: lähetetty ${logs.length} tapahtumaa`);
+      console.log(`🚀 Penna Tracker: lähetetty ${logs.length} tapahtumaa`);
     } catch (e) {
-      console.warn("❌ Tracker: lähetys epäonnistui", e);
+      console.warn("❌ Penna Tracker: lähetys epäonnistui", e);
     }
-  },
-
-  /* ===================== APU ===================== */
-
-  getDuration() {
-    const now = Date.now();
-    const sec = Math.round((now - this.lastTick) / 1000);
-    this.lastTick = now;
-    return sec;
   }
 };
 
