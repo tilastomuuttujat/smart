@@ -1,0 +1,46 @@
+name: Build Print Book
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Create serviceAccountKey.json
+        run: |
+          cat <<EOF > serviceAccountKey.json
+          ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          EOF
+
+      - name: Generate HTML
+        run: node generate-html.js
+
+      - name: Verify HTML
+        run: |
+          if [ ! -f book_static.html ]; then
+            echo "HTML not found"
+            exit 1
+          fi
+
+      - name: Generate PDF
+        run: node generate-pdf.js
+
+      - name: Upload PDF
+        uses: actions/upload-artifact@v4
+        with:
+          name: Print_A5
+          path: Kirja_A5_PRINT.pdf
