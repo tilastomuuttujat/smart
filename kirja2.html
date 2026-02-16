@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>Järjestelmä – Ihmiset – Muutos | Harri Käyhkö</title>
+<meta name="description" content="Järjestelmä Ihmiset Muutos – systemaattinen analyysi hyvinvointivaltion kriisistä.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,300;0,7..72,400;0,7..72,500;0,7..72,600;0,7..72,700;1,7..72,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--bg:#f5f0e8;--card:#ede7db;--text:#2e2820;--heading:#5a3a1a;--primary:#8b4513;--muted:#8a7e6e;
+--border:#d4cbb8;--highlight:#e8c96a;--progress:#8b4513;--overlay:rgba(40,30,20,.45);
+--font-body:'Literata',Georgia,serif;--font-ui:'Inter',system-ui,sans-serif;
+--radius:8px;--max-w:42rem;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+
+/* Progress bar */
+#progress-bar{position:fixed;top:0;left:0;right:0;height:3px;background:var(--border);z-index:100}
+#progress-fill{height:100%;background:var(--progress);transition:width .5s ease-out;width:0}
+
+/* Toolbar */
+.toolbar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);background:rgba(237,231,219,.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);font-family:var(--font-ui);position:relative;z-index:30;flex-shrink:0}
+.toolbar button{background:none;border:none;color:var(--muted);cursor:pointer;padding:8px;border-radius:var(--radius);transition:all .2s;display:flex;align-items:center;gap:6px;font-family:var(--font-ui);font-size:14px}
+.toolbar button:hover{background:var(--border);color:var(--text)}
+.toolbar .chapter-info{font-size:12px;color:var(--muted)}
+.toolbar .font-controls{display:flex;align-items:center;gap:2px}
+.toolbar .font-size-label{width:28px;text-align:center;font-size:12px;color:var(--muted)}
+
+/* Main content area */
+#reader{flex:1;overflow-y:auto;scroll-behavior:smooth}
+#reader::-webkit-scrollbar{width:6px}
+#reader::-webkit-scrollbar-track{background:transparent}
+#reader::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* Chapter content */
+.chapter-view{padding:40px 24px 48px;max-width:var(--max-w);margin:0 auto}
+@media(min-width:640px){.chapter-view{padding:64px 32px 60px}}
+.chapter-header{border-bottom:1px solid #c4a872;padding-bottom:32px;margin-bottom:40px}
+.chapter-part{font-family:var(--font-ui);font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:8px}
+.chapter-title{font-size:clamp(1.5rem,5vw,1.95rem);font-weight:600;color:var(--heading);letter-spacing:-.02em;line-height:1.2}
+.chapter-subtitle{font-size:1.1rem;color:var(--muted);font-style:italic;margin-top:8px}
+
+/*.chapter-body{font-size:18px;line-height:1.85;letter-spacing:.01em}*/
+
+/* Väliotsikoiden tyylit: viivat ylä- ja alapuolella */
+.chapter-body h2 {
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 1.2rem 0;
+    margin: 2.5rem 0 1.5rem 0;
+    color: var(--heading);
+    font-family: var(--font-ui);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    font-size: 18px;
+    text-align: center;
+    width: 100%;
+    line-height: 1.85;
+}
+
+
+@media(max-width:640px){.chapter-body{font-size:16px;line-height:1.75}}
+.chapter-body p{margin-bottom:1.5em}
+.chapter-body blockquote{border-left:2px solid #c4a872;padding-left:20px;font-style:italic;color:var(--muted);font-size:1.15em;margin-bottom:2em}
+@media(max-width:640px){.chapter-body blockquote{font-size:1.05em}}
+
+mark{background:var(--highlight);padding:1px 3px;border-radius:2px}
+
+/* Chapter navigation */
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;max-width:var(--max-w);margin:0 auto;padding:16px 24px 48px;font-family:var(--font-ui)}
+.chapter-nav button{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:10px 16px;font-size:13px;color:var(--muted);cursor:pointer;transition:all .2s;max-width:45%;text-align:left;font-family:var(--font-ui)}
+.chapter-nav button:hover{background:var(--border);color:var(--text)}
+.chapter-nav .spacer{flex:1}
+
+
+/* Overlay */
+.overlay{position:fixed;inset:0;background:var(--overlay);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:40;opacity:0;pointer-events:none;transition:opacity .25s}
+.overlay.open{opacity:1;pointer-events:all}
+
+/* Slide panels */
+.panel{position:fixed;top:0;bottom:0;width:85vw;max-width:380px;background:var(--card);z-index:50;display:flex;flex-direction:column;box-shadow:-4px 0 30px rgba(0,0,0,.15);transition:transform .3s ease}
+.panel-left{left:0;transform:translateX(-100%)}
+.panel-left.open{transform:translateX(0)}
+.panel-right{right:0;transform:translateX(100%)}
+.panel-right.open{transform:translateX(0)}
+
+.panel-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);font-family:var(--font-ui)}
+.panel-header h2{font-size:18px;font-weight:600;color:var(--text)}
+.panel-header button{background:none;border:none;cursor:pointer;color:var(--muted);padding:6px;border-radius:var(--radius);transition:all .2s}
+.panel-header button:hover{background:var(--border);color:var(--text)}
+
+.panel-body{flex:1;overflow-y:auto;padding:16px 8px}
+.panel-body::-webkit-scrollbar{width:5px}
+.panel-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* TOC */
+.toc-book-title{padding:0 12px;margin-bottom:24px}
+.toc-book-title h3{font-size:15px;font-weight:600;color:var(--heading)}
+.toc-book-title p{font-size:12px;color:var(--muted);margin-top:4px;font-family:var(--font-ui)}
+.toc-part{font-family:var(--font-ui);font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.1em;color:var(--primary);padding:0 12px;margin:16px 0 8px}
+.toc-item{display:block;width:100%;text-align:left;background:none;border:none;padding:10px 12px;border-radius:var(--radius);cursor:pointer;transition:all .15s;font-family:var(--font-body);margin-bottom:2px}
+.toc-item:hover{background:var(--border)}
+.toc-item.active{background:rgba(139,69,19,.1);color:var(--primary)}
+.toc-item .toc-title{display:block;font-size:14px;font-weight:500;line-height:1.3}
+.toc-item .toc-sub{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+
+/* Search */
+.search-input-wrap{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--border)}
+.search-input-wrap svg{flex-shrink:0;color:var(--muted)}
+.search-input-wrap input{flex:1;background:none;border:none;outline:none;font-family:var(--font-ui);font-size:14px;color:var(--text)}
+.search-input-wrap input::placeholder{color:var(--muted)}
+.search-msg{text-align:center;padding:32px 16px;font-family:var(--font-ui);font-size:14px;color:var(--muted)}
+.search-count{font-family:var(--font-ui);font-size:12px;color:var(--muted);padding:8px 16px}
+.search-result{display:block;width:100%;text-align:left;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px;cursor:pointer;transition:all .15s;margin-bottom:8px;margin-left:8px;margin-right:8px;max-width:calc(100% - 16px)}
+.search-result:hover{background:var(--border)}
+.search-result .sr-chapter{font-family:var(--font-ui);font-size:12px;font-weight:500;color:var(--primary);margin-bottom:4px}
+.search-result .sr-text{font-size:14px;line-height:1.5;color:var(--text)}
+
+/* SVG icons inline */
+.icon{width:20px;height:20px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.icon-sm{width:16px;height:16px}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.hide-mobile{}
+@media(max-width:480px){.hide-mobile{display:none}}
+
+/* =========================
+   PRINT BOOK LAYOUT (A5)
+   ========================= */
+
+@media print {
+
+  body {
+    background: white !important;
+    color: black !important;
+    overflow: visible !important;
+    font-family: "Georgia", serif;
+  }
+
+  /* Piilotetaan käyttöliittymä */
+  .toolbar,
+  .chapter-nav,
+  .overlay,
+  .panel {
+    display: none !important;
+  }
+
+  #reader {
+    overflow: visible !important;
+    max-width: none !important;
+  }
+
+  .chapter-view {
+    page-break-after: always;
+  }
+
+  .chapter-title {
+    page-break-after: avoid;
+  }
+
+  p {
+    text-align: justify;
+    orphans: 3;
+    widows: 3;
+    line-height: 1.5;
+    font-size: 11pt;
+  }
+
+  h1, h2, h3 {
+    page-break-after: avoid;
+  }
+
+  /* A5 sivukoko */
+  @page {
+    size: A5;
+    margin: 22mm 18mm 25mm 22mm;
+  }
+
+  /* Peilimarginaalit (kirjasidonta) */
+  @page :left {
+    margin-left: 25mm;
+    margin-right: 18mm;
+  }
+
+  @page :right {
+    margin-left: 18mm;
+    margin-right: 25mm;
+  }
+}
+
+</style>
+</head>
+<body>
+
+<div id="progress-bar"><div id="progress-fill"></div></div>
+
+<div class="toolbar">
+  <button id="btn-toc" aria-label="Sisällysluettelo">
+    <svg class="icon" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    <span class="hide-mobile">Sisällys</span>
+  </button>
+      <button id="btn-pdf" aria-label="Lataa PDF">
+  <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+  <span class="hide-mobile">PDF</span>
+</button>
+  <span class="chapter-info" id="chapter-info">1 / 9</span>
+  <div class="font-controls">
+    <button id="btn-font-down" aria-label="Pienennä fonttia">
+      <svg class="icon icon-sm" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+    <span class="font-size-label" id="font-size-label">16</span>
+    <button id="btn-font-up" aria-label="Suurenna fonttia">
+      <svg class="icon icon-sm" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+    <button id="btn-search" aria-label="Haku" style="margin-left:4px">
+      <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
+  </div>
+</div>
+
+<div id="reader"></div>
+
+<!-- Overlay -->
+<div class="overlay" id="overlay"></div>
+
+<!-- TOC Panel -->
+<div class="panel panel-left" id="toc-panel">
+  <div class="panel-header">
+    <h2>Sisällysluettelo</h2>
+    <button id="btn-toc-close" aria-label="Sulje">
+      <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="panel-body" id="toc-body"></div>
+</div>
+
+<!-- Search Panel -->
+<div class="panel panel-right" id="search-panel">
+  <div class="search-input-wrap">
+    <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" id="search-input" placeholder="Hae kirjasta…">
+    <button id="btn-search-close" aria-label="Sulje">
+      <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="panel-body" id="search-body">
+    <p class="search-msg">Kirjoita vähintään 3 merkkiä hakeaksesi…</p>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+// Firebase Config
+const firebaseConfig = {
+  apiKey: "AIzaSyBTC0eygSgWe7tFz11kopqqWAmBmKNTJl0",
+  authDomain: "interaktiivinen-esseekok-3bf69.firebaseapp.com",
+  projectId: "interaktiivinen-esseekok-3bf69"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// State
+let chapters = [];
+let currentIndex = 0;
+let fontSize = 16;
+let searchQuery = "";
+let fullHtml = "";
+const reader = document.getElementById("reader");
+const progressFill = document.getElementById("progress-fill");
+const chapterInfoEl = document.getElementById("chapter-info");
+const fontSizeLabel = document.getElementById("font-size-label");
+const tocBody = document.getElementById("toc-body");
+const searchBody = document.getElementById("search-body");
+const searchInput = document.getElementById("search-input");
+const overlay = document.getElementById("overlay");
+const tocPanel = document.getElementById("toc-panel");
+const searchPanel = document.getElementById("search-panel");
+
+
+// ─── Data Loading (ONLY FIREBASE) ───
+
+const q = query(
+  collection(db, "kirja"),
+  orderBy("part"),
+  orderBy("id")
+);
+
+reader.innerHTML = `
+  <p style="padding:40px; text-align:center;">
+    Ladataan kirjaa...
+  </p>
+`;
+
+onSnapshot(
+  q,
+  (snapshot) => {
+
+    chapters = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+    if (!chapters.length) {
+      reader.innerHTML = `
+        <p style="padding:40px; text-align:center;">
+          Kirja on tyhjä.
+        </p>
+      `;
+      return;
+    }
+
+    currentIndex = 0;
+    renderChapter();
+    renderToc();
+  },
+  (error) => {
+    console.error("Firestore error:", error);
+
+    reader.innerHTML = `
+      <p style="padding:40px; text-align:center; color:red;">
+        Virhe ladattaessa kirjaa.
+      </p>
+    `;
+  }
+);
+
+
+// ─── Global Functions (window. jotta HTML-painikkeet löytävät ne) ───
+window.renderChapter = function() {
+  if (!chapters[currentIndex]) return;
+  const ch = chapters[currentIndex];
+  const total = chapters.length;
+  
+  progressFill.style.width = ((currentIndex + 1) / total * 100) + "%";
+  chapterInfoEl.textContent = (currentIndex + 1) + " / " + total;
+
+  let html = `<div class="chapter-view"><div class="chapter-header">`;
+  if (ch.part) html += `<div class="chapter-part">${esc(ch.part)}</div>`;
+  html += `<h1 class="chapter-title">${esc(ch.title || "Nimetön")}</h1>`;
+  if (ch.subtitle) html += `<p class="chapter-subtitle">${esc(ch.subtitle)}</p>`;
+  html += `</div><div class="chapter-body" style="font-size:${fontSize}px">`;
+  
+  const paragraphs = ch.content ? ch.content.split(/\n\n+/) : ["(Ei sisältöä)"];
+  
+  paragraphs.forEach((para, i) => {
+    const trimmedPara = para.trim();
+    const highlighted = highlightSearch(esc(trimmedPara));
+    
+    // LOGIIKKA: Jos teksti on lyhyt (alle 60 merkkiä) eikä pääty pisteeseen, se on väliotsikko
+    const isHeading = trimmedPara.length > 0 && 
+                      trimmedPara.length < 60 && 
+                      !trimmedPara.endsWith(".");
+
+    if (isHeading) {
+      html += `<h2>${highlighted}</h2>`;
+    } 
+    // Ensimmäinen lyhyt kappale (joka päättyy pisteeseen) on edelleen motto/sitaatti
+    else if (i === 0 && trimmedPara.length < 150) {
+      html += `<blockquote>${highlighted}</blockquote>`;
+    } 
+    else {
+      html += `<p>${highlighted}</p>`;
+    }
+  });
+
+  html += `</div></div>`;
+  html += `<div class="chapter-nav">`;
+  if (currentIndex > 0) {
+    const prev = chapters[currentIndex - 1].title || "Edellinen";
+    html += `<button onclick="goTo(${currentIndex - 1})">← ${esc(prev.length > 20 ? prev.slice(0, 20) + '…' : prev)}</button>`;
+  } else { html += `<div class="spacer"></div>`; }
+  if (currentIndex < total - 1) {
+    const next = chapters[currentIndex + 1].title || "Seuraava";
+    html += `<button onclick="goTo(${currentIndex + 1})">${esc(next.length > 20 ? next.slice(0, 20) + '…' : next)} →</button>`;
+  } else { html += `<div class="spacer"></div>`; }
+  html += `</div>`;
+
+  reader.innerHTML = html;
+  reader.scrollTop = 0;
+};
+
+window.goTo = function(i) {
+  currentIndex = i;
+  closePanels();
+  renderChapter();
+};
+
+window.renderToc = function() {
+  let html = `<div class="toc-book-title"><h3>JÄRJESTELMÄ – IHMISET – MUUTOS</h3><p>Harri Käyhkö</p></div>`;
+  let currentPart = null;
+  chapters.forEach((ch, i) => {
+    const part = ch.part || "Johdanto";
+    if (part !== currentPart) {
+      currentPart = part;
+      html += `<div class="toc-part">${esc(part)}</div>`;
+    }
+    const active = i === currentIndex ? " active" : "";
+    html += `<button class="toc-item${active}" onclick="goTo(${i})">
+      <span class="toc-title">${esc(ch.title || "Nimetön")}</span>
+      ${ch.subtitle ? `<span class="toc-sub">${esc(ch.subtitle)}</span>` : ""}
+    </button>`;
+  });
+  tocBody.innerHTML = html;
+};
+
+window.doSearch = function() {
+  searchQuery = searchInput.value.trim();
+  if (searchQuery.length < 3) {
+    searchBody.innerHTML = '<p class="search-msg">Kirjoita vähintään 3 merkkiä hakeaksesi…</p>';
+    renderChapter();
+    return;
+  }
+  const results = chapters.filter(ch => ch.content?.toLowerCase().includes(searchQuery.toLowerCase()));
+  let html = `<p class="search-count">${results.length} osumaa</p>`;
+  results.forEach(r => {
+    const ci = chapters.indexOf(r);
+    html += `<button class="search-result" onclick="goTo(${ci})">
+      <div class="sr-chapter">${esc(r.title)}</div>
+      <div class="sr-text">Klikkaa lukeaksesi...</div>
+    </button>`;
+  });
+  searchBody.innerHTML = html;
+  renderChapter();
+};
+
+function esc(s) {
+  const d = document.createElement("div");
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function highlightSearch(html) {
+  if (!searchQuery || searchQuery.length < 3) return html;
+  const re = new RegExp("(" + searchQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")", "gi");
+  return html.replace(re, "<mark>$1</mark>");
+}
+
+window.openToc = () => { closePanels(); renderToc(); tocPanel.classList.add("open"); overlay.classList.add("open"); };
+window.openSearch = () => { closePanels(); searchPanel.classList.add("open"); overlay.classList.add("open"); setTimeout(() => searchInput.focus(), 150); };
+window.closePanels = () => { tocPanel.classList.remove("open"); searchPanel.classList.remove("open"); overlay.classList.remove("open"); };
+
+// ─── Event Listeners ───
+document.getElementById("btn-toc").onclick = openToc;
+document.getElementById("btn-toc-close").onclick = closePanels;
+document.getElementById("btn-search").onclick = openSearch;
+document.getElementById("btn-search-close").onclick = closePanels;
+overlay.onclick = closePanels;
+searchInput.oninput = doSearch;
+
+document.getElementById("btn-font-down").onclick = () => {
+  fontSize = Math.max(14, fontSize - 2);
+  fontSizeLabel.textContent = fontSize;
+  renderChapter();
+};
+document.getElementById("btn-font-up").onclick = () => {
+  fontSize = Math.min(28, fontSize + 2);
+  fontSizeLabel.textContent = fontSize;
+  renderChapter();
+};
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "ArrowLeft" && currentIndex > 0) goTo(currentIndex - 1);
+  if (e.key === "ArrowRight" && currentIndex < chapters.length - 1) goTo(currentIndex + 1);
+  if (e.key === "Escape") closePanels();
+});
+
+let touchStartX = 0;
+reader.ontouchstart = (e) => { touchStartX = e.changedTouches[0].screenX; };
+reader.ontouchend = (e) => {
+  const dx = e.changedTouches[0].screenX - touchStartX;
+  if (Math.abs(dx) > 80) {
+    if (dx > 0 && currentIndex > 0) goTo(currentIndex - 1);
+    if (dx < 0 && currentIndex < chapters.length - 1) goTo(currentIndex + 1);
+  }
+};
+
+
+
+// ─── PDF Generation (jsPDF) ───
+window.generatePDF = async function() {
+  const btn = document.getElementById("btn-pdf");
+  const origHTML = btn.innerHTML;
+  btn.innerHTML = `<svg class="icon" viewBox="0 0 24 24" style="animation:spin 1s linear infinite"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="30 70"/></svg><span class="hide-mobile">Luodaan…</span>`;
+  btn.disabled = true;
+
+  // Load jsPDF dynamically
+  if (!window.jspdf) {
+    await new Promise((resolve, reject) => {
+      const s = document.createElement("script");
+      s.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js";
+      s.onload = resolve;
+      s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
+
+  const { jsPDF } = window.jspdf;
+  // A5 portrait: 148mm x 210mm
+  const doc = new jsPDF({ unit: "mm", format: "a5", orientation: "portrait" });
+
+  const PAGE_W = 148;
+  const PAGE_H = 210;
+  const ML = 20; // margin left
+  const MR = 16; // margin right
+  const MT = 24; // margin top
+  const MB = 22; // margin bottom
+  const TEXT_W = PAGE_W - ML - MR; // usable text width
+  const LINE_H = 5.2; // body line height
+  const PARA_GAP = 3; // gap between paragraphs
+
+  let pageNum = 0;
+
+  function addPage() {
+    if (pageNum > 0) doc.addPage();
+    pageNum++;
+  }
+
+  function drawPageNumber() {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(150, 140, 130);
+    const x = pageNum % 2 === 0 ? ML : PAGE_W - MR;
+    doc.text(String(pageNum), x, PAGE_H - 12, { align: pageNum % 2 === 0 ? "left" : "right" });
+  }
+
+  function drawHeader(title) {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7);
+    doc.setTextColor(170, 160, 148);
+    doc.text(title.toUpperCase(), PAGE_W / 2, 14, { align: "center" });
+  }
+
+  // ─── Title Page ───
+  addPage();
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(22);
+  doc.setTextColor(90, 58, 26);
+  doc.text("JÄRJESTELMÄ", PAGE_W / 2, 70, { align: "center" });
+  doc.text("IHMISET", PAGE_W / 2, 82, { align: "center" });
+  doc.text("MUUTOS", PAGE_W / 2, 94, { align: "center" });
+
+  doc.setDrawColor(196, 168, 114);
+  doc.setLineWidth(0.4);
+  doc.line(PAGE_W / 2 - 20, 102, PAGE_W / 2 + 20, 102);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(12);
+  doc.setTextColor(138, 126, 110);
+  doc.text("Harri Käyhkö", PAGE_W / 2, 112, { align: "center" });
+
+  // ─── Table of Contents Page ───
+  addPage();
+  drawPageNumber();
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(14);
+  doc.setTextColor(90, 58, 26);
+  doc.text("SISÄLLYS", ML, MT + 4);
+
+  doc.setDrawColor(196, 168, 114);
+  doc.line(ML, MT + 8, ML + 40, MT + 8);
+
+  let tocY = MT + 18;
+  let currentPart = null;
+  chapters.forEach((ch, i) => {
+    const part = ch.part || "";
+    if (part && part !== currentPart) {
+      currentPart = part;
+      tocY += 4;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8);
+      doc.setTextColor(139, 69, 19);
+      doc.text(part.toUpperCase(), ML, tocY);
+      tocY += 5;
+    }
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9.5);
+    doc.setTextColor(46, 40, 32);
+    doc.text(ch.title || "Nimetön", ML + 4, tocY);
+
+    // Page number placeholder (right-aligned dots)
+    const pStr = String(i + 3); // approximate page
+    doc.setTextColor(150, 140, 130);
+    doc.text(pStr, PAGE_W - MR, tocY, { align: "right" });
+
+    tocY += 5.5;
+    if (ch.subtitle) {
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(8);
+      doc.setTextColor(138, 126, 110);
+      doc.text(ch.subtitle, ML + 8, tocY);
+      tocY += 5;
+    }
+  });
+
+  // ─── Chapter Pages ───
+  for (let ci = 0; ci < chapters.length; ci++) {
+    const ch = chapters[ci];
+    addPage();
+    drawPageNumber();
+
+    let y = MT;
+
+    // Part label
+    if (ch.part) {
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7.5);
+      doc.setTextColor(139, 69, 19);
+      doc.text(ch.part.toUpperCase(), ML, y);
+      y += 6;
+    }
+
+    // Chapter title
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.setTextColor(90, 58, 26);
+    const titleLines = doc.splitTextToSize(ch.title || "Nimetön", TEXT_W);
+    titleLines.forEach(line => {
+      doc.text(line, ML, y);
+      y += 7;
+    });
+
+    // Subtitle
+    if (ch.subtitle) {
+      y += 1;
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(10);
+      doc.setTextColor(138, 126, 110);
+      doc.text(ch.subtitle, ML, y);
+      y += 6;
+    }
+
+    // Divider
+    y += 2;
+    doc.setDrawColor(196, 168, 114);
+    doc.setLineWidth(0.3);
+    doc.line(ML, y, ML + 35, y);
+    y += 8;
+
+    // Body paragraphs
+    const paragraphs = ch.content ? ch.content.split(/\n\n+/) : [];
+
+    for (let pi = 0; pi < paragraphs.length; pi++) {
+      const para = paragraphs[pi].trim();
+      if (!para) continue;
+
+      const isHeading = para.length > 0 && para.length < 60 && !para.endsWith(".");
+      const isQuote = pi === 0 && para.length < 150;
+
+      if (isHeading) {
+        // Sub-heading
+        y += 4;
+        if (y > PAGE_H - MB - 12) {
+          addPage(); drawPageNumber(); drawHeader(ch.title || ""); y = MT;
+        }
+        doc.setDrawColor(212, 203, 184);
+        doc.setLineWidth(0.2);
+        doc.line(ML, y, PAGE_W - MR, y);
+        y += 5;
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(8.5);
+        doc.setTextColor(90, 58, 26);
+        doc.text(para.toUpperCase(), PAGE_W / 2, y, { align: "center" });
+        y += 5;
+        doc.line(ML, y, PAGE_W - MR, y);
+        y += 6;
+      } else if (isQuote) {
+        // Blockquote / motto
+        doc.setFont("helvetica", "italic");
+        doc.setFontSize(10);
+        doc.setTextColor(138, 126, 110);
+        const qLines = doc.splitTextToSize(para, TEXT_W - 12);
+        qLines.forEach(line => {
+          if (y > PAGE_H - MB) {
+            addPage(); drawPageNumber(); drawHeader(ch.title || ""); y = MT;
+          }
+          doc.text(line, ML + 6, y);
+          y += LINE_H;
+        });
+        y += PARA_GAP + 2;
+      } else {
+        // Normal paragraph
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9.5);
+        doc.setTextColor(46, 40, 32);
+        const lines = doc.splitTextToSize(para, TEXT_W);
+        lines.forEach(line => {
+          if (y > PAGE_H - MB) {
+            addPage(); drawPageNumber(); drawHeader(ch.title || ""); y = MT;
+          }
+          doc.text(line, ML, y);
+          y += LINE_H;
+        });
+        y += PARA_GAP;
+      }
+    }
+  }
+
+  // Save
+  doc.save("Jarjestelma-Ihmiset-Muutos.pdf");
+
+  btn.innerHTML = origHTML;
+  btn.disabled = false;
+};
+
+// Kytketään painike toimintaan
+document.getElementById("btn-pdf").onclick = window.generatePDF;
+</script>
+</body>
+</html>
