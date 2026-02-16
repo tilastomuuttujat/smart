@@ -1,9 +1,15 @@
 import puppeteer from "puppeteer";
 import path from "path";
+import fs from "fs";
 
 const filePath = path.resolve("./ekirja.html");
 
 (async () => {
+  if (!fs.existsSync(filePath)) {
+    console.error("HTML FILE NOT FOUND");
+    process.exit(1);
+  }
+
   try {
     const browser = await puppeteer.launch({
       headless: "new",
@@ -18,8 +24,12 @@ const filePath = path.resolve("./ekirja.html");
     const page = await browser.newPage();
 
     await page.goto(`file://${filePath}`, {
-      waitUntil: "networkidle0"
+      waitUntil: "load",
+      timeout: 0
     });
+
+    // Anna selaimelle hetki renderöidä
+    await page.waitForTimeout(2000);
 
     await page.emulateMediaType("print");
 
@@ -33,16 +43,11 @@ const filePath = path.resolve("./ekirja.html");
         <div style="font-size:9px;width:100%;text-align:center;">
           <span class="pageNumber"></span>
         </div>`,
-      margin: {
-        top: "20mm",
-        bottom: "20mm",
-        left: "0mm",
-        right: "0mm"
-      }
     });
 
     await browser.close();
-    console.log("PDF created successfully.");
+    console.log("PDF created successfully");
+
   } catch (error) {
     console.error("PDF generation failed:");
     console.error(error);
