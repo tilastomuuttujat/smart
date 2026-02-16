@@ -34,23 +34,36 @@ jobs:
           npm install firebase-admin puppeteer
 
       # ─────────────────────────────
-      # 4️⃣ Create Firebase service account file
+      # 4️⃣ Create Firebase service account file (SAFE METHOD)
       # ─────────────────────────────
       - name: Create serviceAccountKey.json
         run: |
-          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" > serviceAccountKey.json
-          echo "Service account file created."
+          cat <<EOF > serviceAccountKey.json
+          ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          EOF
 
       # ─────────────────────────────
-      # 5️⃣ Build static HTML from Firestore
+      # 5️⃣ Verify service account file
       # ─────────────────────────────
-      - name: Generate HTML from Firebase
+      - name: Verify service account file
+        run: |
+          echo "File size:"
+          wc -c serviceAccountKey.json
+          if [ ! -s serviceAccountKey.json ]; then
+            echo "ERROR: serviceAccountKey.json is empty!"
+            exit 1
+          fi
+
+      # ─────────────────────────────
+      # 6️⃣ Generate HTML from Firebase
+      # ─────────────────────────────
+      - name: Generate HTML
         run: node generate-html.js
 
       # ─────────────────────────────
-      # 6️⃣ Verify HTML exists
+      # 7️⃣ Verify HTML exists
       # ─────────────────────────────
-      - name: Verify build files
+      - name: Verify HTML build
         run: |
           ls -la
           if [ ! -f book_static.html ]; then
@@ -59,13 +72,23 @@ jobs:
           fi
 
       # ─────────────────────────────
-      # 7️⃣ Generate A5 Print PDF
+      # 8️⃣ Generate A5 Print PDF
       # ─────────────────────────────
-      - name: Generate Print PDF
+      - name: Generate PDF
         run: node generate-pdf.js
 
       # ─────────────────────────────
-      # 8️⃣ Upload artifact
+      # 9️⃣ Verify PDF exists
+      # ─────────────────────────────
+      - name: Verify PDF
+        run: |
+          if [ ! -f Kirja_A5_PRINT.pdf ]; then
+            echo "ERROR: PDF not generated!"
+            exit 1
+          fi
+
+      # ─────────────────────────────
+      # 🔟 Upload artifact
       # ─────────────────────────────
       - name: Upload PDF
         uses: actions/upload-artifact@v4
