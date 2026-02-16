@@ -70,7 +70,13 @@ async function buildHtml() {
   html += `</body></html>`;
 
   fs.writeFileSync("book_static.html", html);
-  console.log("HTML built successfully.");
+
+if (!fs.existsSync("book_static.html")) {
+  throw new Error("HTML file was not created.");
 }
+
+console.log("HTML built successfully.");
+}
+
 
 buildHtml();
