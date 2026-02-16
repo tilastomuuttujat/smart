@@ -1,6 +1,9 @@
-name: Build Book PDF
+name: Build Print Book (A5 PDF)
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
@@ -8,30 +11,64 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
 
+      # ─────────────────────────────
+      # 1️⃣ Checkout repository
+      # ─────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ─────────────────────────────
+      # 2️⃣ Setup Node
+      # ─────────────────────────────
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
+      # ─────────────────────────────
+      # 3️⃣ Install dependencies
+      # ─────────────────────────────
       - name: Install dependencies
-        run: npm install
+        run: |
+          npm install firebase-admin puppeteer
 
-      - name: Create service account file
-        run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > serviceAccountKey.json
+      # ─────────────────────────────
+      # 4️⃣ Create Firebase service account file
+      # ─────────────────────────────
+      - name: Create serviceAccountKey.json
+        run: |
+          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" > serviceAccountKey.json
+          echo "Service account file created."
 
-      - name: Build HTML
-      run: node generate-html.js
-      
-      - name: Check files
-      run: ls -la
+      # ─────────────────────────────
+      # 5️⃣ Build static HTML from Firestore
+      # ─────────────────────────────
+      - name: Generate HTML from Firebase
+        run: node generate-html.js
 
-      - name: Generate PDF
-      run: node generate-pdf.js
+      # ─────────────────────────────
+      # 6️⃣ Verify HTML exists
+      # ─────────────────────────────
+      - name: Verify build files
+        run: |
+          ls -la
+          if [ ! -f book_static.html ]; then
+            echo "ERROR: book_static.html not found!"
+            exit 1
+          fi
 
+      # ─────────────────────────────
+      # 7️⃣ Generate A5 Print PDF
+      # ─────────────────────────────
+      - name: Generate Print PDF
+        run: node generate-pdf.js
+
+      # ─────────────────────────────
+      # 8️⃣ Upload artifact
+      # ─────────────────────────────
       - name: Upload PDF
         uses: actions/upload-artifact@v4
         with:
-          name: Kirja_PDF
+          name: JIM_Print_A5
           path: Kirja_A5_PRINT.pdf
