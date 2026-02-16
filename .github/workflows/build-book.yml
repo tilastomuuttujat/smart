@@ -1,0 +1,29 @@
+name: Build A5 Print Book
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install Puppeteer
+        run: npm install puppeteer
+
+      - name: Generate PDF
+        run: node generate-pdf.js
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: A5_Print_Book
+          path: Kirja_A5_PRINT.pdf
