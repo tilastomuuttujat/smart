@@ -22,13 +22,13 @@ jobs:
         run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > serviceAccountKey.json
 
       - name: Build HTML
-        run: node generate-html.js
-
-      - name: List files after HTML build
-        run: ls -la
+      run: node generate-html.js
+      
+      - name: Check files
+      run: ls -la
 
       - name: Generate PDF
-        run: node generate-pdf.js
+      run: node generate-pdf.js
 
       - name: Upload PDF
         uses: actions/upload-artifact@v4
