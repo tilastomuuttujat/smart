@@ -2,6 +2,7 @@ import puppeteer from "puppeteer";
 import path from "path";
 import fs from "fs";
 
+
 async function generatePDF() {
 
   const filePath = path.resolve("book_static.html");
