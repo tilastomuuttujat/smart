@@ -4,6 +4,10 @@ import fs from "fs";
 
 const filePath = path.resolve("./ekirja.html");
 
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 (async () => {
   if (!fs.existsSync(filePath)) {
     console.error("HTML FILE NOT FOUND");
@@ -12,7 +16,7 @@ const filePath = path.resolve("./ekirja.html");
 
   try {
     const browser = await puppeteer.launch({
-      headless: "new",
+      headless: true,
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
@@ -28,8 +32,8 @@ const filePath = path.resolve("./ekirja.html");
       timeout: 0
     });
 
-    // Anna selaimelle hetki renderöidä
-    await page.waitForTimeout(2000);
+    // Varmistetaan renderöinti
+    await delay(2000);
 
     await page.emulateMediaType("print");
 
@@ -42,7 +46,7 @@ const filePath = path.resolve("./ekirja.html");
       footerTemplate: `
         <div style="font-size:9px;width:100%;text-align:center;">
           <span class="pageNumber"></span>
-        </div>`,
+        </div>`
     });
 
     await browser.close();
