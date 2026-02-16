@@ -8,6 +8,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,300;0,7..72,400;0,7..72,500;0,7..72,600;0,7..72,700;1,7..72,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -420,9 +423,6 @@ reader.ontouchend = (e) => {
   }
 };
 
-
-/*
-
 window.generatePDF = function() {
   const element = document.createElement('div');
   // Lisätään tyylit, jotta PDF näyttää hyvältä
@@ -432,10 +432,10 @@ window.generatePDF = function() {
   element.style.fontFamily = 'serif';
 
   // Alustetaan merkkijono
-   fullHtml = "";
+   let html = "";
 
   // 1. Kansilehti
-  fullHtml += `
+  html += `
     <div style="text-align: center; margin-top: 50mm; margin-bottom: 80mm;">
       <h1 style="font-size: 32pt; margin-bottom: 10px;">JÄRJESTELMÄ – IHMISET – MUUTOS</h1>
       <h2 style="font-size: 18pt; font-weight: normal;">Harri Käyhkö</h2>
@@ -444,19 +444,19 @@ window.generatePDF = function() {
   `;
 
   // 2. Sisällysluettelo
-  fullHtml += `<h2 style="font-size: 20pt; margin-bottom: 30px; border-bottom: 2px solid #000;">Sisällysluettelo</h2>`;
+  html += `<h2 style="font-size: 20pt; margin-bottom: 30px; border-bottom: 2px solid #000;">Sisällysluettelo</h2>`;
   chapters.forEach((ch, i) => {
-    fullHtml += `
+    html += `
       <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-family: sans-serif; font-size: 12pt;">
         <span style="flex: 1; border-bottom: 1px dotted #ccc;">${ch.title || "Nimetön"}</span>
         <span style="margin-left: 10px;">${i + 1}</span>
       </div>`;
   });
-  fullHtml += `<div style="page-break-after: always;"></div>`;
-console.log(fullHtml);
+  html += `<div style="page-break-after: always;"></div>`;
+
   // 3. Kirjan luvut
   chapters.forEach((ch) => {
-    fullHtml += `
+    html += `
       <div style="page-break-after: always;">
         <div style="color: #666; text-transform: uppercase; font-size: 10pt; margin-bottom: 5px; font-family: sans-serif;">
           ${ch.part || ''}
@@ -477,7 +477,7 @@ console.log(fullHtml);
       </div>`;
   });
 
-  element.innerHTML = fullHtml;
+  element.innerHTML = html;
 
   // PDF-asetukset
   const opt = {
@@ -492,63 +492,6 @@ console.log(fullHtml);
   // Käynnistetään lataus
   html2pdf().set(opt).from(element).save();
 };
-*/
-
-window.generatePDF = function() {
-
-  if (!chapters || chapters.length === 0) {
-    alert("Sisältö latautuu vielä. Yritä hetken kuluttua.");
-    return;
-  }
-
-  const element = document.createElement('div');
-  element.style.padding = '20mm';
-  element.style.fontFamily = 'serif';
-  element.style.background = '#fff';
-  element.style.color = '#000';
-
-  let fullHtml = `<h1 style="text-align:center;margin-bottom:40px;">${document.title}</h1>`;
-
-  chapters.forEach(ch => {
-    fullHtml += `<div style="page-break-after:always;">
-      <h2 style="border-bottom:2px solid #000;padding-bottom:10px;">${ch.title}</h2>
-      <div style="font-size:12pt;line-height:1.6;">`;
-
-    const paragraphs = ch.content ? ch.content.split(/\n\n+/) : [];
-
-    paragraphs.forEach(p => {
-      const t = p.trim();
-      if (t.length < 60 && !/[.!?]$/.test(t)) {
-        fullHtml += `<h3 style="border-top:1px solid #ccc;border-bottom:1px solid #ccc;padding:10px 0;text-align:center;margin:20px 0;">${t}</h3>`;
-      } else {
-        fullHtml += `<p style="margin-bottom:10px;">${t}</p>`;
-      }
-    });
-
-    fullHtml += `</div></div>`;
-  });
-
-  element.innerHTML = fullHtml;
-  document.body.appendChild(element);
-
-  html2pdf().set({
-    margin: 15,
-    filename: 'Kirja.pdf',
-    html2canvas: {
-      scale: 2,
-      useCORS: true,
-      letterRendering: true
-    },
-    jsPDF: {
-      unit: 'mm',
-      format: 'a4',
-      orientation: 'portrait'
-    }
-  }).from(element).save().then(() => {
-    document.body.removeChild(element);
-  });
-};
-
 
 // Kytketään painike toimintaan
 document.getElementById("btn-pdf").onclick = window.generatePDF;
