@@ -7,9 +7,6 @@
 <meta name="description" content="Järjestelmä Ihmiset Muutos – systemaattinen analyysi hyvinvointivaltion kriisistä.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,300;0,7..72,400;0,7..72,500;0,7..72,600;0,7..72,700;1,7..72,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
 
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -127,6 +124,71 @@ mark{background:var(--highlight);padding:1px 3px;border-radius:2px}
 /* SVG icons inline */
 .icon{width:20px;height:20px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
 .icon-sm{width:16px;height:16px}
+
+/* =========================
+   PRINT BOOK LAYOUT (A5)
+   ========================= */
+
+@media print {
+
+  body {
+    background: white !important;
+    color: black !important;
+    overflow: visible !important;
+    font-family: "Georgia", serif;
+  }
+
+  /* Piilotetaan käyttöliittymä */
+  .toolbar,
+  .chapter-nav,
+  .overlay,
+  .panel {
+    display: none !important;
+  }
+
+  #reader {
+    overflow: visible !important;
+    max-width: none !important;
+  }
+
+  .chapter-view {
+    page-break-after: always;
+  }
+
+  .chapter-title {
+    page-break-after: avoid;
+  }
+
+  p {
+    text-align: justify;
+    orphans: 3;
+    widows: 3;
+    line-height: 1.5;
+    font-size: 11pt;
+  }
+
+  h1, h2, h3 {
+    page-break-after: avoid;
+  }
+
+  /* A5 sivukoko */
+  @page {
+    size: A5;
+    margin: 22mm 18mm 25mm 22mm;
+  }
+
+  /* Peilimarginaalit (kirjasidonta) */
+  @page :left {
+    margin-left: 25mm;
+    margin-right: 18mm;
+  }
+
+  @page :right {
+    margin-left: 18mm;
+    margin-right: 25mm;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -423,75 +485,19 @@ reader.ontouchend = (e) => {
   }
 };
 
-window.generatePDF = function() {
-  const element = document.createElement('div');
-  // Lisätään tyylit, jotta PDF näyttää hyvältä
-  element.style.padding = '20mm';
-  element.style.background = '#fff';
-  element.style.color = '#000';
-  element.style.fontFamily = 'serif';
+window.copyHtmlToClipboard = async function(htmlContent) {
 
-  // Alustetaan merkkijono
-   let html = "";
+  try {
+    await navigator.clipboard.writeText(htmlContent);
+    alert("HTML kopioitu leikepöydälle.");
+  } catch (err) {
+    console.error("Clipboard error:", err);
+    alert("Kopiointi epäonnistui.");
+  }
 
-  // 1. Kansilehti
-  html += `
-    <div style="text-align: center; margin-top: 50mm; margin-bottom: 80mm;">
-      <h1 style="font-size: 32pt; margin-bottom: 10px;">JÄRJESTELMÄ – IHMISET – MUUTOS</h1>
-      <h2 style="font-size: 18pt; font-weight: normal;">Harri Käyhkö</h2>
-    </div>
-    <div style="page-break-after: always;"></div>
-  `;
-
-  // 2. Sisällysluettelo
-  html += `<h2 style="font-size: 20pt; margin-bottom: 30px; border-bottom: 2px solid #000;">Sisällysluettelo</h2>`;
-  chapters.forEach((ch, i) => {
-    html += `
-      <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-family: sans-serif; font-size: 12pt;">
-        <span style="flex: 1; border-bottom: 1px dotted #ccc;">${ch.title || "Nimetön"}</span>
-        <span style="margin-left: 10px;">${i + 1}</span>
-      </div>`;
-  });
-  html += `<div style="page-break-after: always;"></div>`;
-
-  // 3. Kirjan luvut
-  chapters.forEach((ch) => {
-    html += `
-      <div style="page-break-after: always;">
-        <div style="color: #666; text-transform: uppercase; font-size: 10pt; margin-bottom: 5px; font-family: sans-serif;">
-          ${ch.part || ''}
-        </div>
-        <h1 style="font-size: 24pt; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 30px;">
-          ${ch.title || "Nimetön"}
-        </h1>
-        <div style="font-size: 12pt; line-height: 1.6; text-align: justify;">
-          ${ch.content ? ch.content.split(/\n\n+/).map(p => {
-            const trimmed = p.trim();
-            // Väliotsikon tunnistus: lyhyt ja ei loppupistettä
-            if (trimmed.length > 0 && trimmed.length < 60 && !trimmed.endsWith('.')) {
-              return `<h3 style="border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; padding: 12px 0; text-align: center; text-transform: uppercase; margin: 30px 0; font-family: sans-serif; font-size: 11pt; letter-spacing: 1px;">${trimmed}</h3>`;
-            }
-            return `<p style="margin-bottom: 15px;">${trimmed}</p>`;
-          }).join('') : '<p>Ei sisältöä.</p>'}
-        </div>
-      </div>`;
-  });
-
-  element.innerHTML = html;
-
-  // PDF-asetukset
-  const opt = {
-    margin: [10, 10, 15, 10], // ylä, vasen, ala, oikea (mm)
-    filename: 'Jarjestelma_Ihmiset_Muutos.pdf',
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true, letterRendering: true },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-  };
-
-  // Käynnistetään lataus
-  html2pdf().set(opt).from(element).save();
 };
+
+
 
 // Kytketään painike toimintaan
 document.getElementById("btn-pdf").onclick = window.generatePDF;
