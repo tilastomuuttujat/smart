@@ -1,57 +1,34 @@
 import admin from "firebase-admin";
 import fs from "fs";
 
-// 🔐 Service Account (GitHub secret tai local file)
-const serviceAccount = JSON.parse(
-  fs.readFileSync("./serviceAccountKey.json", "utf8")
-);
+try {
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-});
+  const serviceAccount = JSON.parse(
+    fs.readFileSync("./serviceAccountKey.json", "utf8")
+  );
 
-const db = admin.firestore();
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+  });
 
-async function buildHtml() {
+  const db = admin.firestore();
+
   const snapshot = await db
     .collection("kirja")
     .orderBy("part")
     .orderBy("id")
     .get();
 
+  if (snapshot.empty) {
+    throw new Error("Firestore returned no documents.");
+  }
+
   const chapters = snapshot.docs.map(doc => doc.data());
 
   let html = `
   <!DOCTYPE html>
   <html>
-  <head>
-    <meta charset="utf-8">
-    <style>
-      body {
-        font-family: Georgia, serif;
-        font-size: 11pt;
-        line-height: 1.5;
-      }
-      .chapter {
-        page-break-after: always;
-      }
-      h1 {
-        page-break-after: avoid;
-      }
-      @page {
-        size: A5;
-        margin: 22mm 18mm 25mm 22mm;
-      }
-      @page :left {
-        margin-left: 25mm;
-        margin-right: 18mm;
-      }
-      @page :right {
-        margin-left: 18mm;
-        margin-right: 25mm;
-      }
-    </style>
-  </head>
+  <head><meta charset="utf-8"></head>
   <body>
   `;
 
@@ -71,12 +48,14 @@ async function buildHtml() {
 
   fs.writeFileSync("book_static.html", html);
 
-if (!fs.existsSync("book_static.html")) {
-  throw new Error("HTML file was not created.");
+  if (!fs.existsSync("book_static.html")) {
+    throw new Error("HTML file not created.");
+  }
+
+  console.log("HTML created successfully.");
+
+} catch (err) {
+  console.error("HTML BUILD FAILED:");
+  console.error(err);
+  process.exit(1);
 }
-
-console.log("HTML built successfully.");
-}
-
-
-buildHtml();
