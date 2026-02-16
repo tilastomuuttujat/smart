@@ -125,70 +125,6 @@ mark{background:var(--highlight);padding:1px 3px;border-radius:2px}
 .icon{width:20px;height:20px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
 .icon-sm{width:16px;height:16px}
 
-/* =========================
-   PRINT BOOK LAYOUT (A5)
-   ========================= */
-
-@media print {
-
-  body {
-    background: white !important;
-    color: black !important;
-    overflow: visible !important;
-    font-family: "Georgia", serif;
-  }
-
-  /* Piilotetaan käyttöliittymä */
-  .toolbar,
-  .chapter-nav,
-  .overlay,
-  .panel {
-    display: none !important;
-  }
-
-  #reader {
-    overflow: visible !important;
-    max-width: none !important;
-  }
-
-  .chapter-view {
-    page-break-after: always;
-  }
-
-  .chapter-title {
-    page-break-after: avoid;
-  }
-
-  p {
-    text-align: justify;
-    orphans: 3;
-    widows: 3;
-    line-height: 1.5;
-    font-size: 11pt;
-  }
-
-  h1, h2, h3 {
-    page-break-after: avoid;
-  }
-
-  /* A5 sivukoko */
-  @page {
-    size: A5;
-    margin: 22mm 18mm 25mm 22mm;
-  }
-
-  /* Peilimarginaalit (kirjasidonta) */
-  @page :left {
-    margin-left: 25mm;
-    margin-right: 18mm;
-  }
-
-  @page :right {
-    margin-left: 18mm;
-    margin-right: 25mm;
-  }
-}
-
 </style>
 </head>
 <body>
@@ -200,10 +136,6 @@ mark{background:var(--highlight);padding:1px 3px;border-radius:2px}
     <svg class="icon" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
     <span class="hide-mobile">Sisällys</span>
   </button>
-      <button id="btn-pdf" aria-label="Lataa PDF">
-  <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-  <span class="hide-mobile">PDF</span>
-</button>
   <span class="chapter-info" id="chapter-info">1 / 9</span>
   <div class="font-controls">
     <button id="btn-font-down" aria-label="Pienennä fonttia">
@@ -250,31 +182,6 @@ mark{background:var(--highlight);padding:1px 3px;border-radius:2px}
 </div>
 
 <script type="module">
-// ─── Book Data ───
-const xbookData = {};
-const bookData = {
-  title: "JÄRJESTELMÄ – IHMISET – MUUTOS",
-  author: "Harri Käyhkö",
-  chapters: [
-    {
-      id: "intro", title: "Johdanto", part: null,
-      content: [
-        "Hyvinvointivaltion kriisi ei ole budjettialijäämä tai velkasuhde. Se on ohjausjärjestelmän kriisi.",
-        "Järjestelmä, joka rakennettiin turvaamaan tulevaisuus, on ajautunut mittaamaan, priorisoimaan ja vastuuttamaan tavalla, joka kaventaa aikahorisonttia, siirtää riskiä ja rapauttaa luottamusta. Bruttokansantuote kasvaa, mutta elinvoima murentuu. Budjetti tasapainottuu, mutta palvelut heikkenevät. Tehokkuus paranee, mutta ihmiset uupuvat.",
-        "Järjestelmä Ihmiset Muutos on systemaattinen analyysi siitä, miten tähän päädyttiin ja mitä voitaisiin tehdä toisin.",
-        "Osa I – Järjestelmä paljastaa järjestelmän anatomian. Miten 1990-luvun kriisi loi polkuriippuvuuden, miten rahoituslogiikka muuttui koordinaatiokieleksi, miten mittarit luovat todellisuutta ja miten demografia luo väistämättömän aikapaineen.",
-        "Osa II – Ihmiset näyttää, miten rakenteet näkyvät arjessa. Ulossulkeminen vahvistaa itseään, eriarvoisuus periytyy sukupolvelta toiselle, kokemus tuottaa epävarmuutta ja vastuu yksilöllistyy, vaikka ongelmat ovat rakenteellisia.",
-        "Osa III – Muutos esittää uudelleenmallinnuksen. Tulevaisuuden institutionaalinen edustus, uudet investointimallit, mittarireformi ja systeeminen siirtymä. Ei korjausta vaan paradigman vaihdos.",
-        "Kolme perusperiaatetta uudelle paradigmalle:",
-        "Elinvoima ennen BKT:tä: Mielenterveys, luottamus, osallisuus ja demografinen kestävyys määrittävät menestyksen. BKT on väline, ei tavoite.",
-        "Tulevaisuus ennen nykyhetkeä: Sukupolvien välinen oikeudenmukaisuus. Nykyinen sukupolvi ei voi kuluttaa kaikkea – tulevaisuus tarvitsee institutionaalisen äänen.",
-        "Ennaltaehkäisy ennen korjausta: Investointi, joka tuottaa 20 vuoden aikajänteellä. Järjestelmä ei paikkaa – se parantaa."
-      ]
-    }
-  ]
-};
-
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -305,49 +212,54 @@ const overlay = document.getElementById("overlay");
 const tocPanel = document.getElementById("toc-panel");
 const searchPanel = document.getElementById("search-panel");
 
-// ─── Data Loading ───
-// Huom: Vaatii yhdistelmäindeksin (part, id) Firebasessa
 
-const q = query(collection(db, "kirja"), orderBy("part"), orderBy("id"));
+// ─── Data Loading (ONLY FIREBASE) ───
 
-let loadedFromFirebase = false;
+const q = query(
+  collection(db, "kirja"),
+  orderBy("part"),
+  orderBy("id")
+);
 
-// Firebase-lataus
-onSnapshot(q, (snapshot) => {
-  chapters = snapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data()
-  }));
+reader.innerHTML = `
+  <p style="padding:40px; text-align:center;">
+    Ladataan kirjaa...
+  </p>
+`;
 
-  loadedFromFirebase = true;
+onSnapshot(
+  q,
+  (snapshot) => {
 
-  if (chapters.length > 0) {
+    chapters = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+    if (!chapters.length) {
+      reader.innerHTML = `
+        <p style="padding:40px; text-align:center;">
+          Kirja on tyhjä.
+        </p>
+      `;
+      return;
+    }
+
+    currentIndex = 0;
     renderChapter();
     renderToc();
-  } else {
-    reader.innerHTML =
-      "<p style='padding:40px; text-align:center;'>Kirja on tyhjä.</p>";
+  },
+  (error) => {
+    console.error("Firestore error:", error);
+
+    reader.innerHTML = `
+      <p style="padding:40px; text-align:center; color:red;">
+        Virhe ladattaessa kirjaa.
+      </p>
+    `;
   }
-});
+);
 
-// ─── Fallback CI / PDF-ympäristöön ───
-// Jos Firebase ei vastaa 3 sekunnissa,
-// käytetään staattista bookData.chapters -dataa
-
-setTimeout(() => {
-  if (!loadedFromFirebase) {
-    console.log("Firebase not available – using fallback data.");
-
-    if (typeof bookData !== "undefined" && bookData.chapters?.length > 0) {
-      chapters = bookData.chapters;
-      renderChapter();
-      renderToc();
-    } else {
-      reader.innerHTML =
-        "<p style='padding:40px; text-align:center;'>Ei ladattavaa sisältöä.</p>";
-    }
-  }
-}, 3000);
 
 // ─── Global Functions (window. jotta HTML-painikkeet löytävät ne) ───
 window.renderChapter = function() {
@@ -386,19 +298,6 @@ window.renderChapter = function() {
       html += `<p>${highlighted}</p>`;
     }
   });
-  
-  
-/*
-  const paragraphs = ch.content ? ch.content.split(/\n\n+/) : ["(Ei sisältöä)"];
-  paragraphs.forEach((para, i) => {
-    const highlighted = highlightSearch(esc(para));
-    if (i === 0 && para.length < 150) {
-      html += `<blockquote>${highlighted}</blockquote>`;
-    } else {
-      html += `<p>${highlighted}</p>`;
-    }
-  });
-*/
 
   html += `</div></div>`;
   html += `<div class="chapter-nav">`;
@@ -511,22 +410,6 @@ reader.ontouchend = (e) => {
   }
 };
 
-window.copyHtmlToClipboard = async function(htmlContent) {
-
-  try {
-    await navigator.clipboard.writeText(htmlContent);
-    alert("HTML kopioitu leikepöydälle.");
-  } catch (err) {
-    console.error("Clipboard error:", err);
-    alert("Kopiointi epäonnistui.");
-  }
-
-};
-
-
-
-// Kytketään painike toimintaan
-document.getElementById("btn-pdf").onclick = window.generatePDF;
 </script>
 </body>
 </html>
