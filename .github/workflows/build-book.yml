@@ -9,12 +9,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
       - name: Setup Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
 
       - name: Install Puppeteer
         run: npm install puppeteer
@@ -22,8 +23,8 @@ jobs:
       - name: Generate PDF
         run: node generate-pdf.js
 
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v3
+      - name: Upload PDF Artifact
+        uses: actions/upload-artifact@v4
         with:
           name: A5_Print_Book
           path: Kirja_A5_PRINT.pdf
