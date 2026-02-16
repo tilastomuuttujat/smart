@@ -306,22 +306,48 @@ const tocPanel = document.getElementById("toc-panel");
 const searchPanel = document.getElementById("search-panel");
 
 // ─── Data Loading ───
-// Huom: Vaatii yhdistelmäindeksin (part, title) Firebasessa
+// Huom: Vaatii yhdistelmäindeksin (part, id) Firebasessa
+
 const q = query(collection(db, "kirja"), orderBy("part"), orderBy("id"));
 
+let loadedFromFirebase = false;
+
+// Firebase-lataus
 onSnapshot(q, (snapshot) => {
   chapters = snapshot.docs.map(doc => ({
     id: doc.id,
     ...doc.data()
   }));
-  
+
+  loadedFromFirebase = true;
+
   if (chapters.length > 0) {
     renderChapter();
     renderToc();
   } else {
-    reader.innerHTML = "<p style='padding:40px; text-align:center;'>Kirja on tyhjä.</p>";
+    reader.innerHTML =
+      "<p style='padding:40px; text-align:center;'>Kirja on tyhjä.</p>";
   }
 });
+
+// ─── Fallback CI / PDF-ympäristöön ───
+// Jos Firebase ei vastaa 3 sekunnissa,
+// käytetään staattista bookData.chapters -dataa
+
+setTimeout(() => {
+  if (!loadedFromFirebase) {
+    console.log("Firebase not available – using fallback data.");
+
+    if (typeof bookData !== "undefined" && bookData.chapters?.length > 0) {
+      chapters = bookData.chapters;
+      renderChapter();
+      renderToc();
+    } else {
+      reader.innerHTML =
+        "<p style='padding:40px; text-align:center;'>Ei ladattavaa sisältöä.</p>";
+    }
+  }
+}, 3000);
 
 // ─── Global Functions (window. jotta HTML-painikkeet löytävät ne) ───
 window.renderChapter = function() {
