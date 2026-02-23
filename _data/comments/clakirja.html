@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Järjestelmä – Ihmiset – Muutos · Harri Käyhkö</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,300;0,7..72,400;0,7..72,500;0,7..72,600;1,7..72,300;1,7..72,400;1,7..72,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:           hsl(38,30%,94%);
+  --bg-card:      hsl(35,25%,90%);
+  --ink:          hsl(24,40%,14%);
+  --ink-light:    hsl(24,25%,28%);
+  --muted:        hsl(28,18%,52%);
+  --hairline:     hsl(32,18%,76%);
+  --copper:       hsl(20,60%,31%);
+  --copper-light: hsl(25,50%,45%);
+  --gold:         hsl(38,70%,58%);
+  --gold-light:   hsl(42,60%,72%);
+  --secondary:    hsl(35,22%,85%);
+  --font-body:    'Literata', Georgia, 'Times New Roman', serif;
+  --font-ui:      'Inter', system-ui, sans-serif;
+  --max-w:        660px;
+  --radius:       6px;
+}
+body.theme-dark {
+  --bg:           hsl(24,20%,12%);
+  --bg-card:      hsl(24,18%,18%);
+  --ink:          hsl(35,30%,88%);
+  --ink-light:    hsl(35,25%,75%);
+  --muted:        hsl(28,15%,55%);
+  --hairline:     hsl(24,15%,30%);
+  --copper:       hsl(20,60%,50%);
+  --copper-light: hsl(25,50%,60%);
+  --gold:         hsl(38,70%,65%);
+  --gold-light:   hsl(42,50%,60%);
+  --secondary:    hsl(24,15%,25%);
+}
+body.theme-sepia {
+  --bg:           hsl(35,40%,90%);
+  --bg-card:      hsl(35,35%,84%);
+  --ink:          hsl(30,30%,20%);
+  --ink-light:    hsl(30,25%,30%);
+  --muted:        hsl(30,20%,45%);
+  --hairline:     hsl(30,25%,65%);
+  --copper:       hsl(20,50%,35%);
+  --copper-light: hsl(25,45%,45%);
+  --gold:         hsl(38,60%,50%);
+  --gold-light:   hsl(42,50%,65%);
+  --secondary:    hsl(35,25%,75%);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: auto; }
+body {font-family: var(--font-body);background: var(--bg);color: var(--ink);-webkit-font-smoothing: antialiased;height: 100dvh;overflow: hidden;display: flex;flex-direction: column;}
+::selection { background: hsl(42,60%,72%,0.4); color: var(--ink); }
+#progress-bar-wrap {position: fixed; top: 0; left: 0; right: 0; z-index: 100;height: 2px; background: hsl(32,18%,76%,0.4);}
+#progress-bar {height: 100%; width: 0%;background: linear-gradient(90deg, hsl(20,60%,31%), hsl(38,70%,58%));transition: width 0.4s ease-out;}
+#toolbar {flex-shrink: 0;display: flex; align-items: center; justify-content: space-between;padding: 10px 14px;background: var(--bg-card);backdrop-filter: blur(12px);-webkit-backdrop-filter: blur(12px);border-bottom: 1px solid var(--hairline);position: relative; z-index: 30;}
+.tb-cluster { display: flex; align-items: center; gap: 2px; }
+.tb-btn {display: flex; align-items: center; gap: 5px;padding: 6px 8px; border: none; background: transparent;border-radius: var(--radius); cursor: pointer;color: var(--muted); font-family: var(--font-ui);font-size: 12px; transition: background 0.15s, color 0.15s;}
+.tb-btn:hover { background: var(--secondary); color: var(--ink); }
+.tb-btn.active { background: var(--secondary); color: var(--copper); }
+.tb-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.tb-sep { width: 1px; height: 16px; background: var(--hairline); margin: 0 4px; }
+.tb-center {position: absolute; left: 50%; transform: translateX(-50%);text-align: center; pointer-events: none;font-family: var(--font-ui);}
+.tb-part { font-size: 9px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted); display: block; }
+.tb-idx  { font-size: 11px; font-weight: 500; color: var(--ink-light); display: block; }
+#font-size-display { font-family: var(--font-ui); font-size: 11px; color: var(--muted); width: 24px; text-align: center; }
+#reader {flex: 1;overflow-y: auto;scroll-behavior: auto;}
+#reader::-webkit-scrollbar { width: 5px; }
+#reader::-webkit-scrollbar-track { background: transparent; }
+#reader::-webkit-scrollbar-thumb { background: var(--hairline); border-radius: 10px; }
+#reader::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+.chapter-block { display: block; }
+.chapter-inner {max-width: var(--max-w);margin: 0 auto;padding: 56px 24px 48px;}
+@media (min-width: 640px) { .chapter-inner { padding: 56px 40px 48px; } }
+.ch-header {margin-bottom: 40px;padding-bottom: 32px;border-bottom: 1px solid var(--hairline);}
+.ch-part {font-family: var(--font-ui);font-size: 9px;text-transform: uppercase;letter-spacing: 0.18em;color: var(--muted);margin-bottom: 8px;}
+.ch-title {font-family: var(--font-body);font-weight: 600;color: var(--copper);letter-spacing: -0.02em;line-height: 1.25;font-size: clamp(1.35rem, 5vw, 1.85rem);}
+.ch-subtitle {font-family: var(--font-body);font-size: 1rem;font-style: italic;color: var(--muted);margin-top: 8px;}
+.reader-body {font-family: var(--font-body);color: var(--ink);line-height: 1.85;letter-spacing: 0.01em;}
+.reader-body p {margin-bottom: 1.5em;hyphens: auto;}
+.reader-body h2 {font-family: var(--font-ui);font-size: 0.68rem;font-weight: 500;text-transform: uppercase;letter-spacing: 0.18em;color: var(--muted);border-top: 1px solid var(--hairline);border-bottom: 1px solid var(--hairline);padding: 0.85rem 0;margin: 2.6rem 0 1.7rem;text-align: center;}
+.reader-body blockquote {border-left: 2px solid var(--gold);padding: 0.2rem 0 0.2rem 1.4rem;font-style: italic;font-size: 1.13em;color: var(--ink-light);margin-bottom: 2em;line-height: 1.72;}
+.reader-body ul {margin: 1.4rem 0 1.8rem 0;list-style: none;}
+.reader-body ul li {position: relative;padding-left: 1.4rem;margin-bottom: 0.55em;line-height: 1.72;}
+.reader-body ul li::before {content: '—';position: absolute; left: 0;color: var(--copper-light);font-weight: 300;}
+.reader-body mark {background: hsl(42,60%,72%,0.42);padding: 1px 3px;border-radius: 2px;color: inherit;}
+.reader-table {width: 100%;border-collapse: collapse;margin: 2rem 0;font-family: var(--font-ui);font-size: 0.83rem;}
+.reader-table th {font-weight: 500;text-align: left;padding: 0.55rem 0.75rem;border-bottom: 2px solid var(--hairline);color: var(--muted);text-transform: uppercase;letter-spacing: 0.08em;font-size: 0.67rem;}
+.reader-table td {padding: 0.55rem 0.75rem;border-bottom: 1px solid hsl(32,18%,76%,0.55);color: var(--ink-light);line-height: 1.5;}
+.reader-table tr:last-child td { border-bottom: none; }
+/* ── Kuvaajat ─────────────────────────────────────────── */
+.chart-wrap {
+  margin: 1.6rem 0 2rem;
+  overflow: hidden;
+  border-radius: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--hairline);
+  padding: 16px 16px 12px;
+}
+.chart-wrap svg { display: block; width: 100%; height: auto; }
+.chart-title {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 10px;
+  color: var(--muted);
+}
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 10px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--ink-light);
+}
+.legend-item { display: flex; align-items: center; gap: 6px; }
+.legend-swatch {
+  width: 10px; height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* SVG-tekstit käyttävät aina UI-fonttia */
+.chart-wrap svg text { font-family: var(--font-ui), system-ui, sans-serif; }
+/* ── Navigaatio ───────────────────────────────────────── */
+.ch-nav {display: flex; align-items: center; justify-content: space-between;margin-top: 60px; padding-top: 28px;border-top: 1px solid var(--hairline);}
+.ch-nav-btn {display: flex; align-items: center; gap: 6px;background: none; border: none; cursor: pointer;font-family: var(--font-ui); font-size: 11px;color: var(--muted); max-width: 150px;text-align: left; line-height: 1.4;transition: opacity 0.15s;}
+.ch-nav-btn:hover { opacity: 0.7; }
+.ch-nav-btn.right { text-align: right; }
+.ch-nav-btn svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+.ch-dots { display: flex; gap: 4px; align-items: center; }
+.ch-dot {height: 5px; border-radius: 10px;background: var(--hairline); border: none; cursor: pointer;padding: 0; transition: all 0.25s;}
+.ch-dot.active { background: var(--copper); width: 18px !important; }
+.ch-end { font-family: var(--font-ui); font-size: 9px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted); }
+.ornament {display: flex; align-items: center; gap: 12px;margin: 56px 0 0; color: var(--hairline);font-family: var(--font-ui); font-size: 11px;}
+.ornament::before, .ornament::after {content: ''; flex: 1; height: 1px; background: var(--hairline);}
+.panel-overlay {position: fixed; inset: 0; z-index: 40;background: hsl(24,40%,14%,0.42);backdrop-filter: blur(3px);opacity: 0; pointer-events: none;transition: opacity 0.25s;}
+.panel-overlay.open { opacity: 1; pointer-events: auto; }
+.panel {position: fixed; top: 0; bottom: 0; z-index: 50;width: min(85vw, 360px);background: var(--bg-card);display: flex; flex-direction: column;transition: transform 0.3s cubic-bezier(0.32,0,0.24,1);box-shadow: 8px 0 40px hsl(24,40%,14%,0.14);}
+.panel.left { left: 0; transform: translateX(-100%); }
+.panel.right { right: 0; transform: translateX(100%); box-shadow: -8px 0 40px hsl(24,40%,14%,0.14); }
+.panel.left.open { transform: translateX(0); }
+.panel.right.open { transform: translateX(0); }
+.panel-head {display: flex; align-items: center; justify-content: space-between;padding: 16px 20px; flex-shrink: 0;border-bottom: 1px solid var(--hairline);}
+.panel-head-sub { font-family: var(--font-ui); font-size: 9px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted); margin-bottom: 2px; }
+.panel-head-title { font-family: var(--font-body); font-size: 0.85rem; font-weight: 600; color: var(--ink); line-height: 1.3; }
+.panel-close {padding: 7px; border: none; background: transparent; cursor: pointer;border-radius: var(--radius); color: var(--muted); transition: background 0.15s;flex-shrink: 0;}
+.panel-close:hover { background: var(--secondary); }
+.panel-close svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
+.panel-body {flex: 1; overflow-y: auto; padding: 12px;}
+.panel-body::-webkit-scrollbar { width: 4px; }
+.panel-body::-webkit-scrollbar-thumb { background: var(--hairline); border-radius: 8px; }
+.toc-author {padding: 10px 20px;border-bottom: 1px solid hsl(32,18%,76%,0.45);font-family: var(--font-ui); font-size: 11px; color: var(--muted);flex-shrink: 0;}
+.toc-part-label {font-family: var(--font-ui); font-size: 9px; font-weight: 500;text-transform: uppercase; letter-spacing: 0.12em;color: var(--copper); padding: 16px 12px 8px;}
+.toc-item {display: block; width: 100%; text-align: left;padding: 10px 12px; border: none; background: transparent;border-radius: var(--radius); margin-bottom: 2px;cursor: pointer; transition: background 0.15s;}
+.toc-item:hover { background: var(--secondary); }
+.toc-item.active { background: hsl(20,60%,31%,0.09); }
+.toc-item-title {display: block; font-family: var(--font-body); font-size: 0.85rem;line-height: 1.4; color: var(--ink-light);}
+.toc-item.active .toc-item-title { font-weight: 600; color: var(--copper); }
+.toc-item-sub { display: block; font-family: var(--font-ui); font-size: 10px; color: var(--muted); margin-top: 2px; }
+.search-input-row {display: flex; align-items: center; gap: 10px;padding: 12px 16px; border-bottom: 1px solid var(--hairline); flex-shrink: 0;}
+.search-input-row svg { width: 15px; height: 15px; stroke: var(--muted); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+#search-input {flex: 1; border: none; background: transparent; outline: none;font-family: var(--font-ui); font-size: 13px; color: var(--ink);}
+#search-input::placeholder { color: var(--muted); }
+.search-hint { font-family: var(--font-ui); font-size: 12px; color: var(--muted); text-align: center; padding: 36px 0; }
+.search-count { font-family: var(--font-ui); font-size: 10px; color: var(--muted); padding: 0 4px 12px; }
+.search-result {display: block; width: 100%; text-align: left;padding: 12px; border: 1px solid var(--hairline); border-radius: var(--radius);background: transparent; cursor: pointer; margin-bottom: 8px;transition: background 0.15s;}
+.search-result:hover { background: var(--secondary); }
+.search-result-title { font-family: var(--font-ui); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--copper); margin-bottom: 6px;}
+.search-result-snippet { font-family: var(--font-body); font-size: 0.83rem; color: var(--ink-light); line-height: 1.6; }
+.comment-form { display: flex; flex-direction: column; gap: 16px; padding: 4px 8px; }
+.form-label { font-family: var(--font-ui); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); display: block; margin-bottom: 6px; }
+.form-control {width: 100%; border-radius: var(--radius); padding: 10px 12px;font-family: var(--font-ui); font-size: 13px; outline: none;background: var(--bg); border: 1px solid var(--hairline); color: var(--ink);transition: border-color 0.2s;}
+.form-control:focus { border-color: var(--copper-light); }
+textarea.form-control { resize: vertical; min-height: 110px; }
+.form-submit {width: 100%; padding: 10px; border: none; border-radius: var(--radius);background: var(--copper); color: hsl(35,50%,95%);font-family: var(--font-ui); font-size: 13px; font-weight: 500;cursor: pointer; transition: opacity 0.2s;}
+.form-submit:hover { opacity: 0.88; }
+.form-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+.form-error { font-family: var(--font-ui); font-size: 11px; color: hsl(0,70%,50%); text-align: center; }
+@media (min-width: 500px) { .hidden-sm { display: inline; } }
+@media (max-width: 499px) { .hidden-sm { display: none; } }
+.chart-legend-text {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 6px;
+  font-family: var(--font-ui);
+  line-height: 1.6;
+}
+/* ── Elink-indikaattoriblokki ─────────────────────────── */
+.elink-block {
+  margin: 1.8rem 0;
+}
+.elink-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  user-select: none;
+}
+.elink-title {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
+.elink-btn {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 5px;
+  color: var(--muted);
+  transition: background 0.15s, color 0.15s;
+  padding: 0;
+}
+.elink-btn:hover { background: var(--secondary); color: var(--copper); }
+.elink-btn.open { color: var(--copper); }
+.elink-btn svg {
+  width: 16px; height: 16px;
+  stroke: currentColor; fill: none;
+  stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+}
+.elink-body { display: none; padding-top: 10px; }
+.elink-body.open { display: block; }
+</style>
+</head>
+<body>
+
+<div id="progress-bar-wrap"><div id="progress-bar"></div></div>
+<header id="toolbar">
+  <div class="tb-cluster">
+    <button class="tb-btn" id="btn-toc" title="Sisällysluettelo">
+      <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      <span class="hidden-sm">Sisällys</span>
+    </button>
+    <div class="tb-sep"></div>
+    <button class="tb-btn" id="btn-theme" title="Vaihda teemaa">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+    </button>
+    <button class="tb-btn" id="btn-tts" title="Lue ääneen">
+      <svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+    </button>
+  </div>
+
+  <div class="tb-center">
+    <span class="tb-part" id="tb-part">—</span>
+    <span class="tb-idx" id="tb-idx">1 / 1</span>
+  </div>
+
+  <div class="tb-cluster">
+    <button class="tb-btn" id="btn-font-down" title="Pienennä fonttia">
+      <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+    <span id="font-size-display">17</span>
+    <button class="tb-btn" id="btn-font-up" title="Suurenna fonttia">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+    <div class="tb-sep"></div>
+    <button class="tb-btn" id="btn-search" title="Haku">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="17" y1="17" x2="22" y2="22"/></svg>
+    </button>
+    <button class="tb-btn" id="btn-comment" title="Kommentoi">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    </button>
+    <button class="tb-btn" id="btn-link" title="Kopioi linkki">
+      <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+    </button>
+    <button class="tb-btn" id="btn-export" title="Kopioi tekstiversio">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+    </button>
+  </div>
+</header>
+
+<main id="reader"></main>
+
+<div class="panel-overlay" id="overlay-toc"></div>
+<aside class="panel left" id="panel-toc">
+  <div class="panel-head">
+    <div>
+      <div class="panel-head-sub">Sisällysluettelo</div>
+      <div class="panel-head-title">Järjestelmä – Ihmiset – Muutos</div>
+    </div>
+    <button class="panel-close" id="close-toc">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="toc-author">Harri Käyhkö</div>
+  <div class="panel-body" id="toc-body"></div>
+</aside>
+
+<div class="panel-overlay" id="overlay-search"></div>
+<aside class="panel right" id="panel-search">
+  <div class="search-input-row">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="17" y1="17" x2="22" y2="22"/></svg>
+    <input type="search" id="search-input" placeholder="Hae kirjasta…" autocomplete="off"/>
+    <button class="panel-close" id="close-search">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="panel-body" id="search-body">
+    <div class="search-hint">Kirjoita vähintään 3 merkkiä…</div>
+  </div>
+</aside>
+
+<div class="panel-overlay" id="overlay-comment"></div>
+<aside class="panel right" id="panel-comment" style="width:min(85vw,380px)">
+  <div class="panel-head">
+    <div>
+      <div class="panel-head-sub">Palautelomake</div>
+      <div class="panel-head-title" id="comment-chapter-title">Kommentoi sisältöä</div>
+    </div>
+    <button class="panel-close" id="close-comment">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="panel-body">
+    <form class="comment-form" id="comment-form">
+      <div>
+        <label class="form-label" for="comment-type">Kommentin tyyppi</label>
+        <select class="form-control" id="comment-type">
+          <option>Oikaisuehdotus</option>
+          <option>Lisäysehdotus</option>
+          <option>Täsmennys</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label" for="comment-msg">Kommentti *</label>
+        <textarea class="form-control" id="comment-msg" required placeholder="Kirjoita kommenttisi…"></textarea>
+      </div>
+      <div>
+        <label class="form-label" for="comment-email">Sähköposti (valinnainen)</label>
+        <input type="email" class="form-control" id="comment-email" placeholder="nimi@esimerkki.fi"/>
+      </div>
+      <button type="submit" class="form-submit" id="comment-submit">Lähetä palaute</button>
+      <div class="form-error" id="comment-error" style="display:none">Lähetys epäonnistui. Yritä uudelleen.</div>
+    </form>
+  </div>
+</aside>
+<script src="elink-charts.js"></script>
+<script>
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function highlight(text, q) {
+  if (!q || q.length < 3) return text;
+  const re = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+  return text.replace(re, '<mark>$1</mark>');
+}
+
+function parseBlocks(text) {
+  const lines = text.split('\n');
+  const blocks = [];
+  let buffer = [];
+  let mode = null;
+
+  lines.forEach(line => {
+    line = line.trim();
+
+    if (line.startsWith('lista:')) { mode = 'list'; buffer = []; return; }
+    if (line === ':lista')         { blocks.push({ mode, content: [...buffer] }); mode = null; buffer = []; return; }
+
+    if (mode) {
+      buffer.push(line);
+    } else if (line !== '') {
+      blocks.push({ mode: 'text', content: [line] });
+    }
+  });
+
+  return blocks;
+}
+
+// ── elink-charts.js stubit ───────────────────────────────
+// var → oikeasti globaaleja, näkyy myös elink-charts.js:lle.
+// Funktiot asetetaan vain jos elink-charts.js ei ole ladannut niitä.
+var ELINK = null;
+var EDATA = null;
+var placementMap = {};
+window.loadIndicators    = window.loadIndicators    || (async function() {});
+window.buildPlacementMap = window.buildPlacementMap || (function() {});
+window.renderElinkModules= window.renderElinkModules|| (function() { return ''; });
+
+
+function createSmoothPath(points, tension = 0.35) {
+  if (points.length < 2) return "";
+
+  let d = `M ${points[0].x} ${points[0].y}`;
+
+  for (let i = 0; i < points.length - 1; i++) {
+    const p0 = points[i === 0 ? i : i - 1];
+    const p1 = points[i];
+    const p2 = points[i + 1];
+    const p3 = points[i + 2] || p2;
+
+    const cp1x = p1.x + (p2.x - p0.x) * tension;
+    const cp1y = p1.y + (p2.y - p0.y) * tension;
+
+    const cp2x = p2.x - (p3.x - p1.x) * tension;
+    const cp2y = p2.y - (p3.y - p1.y) * tension;
+
+    d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
+  }
+
+  return d;
+}
+
+
+
+function renderList(lines) {
+  const items = lines.map(l => l.trim()).filter(l => l.length);
+  if (!items.length) return '';
+  return `<ul class="reader-body" style="margin-top:0">${items.map(i => `<li>${esc(i)}</li>`).join('')}</ul>`;
+}
+
+const blockRenderers = {
+  list: (b) => renderList(b.content),
+};
+
+function renderBody(content, fontSize, query, chapterId) {
+  const blocks = parseBlocks(content);
+  let html = '';
+  let paraCount = 0;   // laskee renderöidyt kappaleet (<p> + <blockquote>)
+
+  blocks.forEach((block, i) => {
+    const renderer = blockRenderers[block.mode];
+    if (renderer) { html += renderer(block); return; }
+
+    // Tavallinen teksti
+    const text = block.content.join(' ').trim();
+    if (!text) return;
+
+    const hi = highlight(esc(text), query);
+    const isHeading = i !== 0 && text.length < 60 && !/[.:,;!?]$/.test(text) && !/^\d/.test(text) && !/^-/.test(text);
+
+    let paraIncremented = false;
+    if (isHeading) {
+      html += `<h2>${hi}</h2>`;
+    } else if (i === 0 && text.length < 150) {
+      html += `<blockquote>${hi}</blockquote>`;
+      paraCount++; paraIncremented = true;
+    } else {
+      html += `<p>${hi}</p>`;
+      paraCount++; paraIncremented = true;
+    }
+
+    // Injektoi elink-moduulit – vain p/blockquote jälkeen, ei h2:n jälkeen
+    if (paraIncremented && chapterId && ELINK) {
+      const key = String(chapterId) + ':' + paraCount;
+      const mods = placementMap[key];
+      if (mods && mods.length) {
+        html += renderElinkModules(mods);
+      }
+    }
+  });
+  return html;
+}
+
+(async () => {
+  const WEBHOOK = 'https://script.google.com/macros/s/AKfycbymZpTBcrfjNSyyovHsVqcuTmvnGmDT3EzjDdFnj-pX-qv4-IecyGhGtEGemD7VKmRN5g/exec';
+
+  let book, chapters;
+  let currentIndex = 0;
+  let fontSize = 17;
+  let searchQuery = '';
+  const themes = ['', 'theme-dark', 'theme-sepia'];
+  let themeIndex = 0;
+  let isSpeaking = false;
+  let utterance = null;
+
+  // Load book data – try same dir, then ./ekirja.json
+  try {
+    const res = await fetch('ekirja.json');
+    if (!res.ok) throw new Error();
+    book = await res.json();
+  } catch {
+    document.getElementById('reader').innerHTML =
+      '<div style="padding:60px;text-align:center;font-family:Inter,sans-serif;color:hsl(28,18%,52%)">Tiedostoa ekirja.json ei löydy.</div>';
+    return;
+  }
+  chapters = book.chapters;
+
+  // ── Lataa indikaattoridata (edata.json + elink.json) ──
+  try {
+    await loadIndicators();
+    buildPlacementMap();
+  } catch (e) {
+    console.warn('Indikaattoridata ei saatavilla:', e);
+  }
+
+  // ── Render chapters ──
+  const reader = document.getElementById('reader');
+  function renderChapters() {
+    reader.innerHTML = '';
+    chapters.forEach((ch, i) => {
+      const section = document.createElement('section');
+      section.className = 'chapter-block';
+      section.dataset.index = i;
+
+      // Nav dots
+      const dots = chapters.map((_, j) =>
+        `<button class="ch-dot${j === i ? ' active' : ''}" data-goto="${j}" style="width:${j === i ? 18 : 5}px" title="Luku ${j+1}"></button>`
+      ).join('');
+
+      const prevBtn = i > 0
+        ? `<button class="ch-nav-btn" data-goto="${i-1}"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>${esc(chapters[i-1].title)}</span></button>`
+        : `<span></span>`;
+      const nextBtn = i < chapters.length - 1
+        ? `<button class="ch-nav-btn right" data-goto="${i+1}"><span>${esc(chapters[i+1].title)}</span><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>`
+        : `<div class="ch-end">— Loppu —</div>`;
+
+      section.innerHTML = `
+        <div class="chapter-inner">
+          <header class="ch-header">
+            ${ch.part ? `<p class="ch-part">${esc(ch.part)}</p>` : ''}
+            <h1 class="ch-title">${esc(ch.title)}</h1>
+            ${ch.subtitle ? `<p class="ch-subtitle">${esc(ch.subtitle)}</p>` : ''}
+          </header>
+          <div class="reader-body" id="body-${i}" style="font-size:${fontSize}px">
+            ${ch.content ? renderBody(ch.content, fontSize, searchQuery, ch.id) : ''}
+          </div>
+          <nav class="ch-nav">
+            ${prevBtn}
+            <div class="ch-dots">${dots}</div>
+            ${nextBtn}
+          </nav>
+          ${i < chapters.length - 1 ? '<div class="ornament"><span>✦</span></div>' : ''}
+        </div>`;
+
+      reader.appendChild(section);
+    });
+
+    // Nav dot / btn click
+    reader.querySelectorAll('[data-goto]').forEach(el => {
+      el.addEventListener('click', () => goTo(parseInt(el.dataset.goto)));
+    });
+  }
+
+  function updateBodyFontSize() {
+    chapters.forEach((_, i) => {
+      const el = document.getElementById(`body-${i}`);
+      if (el) el.style.fontSize = fontSize + 'px';
+    });
+    document.getElementById('font-size-display').textContent = fontSize;
+  }
+
+  function updateToolbar() {
+    const ch = chapters[currentIndex];
+    document.getElementById('tb-part').textContent = ch?.part || 'Johdanto';
+    document.getElementById('tb-idx').textContent = `${currentIndex + 1} / ${chapters.length}`;
+  }
+
+  function scrollToChapter(index) {
+    const block = reader.querySelector(`.chapter-block[data-index="${index}"]`);
+    if (block) reader.scrollTop = block.offsetTop;
+  }
+
+  function goTo(index) {
+    if (index < 0 || index >= chapters.length) return;
+    stopTTS();
+    currentIndex = index;
+    requestAnimationFrame(() => {
+      scrollToChapter(index);
+      updateToolbar();
+    });
+    const url = new URL(location.href);
+    url.searchParams.set('chapter', index);
+    history.replaceState(null, '', url);
+  }
+
+  reader.addEventListener('scroll', () => {
+    const total = reader.scrollHeight - reader.clientHeight;
+    document.getElementById('progress-bar').style.width =
+      total > 0 ? (reader.scrollTop / total * 100) + '%' : '0%';
+
+    const threshold = reader.getBoundingClientRect().top + reader.clientHeight * 0.35;
+    for (const block of reader.querySelectorAll('.chapter-block')) {
+      const rect = block.getBoundingClientRect();
+      if (rect.top <= threshold && rect.bottom > threshold) {
+        const idx = parseInt(block.dataset.index);
+        if (idx !== currentIndex) {
+          currentIndex = idx;
+          updateToolbar();
+          const url = new URL(location.href);
+          url.searchParams.set('chapter', idx);
+          history.replaceState(null, '', url);
+        }
+        break;
+      }
+    }
+  });
+
+  window.addEventListener('keydown', e => {
+    if (e.key === 'ArrowLeft' && currentIndex > 0) goTo(currentIndex - 1);
+    if (e.key === 'ArrowRight' && currentIndex < chapters.length - 1) goTo(currentIndex + 1);
+    if (e.key === 'Escape') closeAllPanels();
+  });
+
+  document.getElementById('btn-font-down').addEventListener('click', () => {
+    fontSize = Math.max(14, fontSize - 2);
+    updateBodyFontSize();
+  });
+  document.getElementById('btn-font-up').addEventListener('click', () => {
+    fontSize = Math.min(28, fontSize + 2);
+    updateBodyFontSize();
+  });
+
+  document.getElementById('btn-link').addEventListener('click', () => {
+    const url = `${location.origin}${location.pathname}?chapter=${currentIndex}`;
+    navigator.clipboard.writeText(url).catch(() => {});
+  });
+
+  document.getElementById('btn-theme').addEventListener('click', () => {
+    themeIndex = (themeIndex + 1) % themes.length;
+    document.body.className = themes[themeIndex];
+  });
+
+  document.getElementById('btn-tts').addEventListener('click', () => {
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      isSpeaking = false;
+      document.getElementById('btn-tts').classList.remove('active');
+      return;
+    }
+    const bodyEl = document.getElementById(`body-${currentIndex}`);
+    if (!bodyEl) return;
+    const text = bodyEl.innerText;
+    if (!text) return;
+    utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'fi-FI';
+    utterance.rate = 1.0;
+    utterance.onstart = () => { isSpeaking = true; document.getElementById('btn-tts').classList.add('active'); };
+    utterance.onend = () => { isSpeaking = false; document.getElementById('btn-tts').classList.remove('active'); };
+    utterance.onerror = () => { isSpeaking = false; document.getElementById('btn-tts').classList.remove('active'); };
+    window.speechSynthesis.speak(utterance);
+  });
+
+  function stopTTS() {
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      isSpeaking = false;
+      document.getElementById('btn-tts').classList.remove('active');
+    }
+  }
+
+  document.getElementById('btn-export').addEventListener('click', () => {
+    let txt = `${book.title}\n${book.author}\n${'='.repeat(40)}\n\nSISÄLLYSLUETTELO\n${'-'.repeat(40)}\n`;
+    chapters.forEach((ch, i) => { txt += `${i+1}. ${ch.title}\n`; });
+    txt += '\n\n';
+    chapters.forEach((ch, i) => {
+      txt += `${'='.repeat(40)}\n${i+1}. ${ch.title}\n`;
+      if (ch.part) txt += `${ch.part}\n`;
+      txt += `${'-'.repeat(40)}\n\n`;
+      (ch.content || '').split(/\n\n+/).forEach(p => { const t = p.trim(); if (t) txt += t + '\n\n'; });
+    });
+    navigator.clipboard.writeText(txt).catch(() => {});
+  });
+
+  function openPanel(overlayId, panelId) {
+    closeAllPanels();
+    document.getElementById(overlayId).classList.add('open');
+    document.getElementById(panelId).classList.add('open');
+  }
+  function closePanel(overlayId, panelId) {
+    document.getElementById(overlayId).classList.remove('open');
+    document.getElementById(panelId).classList.remove('open');
+  }
+  function closeAllPanels() {
+    ['overlay-toc','overlay-search','overlay-comment'].forEach(id => document.getElementById(id).classList.remove('open'));
+    ['panel-toc','panel-search','panel-comment'].forEach(id => document.getElementById(id).classList.remove('open'));
+  }
+
+  document.getElementById('btn-toc').addEventListener('click', () => openPanel('overlay-toc', 'panel-toc'));
+  document.getElementById('close-toc').addEventListener('click', () => closePanel('overlay-toc', 'panel-toc'));
+  document.getElementById('overlay-toc').addEventListener('click', () => closePanel('overlay-toc', 'panel-toc'));
+
+  const tocBody = document.getElementById('toc-body');
+  const partsSeen = new Set();
+  chapters.forEach((ch, i) => {
+    const part = ch.part || 'Johdanto';
+    if (!partsSeen.has(part)) {
+      partsSeen.add(part);
+      const label = document.createElement('div');
+      label.className = 'toc-part-label';
+      label.textContent = part;
+      tocBody.appendChild(label);
+    }
+    const btn = document.createElement('button');
+    btn.className = 'toc-item' + (i === currentIndex ? ' active' : '');
+    btn.dataset.index = i;
+    btn.innerHTML = `<span class="toc-item-title">${esc(ch.title)}</span>${ch.subtitle ? `<span class="toc-item-sub">${esc(ch.subtitle)}</span>` : ''}`;
+    btn.addEventListener('click', () => { goTo(i); closePanel('overlay-toc', 'panel-toc'); });
+    tocBody.appendChild(btn);
+  });
+
+  document.getElementById('btn-search').addEventListener('click', () => {
+    openPanel('overlay-search', 'panel-search');
+    setTimeout(() => document.getElementById('search-input').focus(), 150);
+  });
+  document.getElementById('close-search').addEventListener('click', () => {
+    closePanel('overlay-search', 'panel-search');
+    if (searchQuery) { searchQuery = ''; renderChapters(); }
+  });
+  document.getElementById('overlay-search').addEventListener('click', () => {
+    closePanel('overlay-search', 'panel-search');
+    if (searchQuery) { searchQuery = ''; renderChapters(); }
+  });
+
+  document.getElementById('search-input').addEventListener('input', e => {
+    const q = e.target.value.trim();
+    const body = document.getElementById('search-body');
+    if (q.length < 3) {
+      if (searchQuery) { searchQuery = ''; renderChapters(); }
+      body.innerHTML = '<div class="search-hint">Kirjoita vähintään 3 merkkiä…</div>';
+      return;
+    }
+    const results = chapters.map((ch, i) => ({ ch, i })).filter(({ ch }) => ch.content?.toLowerCase().includes(q.toLowerCase()));
+    if (!results.length) { body.innerHTML = '<div class="search-hint">Ei tuloksia</div>'; return; }
+
+    function snippet(content, query, max = 80) {
+      const idx = content.toLowerCase().indexOf(query.toLowerCase());
+      if (idx < 0) return esc(content.slice(0, max)) + '…';
+      const start = Math.max(0, idx - 20), end = Math.min(content.length, idx + 60);
+      const raw = (start > 0 ? '…' : '') + content.slice(start, end) + (end < content.length ? '…' : '');
+      return highlight(esc(raw), q);
+    }
+
+    body.innerHTML = `<div class="search-count">${results.length} osumaa</div>`;
+    results.forEach(({ ch, i }) => {
+      const btn = document.createElement('button');
+      btn.className = 'search-result';
+      btn.innerHTML = `<div class="search-result-title">${esc(ch.title)}</div><div class="search-result-snippet">${snippet(ch.content || '', q)}</div>`;
+      btn.addEventListener('click', () => {
+        searchQuery = q;
+        goTo(i);
+        renderChapters(); // re-render with highlight
+        closePanel('overlay-search', 'panel-search');
+      });
+      body.appendChild(btn);
+    });
+  });
+
+  document.getElementById('btn-comment').addEventListener('click', () => {
+    document.getElementById('comment-chapter-title').textContent = chapters[currentIndex]?.title || 'Kommentoi sisältöä';
+    openPanel('overlay-comment', 'panel-comment');
+  });
+  document.getElementById('close-comment').addEventListener('click', () => closePanel('overlay-comment', 'panel-comment'));
+  document.getElementById('overlay-comment').addEventListener('click', () => closePanel('overlay-comment', 'panel-comment'));
+
+  document.getElementById('comment-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const submit = document.getElementById('comment-submit');
+    const errEl = document.getElementById('comment-error');
+    submit.disabled = true;
+    submit.textContent = 'Lähetetään…';
+    errEl.style.display = 'none';
+    try {
+      await fetch(WEBHOOK, {
+        method: 'POST',
+        body: JSON.stringify({
+          chapter: chapters[currentIndex]?.index,
+          message: document.getElementById('comment-msg').value,
+          type: document.getElementById('comment-type').value,
+          email: document.getElementById('comment-email').value,
+        }),
+      });
+      submit.textContent = 'Kiitos! ✓';
+      document.getElementById('comment-msg').value = '';
+      document.getElementById('comment-email').value = '';
+      setTimeout(() => { submit.disabled = false; submit.textContent = 'Lähetä palaute'; closePanel('overlay-comment', 'panel-comment'); }, 1400);
+    } catch {
+      submit.disabled = false;
+      submit.textContent = 'Lähetä palaute';
+      errEl.style.display = 'block';
+    }
+  });
+
+  renderChapters();
+
+  const params = new URLSearchParams(location.search);
+  const startIdx = parseInt(params.get('chapter') || '0', 10);
+  currentIndex = (!isNaN(startIdx) && startIdx >= 0 && startIdx < chapters.length) ? startIdx : 0;
+  updateToolbar();
+  requestAnimationFrame(() => scrollToChapter(currentIndex));
+})();
+</script>
+</body>
+</html>

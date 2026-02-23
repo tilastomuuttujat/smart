@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ekirja — Linkityseditori</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Literata:opsz,wght@7..72,300;7..72,400&display=swap" rel="stylesheet">
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, doc, setDoc, getDoc, collection,
+         getDocs, writeBatch, serverTimestamp, deleteDoc }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const app = initializeApp({
+  apiKey:            "AIzaSyBTC0eygSgWe7tFz11kopqqWAmBmKNTJl0",
+  authDomain:        "interaktiivinen-esseekok-3bf69.firebaseapp.com",
+  projectId:         "interaktiivinen-esseekok-3bf69",
+  storageBucket:     "interaktiivinen-esseekok-3bf69.appspot.com",
+  messagingSenderId: "186132599458",
+  appId:             "1:186132599458:web:3a0733af2effda14eefdfb"
+});
+
+const db = getFirestore(app);
+window._fb = { db, doc, setDoc, getDoc, collection, getDocs, writeBatch, serverTimestamp, deleteDoc };
+window.dispatchEvent(new CustomEvent('fbready'));
+</script>
+
+<style>
+:root{
+  --ink:#13100a;--paper:#faf7f1;--cream:#f2ede4;--cream2:#e8e0d4;
+  --copper:#9b5e2a;--copper2:#c4845a;--gold:#d4a94a;
+  --muted:#7a6d5f;--wire:#ddd4c6;--panel:#ffffff;
+  --blue:#1d5fa8;--green:#2a7a48;--red:#b53020;--r:6px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'Literata',Georgia,serif;background:var(--cream);color:var(--ink);font-size:13px;line-height:1.55;}
+
+.topbar{display:flex;align-items:center;gap:10px;height:48px;padding:0 14px;flex-shrink:0;background:var(--ink);border-bottom:2px solid var(--copper);z-index:200;}
+.brand{font-family:'Syne',sans-serif;font-weight:800;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);flex-shrink:0;}
+.brand span{color:var(--copper2);font-weight:400;font-size:11px;}
+.sep{flex:1;}
+.stat{font-family:'Syne',sans-serif;font-size:10px;color:#666;letter-spacing:.03em;}
+.stat b{color:var(--gold);}
+.fbs{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:14px;font-family:'Syne',sans-serif;font-size:10px;font-weight:700;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#777;}
+.fbs .dot{width:6px;height:6px;border-radius:50%;background:#444;flex-shrink:0;transition:background .3s;}
+.fbs.ok{color:#86efac;} .fbs.ok .dot{background:#4ade80;}
+.fbs.err{color:#fca5a5;} .fbs.err .dot{background:#f87171;}
+.fbs.busy .dot{background:var(--gold);animation:blink .7s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.2;}}
+.topbtn{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;border:none;border-radius:var(--r);padding:6px 12px;cursor:pointer;transition:background .15s,opacity .15s;}
+.topbtn:disabled{opacity:.4;cursor:not-allowed;}
+.tb-copper{background:var(--copper);color:#fff;} .tb-copper:not(:disabled):hover{background:var(--copper2);}
+.tb-ghost{background:rgba(255,255,255,.08);color:#ccc;border:1px solid rgba(255,255,255,.14);} .tb-ghost:not(:disabled):hover{background:rgba(255,255,255,.15);}
+
+.root{display:flex;flex-direction:column;height:100vh;}
+.layout{display:grid;grid-template-columns:310px 1fr 278px;flex:1;overflow:hidden;}
+.col{display:flex;flex-direction:column;background:var(--panel);overflow:hidden;border-right:1px solid var(--wire);}
+.col:last-child{border-right:none;}
+.ch{padding:11px 13px 8px;border-bottom:1px solid var(--wire);flex-shrink:0;background:var(--paper);}
+.cht{font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.cb{flex:1;overflow-y:auto;overflow-x:hidden;}
+.cb::-webkit-scrollbar{width:3px;} .cb::-webkit-scrollbar-thumb{background:var(--wire);}
+
+.lcard{display:flex;align-items:center;gap:9px;padding:7px 10px;background:var(--cream);border:1px solid var(--wire);border-radius:var(--r);margin-bottom:6px;}
+.lcard-icon{font-size:16px;flex-shrink:0;}
+.lcard-info{flex:1;min-width:0;}
+.lcard-name{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--ink);}
+.lcard-sub{font-size:10px;color:var(--muted);}
+.lbadge{font-family:'Syne',sans-serif;font-size:8px;font-weight:700;letter-spacing:.05em;padding:2px 7px;border-radius:3px;text-transform:uppercase;white-space:nowrap;flex-shrink:0;}
+.lb-ok{background:#d1f5e0;color:var(--green);}
+.upload-lbl{display:block;font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;background:none;border:1px dashed var(--copper2);color:var(--copper);border-radius:var(--r);padding:5px 0;cursor:pointer;text-align:center;width:100%;margin-bottom:7px;transition:background .1s;}
+.upload-lbl:hover{background:var(--cream);}
+.upload-lbl input{display:none;}
+
+.srow{display:flex;gap:5px;margin-bottom:5px;}
+.sinp{flex:1;font-family:'Literata',serif;font-size:11px;padding:5px 9px;border:1px solid var(--wire);border-radius:var(--r);background:white;color:var(--ink);outline:none;transition:border-color .15s;}
+.sinp:focus{border-color:var(--copper);}
+.ssel{font-family:'Syne',sans-serif;font-size:10px;padding:5px 6px;border:1px solid var(--wire);border-radius:var(--r);background:white;color:var(--ink);outline:none;cursor:pointer;max-width:110px;}
+.scount{font-family:'Syne',sans-serif;font-size:9px;color:var(--muted);}
+
+.ilist{padding:4px 5px;}
+.iitem{padding:7px 8px;border-radius:var(--r);cursor:pointer;border:1px solid transparent;margin-bottom:1px;transition:background .1s,border-color .1s;}
+.iitem:hover{background:var(--cream);}
+.iitem.sel{background:var(--cream2);border-color:var(--copper);}
+.iname{font-size:12px;font-weight:500;color:var(--ink);line-height:1.35;margin-bottom:2px;}
+.imeta{display:flex;gap:4px;flex-wrap:wrap;}
+.badge{font-family:'Syne',sans-serif;font-size:8px;font-weight:700;letter-spacing:.04em;padding:2px 5px;border-radius:3px;text-transform:uppercase;}
+.bg{background:var(--cream2);color:var(--muted);}
+.bu{background:#e8f0fb;color:var(--blue);}
+.by{background:#f0f8ee;color:var(--green);}
+.spark{height:15px;width:100%;display:block;margin-top:3px;}
+
+.detail{padding:12px;background:var(--cream);border-bottom:1px solid var(--wire);display:none;}
+.detail.on{display:block;}
+.dname{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;margin-bottom:1px;}
+.dgrp{font-size:10px;color:var(--muted);margin-bottom:7px;}
+.dsvg{height:58px;width:100%;display:block;margin-bottom:7px;}
+.dstats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:6px;}
+.ds{background:white;border:1px solid var(--wire);border-radius:4px;padding:4px 5px;text-align:center;}
+.dsv{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--copper);}
+.dsl{font-size:8px;color:var(--muted);font-family:'Syne',sans-serif;letter-spacing:.04em;text-transform:uppercase;}
+.ctrow{display:flex;gap:3px;}
+.ctbtn{font-family:'Syne',sans-serif;font-size:8px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;background:white;border:1px solid var(--wire);color:var(--muted);border-radius:3px;padding:3px 7px;cursor:pointer;transition:all .1s;}
+.ctbtn.on{background:var(--copper);border-color:var(--copper);color:white;}
+
+.chnav{display:flex;gap:5px;align-items:center;margin-bottom:5px;}
+.chsel{flex:1;font-family:'Literata',serif;font-size:11px;padding:5px 7px;border:1px solid var(--wire);border-radius:var(--r);background:white;color:var(--ink);outline:none;cursor:pointer;}
+.chinfo{font-family:'Syne',sans-serif;font-size:9px;color:var(--muted);}
+.chbody{padding:10px 11px;}
+.chhdr{margin-bottom:12px;padding-bottom:10px;border-bottom:2px solid var(--copper);}
+.chpart{font-family:'Syne',sans-serif;font-size:8px;letter-spacing:.13em;text-transform:uppercase;color:var(--copper);margin-bottom:2px;}
+.chtitle{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;line-height:1.3;}
+
+.pwrap{margin-bottom:1px;}
+.prow{display:flex;gap:5px;align-items:flex-start;}
+.pnum{font-family:'Syne',sans-serif;font-size:8px;color:var(--wire);padding-top:4px;min-width:14px;text-align:right;flex-shrink:0;}
+.ptxt{font-size:11px;line-height:1.6;color:#3a3028;flex:1;padding:3px 5px;border-radius:4px;border:1px solid transparent;cursor:pointer;transition:background .1s,border-color .1s;}
+.ptxt:hover{background:var(--cream);border-color:var(--wire);}
+.ptxt.dragover{background:#e8f0fb;border-color:#93c5fd;}
+.addbtn{font-family:'Syne',sans-serif;font-size:8px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;background:none;border:1px dashed var(--copper2);color:var(--copper);border-radius:3px;padding:3px 6px;cursor:pointer;display:none;white-space:nowrap;flex-shrink:0;}
+.prow:hover .addbtn{display:block;}
+.addbtn:hover{background:var(--cream2);}
+
+.plslot{padding:3px 5px 3px 22px;margin:2px 0;}
+.plcard{background:var(--cream2);border:1px solid var(--copper);border-radius:4px;padding:4px 8px;display:flex;align-items:center;gap:5px;}
+.plicon{width:18px;height:18px;background:var(--copper);border-radius:3px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.plicon svg{width:10px;height:10px;fill:white;}
+.plname{font-size:10px;font-weight:500;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.plmeta{font-family:'Syne',sans-serif;font-size:8px;color:var(--muted);}
+.plsynced{font-family:'Syne',sans-serif;font-size:8px;color:var(--blue);}
+.rmbtn{background:none;border:none;cursor:pointer;color:var(--muted);font-size:12px;padding:1px 3px;border-radius:3px;transition:color .15s,background .15s;flex-shrink:0;}
+.rmbtn:hover{color:var(--red);background:#faeae8;}
+
+.tabbar{display:flex;border-bottom:1px solid var(--wire);}
+.tabbtn{font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:none;border:none;border-bottom:2px solid transparent;padding:7px 11px;cursor:pointer;color:var(--muted);margin-bottom:-1px;transition:all .15s;}
+.tabbtn.on{color:var(--copper);border-bottom-color:var(--copper);}
+.tabpane{display:none;flex:1;overflow-y:auto;flex-direction:column;}
+.tabpane.on{display:flex;}
+
+.ellist{padding:6px;}
+.elentry{background:var(--cream);border:1px solid var(--wire);border-radius:var(--r);padding:6px 8px;margin-bottom:4px;cursor:pointer;transition:border-color .1s;position:relative;}
+.elentry:hover{border-color:var(--copper);}
+.elch{font-size:9px;color:var(--muted);margin-bottom:1px;}
+.elname{font-size:11px;font-weight:600;padding-right:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.elloc{font-size:9px;color:var(--copper);margin-top:1px;}
+.elentry .rmbtn{position:absolute;top:5px;right:5px;}
+
+.fbpanel{padding:10px;}
+.fbsect{font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:11px 0 6px;padding-bottom:3px;border-bottom:1px solid var(--wire);}
+.fbsect:first-child{margin-top:0;}
+.fbbtn{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border:none;border-radius:var(--r);padding:7px 0;cursor:pointer;width:100%;margin-bottom:5px;transition:background .15s,opacity .15s;}
+.fbbtn:disabled{opacity:.4;cursor:not-allowed;}
+.fb-copper{background:var(--copper);color:#fff;} .fb-copper:not(:disabled):hover{background:var(--copper2);}
+.fb-green{background:var(--green);color:#fff;} .fb-green:not(:disabled):hover{background:#3a9a58;}
+.fb-ghost{background:var(--cream2);color:var(--ink);} .fb-ghost:not(:disabled):hover{background:var(--cream);}
+.fb2{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:5px;}
+.progtxt{font-family:'Syne',sans-serif;font-size:9px;color:var(--muted);margin-bottom:3px;display:none;}
+.progwrap{height:5px;background:var(--cream2);border-radius:3px;margin-bottom:8px;overflow:hidden;display:none;}
+.progbar{height:100%;background:var(--copper);border-radius:3px;width:0%;transition:width .3s;}
+.fblog{font-family:'Courier New',monospace;font-size:9px;line-height:1.6;background:#13100a;color:#a0b090;padding:8px;border-radius:4px;max-height:200px;overflow-y:auto;}
+.fblog .ok{color:#4ade80;} .fblog .err{color:#f87171;} .fblog .info{color:#93c5fd;}
+
+.jsonpre{font-family:'Courier New',monospace;font-size:9px;line-height:1.5;background:#13100a;color:#c8b89a;padding:10px;flex:1;overflow:auto;white-space:pre;}
+.jk{color:var(--gold);} .js{color:#98d4a0;} .jn{color:#7ec8e3;}
+
+.empty{padding:20px 10px;text-align:center;color:var(--muted);}
+.empty-i{font-size:24px;margin-bottom:4px;opacity:.4;}
+.empty-t{font-family:'Syne',sans-serif;font-size:10px;letter-spacing:.04em;}
+.toast{position:fixed;bottom:14px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--ink);color:white;padding:7px 15px;border-radius:14px;font-family:'Syne',sans-serif;font-size:11px;font-weight:600;border:1px solid var(--copper);opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;z-index:999;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.plcount{
+  display:inline-flex;align-items:center;justify-content:center;
+  background:var(--copper);color:white;
+  font-family:'Syne',sans-serif;font-size:8px;font-weight:700;
+  width:14px;height:14px;border-radius:50%;
+  margin-left:5px;vertical-align:middle;flex-shrink:0;
+}
+.loading-state{
+  padding:30px;text-align:center;color:var(--muted);
+  font-family:'Syne',sans-serif;font-size:10px;letter-spacing:.05em;
+}
+.loading-state .spin{
+  display:inline-block;width:16px;height:16px;border:2px solid var(--wire);
+  border-top-color:var(--copper);border-radius:50%;
+  animation:spin .8s linear infinite;margin-bottom:8px;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+<div class="root">
+  <div class="topbar">
+    <div class="brand">Ekirja <span>Linkityseditori</span></div>
+    <div class="sep"></div>
+    <div class="stat">indikaattorit: <b id="st-ind">136</b></div>
+    <div class="stat" style="margin-left:10px">luvut: <b id="st-ch">29</b></div>
+    <div class="stat" style="margin-left:10px">linkityksiä: <b id="st-lnk">0</b></div>
+    <div class="fbs" id="fbs"><div class="dot"></div><span id="fbs-txt">Yhdistetään…</span></div>
+    <button class="topbtn tb-ghost" onclick="exportJSON()">Vie JSON ↓</button>
+    <button class="topbtn tb-copper" id="btn-save" onclick="saveAllToFirebase()">☁ Tallenna</button>
+  </div>
+
+  <div class="layout">
+
+    <div class="col">
+      <div class="ch">
+        <div class="cht">edata — Indikaattorit</div>
+        <div class="lcard">
+          <div class="lcard-icon">📊</div>
+          <div class="lcard-info"><div class="lcard-name">edata.json</div><div class="lcard-sub">136 indikaattoria (sisäinen)</div></div>
+          <div class="lbadge lb-ok">136 ✓</div>
+        </div>
+        <label class="upload-lbl">📂 Lataa oma edata.json<input type="file" accept=".json" onchange="loadEdataFile(event)"></label>
+        <div class="lcard">
+          <div class="lcard-icon">📖</div>
+          <div class="lcard-info"><div class="lcard-name">ekirja.json</div><div class="lcard-sub">29 lukua (sisäinen)</div></div>
+          <div class="lbadge lb-ok">29 ✓</div>
+        </div>
+        <label class="upload-lbl">📂 Lataa oma ekirja.json<input type="file" accept=".json" onchange="loadEkirjaFile(event)"></label>
+        <div class="srow" style="margin-top:6px">
+          <input class="sinp" id="search" placeholder="Hae indikaattoria…" oninput="filterInd()">
+          <select class="ssel" id="grpf" onchange="filterInd()"><option value="">Kaikki</option></select>
+        </div>
+        <div class="scount" id="scount">136 indikaattoria</div>
+      </div>
+      <div class="detail" id="detail">
+        <div class="dname" id="d-name">–</div>
+        <div class="dgrp"  id="d-grp">–</div>
+        <svg class="dsvg" id="d-svg" viewBox="0 0 280 58" preserveAspectRatio="none"></svg>
+        <div class="dstats" id="d-stats"></div>
+        <div class="ctrow"  id="d-ct"></div>
+      </div>
+      <div class="cb"><div class="ilist" id="ilist"><div class="loading-state"><div class="spin"></div><br>Ladataan Firestoresta…</div></div></div>
+    </div>
+
+    <div class="col">
+      <div class="ch">
+        <div class="cht">ekirja — Kirjan rakenne</div>
+        <div class="chnav">
+          <select class="chsel" id="chsel" onchange="renderChapter()"><option value="">— Valitse luku —</option></select>
+        </div>
+        <div class="chinfo" id="chinfo">–</div>
+      </div>
+      <div class="cb"><div class="chbody" id="chbody">
+        <div class="loading-state"><div class="spin"></div><br>Ladataan lukuja…</div>
+      </div></div>
+    </div>
+
+    <div class="col">
+      <div class="ch">
+        <div class="cht">Linkitykset — elink</div>
+        <div style="font-family:'Syne',sans-serif;font-size:9px;color:var(--muted)">Yhteensä: <b id="lcount">0</b></div>
+      </div>
+      <div class="tabbar">
+        <button class="tabbtn on" onclick="tab('list',this)">Lista</button>
+        <button class="tabbtn"    onclick="tab('firebase',this)">Firebase</button>
+        <button class="tabbtn"    onclick="tab('json',this)">JSON</button>
+      </div>
+      <div class="tabpane on" id="tp-list">
+        <div class="ellist" id="ellist">
+          <div class="empty"><div class="empty-i">🔗</div><div class="empty-t">Ei linkityksiä vielä</div></div>
+        </div>
+      </div>
+      <div class="tabpane" id="tp-firebase">
+        <div class="fbpanel">
+          <div class="fbsect">Tallenna Firestoreen</div>
+          <button class="fbbtn fb-copper" id="fb-sl"  onclick="saveLinkToFirebase()">☁ Tallenna elink</button>
+          <button class="fbbtn fb-green"  id="fb-sed" onclick="saveEdataToFirebase()">☁ Tallenna edata</button>
+          <button class="fbbtn fb-ghost"  id="fb-sek" onclick="saveEkirjaToFirebase()">☁ Tallenna ekirja (luvut)</button>
+          <button class="fbbtn fb-copper" id="fb-all" onclick="saveAllToFirebase()">☁ Tallenna kaikki</button>
+          <div class="progtxt" id="progtxt">–</div>
+          <div class="progwrap" id="progwrap"><div class="progbar" id="progbar"></div></div>
+          <div class="fbsect">Hae Firestoresta</div>
+          <div class="fb2">
+            <button class="fbbtn fb-ghost" id="fb-ll"  onclick="loadLinkFromFirebase()">↓ Hae elink</button>
+            <button class="fbbtn fb-ghost" id="fb-led" onclick="loadEdataFromFirebase()">↓ Hae edata</button>
+          </div>
+          <button class="fbbtn fb-ghost" id="fb-lek" onclick="loadEkirjaFromFirebase()" style="margin-bottom:5px">↓ Hae ekirja (luvut)</button>
+          <div class="fbsect">Loki</div>
+          <div class="fblog" id="fblog"><span class="info">— Yhdistetään Firestoreen… —</span></div>
+        </div>
+      </div>
+      <div class="tabpane" id="tp-json">
+        <div class="jsonpre" id="jsonpre">{ "placements": [] }</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var EDATA    = {}
+var CHAPTERS = []
+
+
+var filtered = Object.keys(EDATA).map(function(id){ return Object.assign({id:id}, EDATA[id]); });
+var selInd   = null;
+var links    = [];
+var _pid     = 0;
+var FBCOL    = 'ekirja';
+var fbReady  = false;
+
+// ── Firebase ready ──
+window.addEventListener('fbready', function() {
+  fbReady = true;
+  setFbSt('busy', 'Ladataan…');
+  log('ok', 'Firebase valmis — haetaan data…');
+  // Load in sequence: edata → ekirja → elink
+  loadEdataFromFirebase().then(function() {
+    return loadEkirjaFromFirebase();
+  }).then(function() {
+    return loadLinkFromFirebase();
+  }).then(function() {
+    setFbSt('ok', 'Yhdistetty');
+  }).catch(function(e) {
+    setFbSt('err', 'Virhe'); log('err', e.message);
+  });
+});
+
+// Fallback: check after 6s if event never fired
+setTimeout(function() {
+  if (!fbReady && window._fb) {
+    fbReady = true;
+    setFbSt('busy', 'Ladataan…');
+    loadEdataFromFirebase().then(function(){ return loadEkirjaFromFirebase(); })
+      .then(function(){ return loadLinkFromFirebase(); })
+      .then(function(){ setFbSt('ok', 'Yhdistetty'); });
+  } else if (!window._fb) {
+    setFbSt('err', 'Yhteys epäonnistui');
+    log('err', 'Firebase ei latautunut — tarkista verkkoyhteys');
+  }
+}, 6000);
+
+// ── File loaders ──
+function loadEdataFile(evt) {
+  readJSON(evt, function(data) {
+    EDATA = data;
+    filtered = Object.keys(EDATA).map(function(id){ return Object.assign({id:id}, EDATA[id]); });
+    populateGroups(); renderInd();
+    document.getElementById('st-ind').textContent = Object.keys(EDATA).length;
+    toast('edata.json ladattu — ' + Object.keys(EDATA).length + ' indikaattoria');
+  });
+}
+function loadEkirjaFile(evt) {
+  readJSON(evt, function(data) {
+    var raw = data.chapters || data;
+    if (!Array.isArray(raw)) raw = [];
+    CHAPTERS = raw.map(function(ch) {
+      var content = ch.content || '';
+      var paras = content.split(new RegExp('\\n\\n+')).map(function(p){ return p.trim(); }).filter(Boolean);
+      if (!paras.length) paras = ch.paragraphs || [];
+      return { index:ch.index||0, id:String(ch.id), part:ch.part||'', title:ch.title||'', paras:paras };
+    });
+    populateChapters();
+    document.getElementById('st-ch').textContent = CHAPTERS.length;
+    toast('ekirja.json ladattu — ' + CHAPTERS.length + ' lukua');
+  });
+}
+function readJSON(evt, cb) {
+  var f = evt.target.files[0]; if (!f) return;
+  var r = new FileReader();
+  r.onload = function(e) { try { cb(JSON.parse(e.target.result)); } catch(err) { toast('JSON-virhe: ' + err.message); } };
+  r.readAsText(f, 'utf-8');
+}
+
+// ── Init ──
+function init() {
+  populateGroups();
+  renderInd();
+  populateChapters();
+}
+
+function populateGroups() {
+  var grps = [];
+  Object.values(EDATA).forEach(function(d) { var g=d.group||''; if(g && grps.indexOf(g)<0) grps.push(g); });
+  grps.sort();
+  var sel = document.getElementById('grpf');
+  sel.innerHTML = '<option value="">Kaikki</option>';
+  grps.forEach(function(grp) {
+    var o = document.createElement('option'); o.value=grp;
+    o.textContent = grp.length>18 ? grp.slice(0,18)+'…' : grp;
+    sel.appendChild(o);
+  });
+}
+
+function populateChapters() {
+  var sel = document.getElementById('chsel');
+  sel.innerHTML = '<option value="">— Valitse luku —</option>';
+  CHAPTERS.forEach(function(ch) {
+    var o = document.createElement('option'); o.value=ch.id;
+    var pt = ch.part ? '['+ch.part.split('-')[0]+'] ' : '';
+    o.textContent = pt + ch.title;
+    sel.appendChild(o);
+  });
+}
+
+// ── Indicator list ──
+function filterInd() {
+  var q = document.getElementById('search').value.toLowerCase();
+  var grp = document.getElementById('grpf').value;
+  filtered = Object.keys(EDATA).map(function(id){ return Object.assign({id:id},EDATA[id]); }).filter(function(ind) {
+    var mq = !q || (ind.title||'').toLowerCase().indexOf(q)>=0 || (ind.unit||'').toLowerCase().indexOf(q)>=0
+                || (ind.group||'').toLowerCase().indexOf(q)>=0 || ind.id.toLowerCase().indexOf(q)>=0;
+    var mg = !grp || (ind.group||'')===grp;
+    return mq && mg;
+  });
+  document.getElementById('scount').textContent = filtered.length + ' indikaattoria';
+  renderInd();
+}
+
+function renderInd() {
+  var list = document.getElementById('ilist');
+  if (!filtered.length) { list.innerHTML='<div class="empty"><div class="empty-i">🔍</div><div class="empty-t">Ei tuloksia</div></div>'; return; }
+  list.innerHTML='';
+  filtered.forEach(function(ind) {
+    var el = document.createElement('div');
+    el.className = 'iitem' + (selInd && selInd.id===ind.id ? ' sel' : '');
+    el.draggable = true;
+    var yrs = Object.keys(ind.series||{}).map(Number).sort(function(a,b){return a-b;});
+    var yr  = yrs.length ? yrs[0]+'–'+yrs[yrs.length-1] : '';
+    el.innerHTML =
+      '<div class="iname">'+esc(ind.title||ind.id)+'</div>' +
+      '<div class="imeta">' +
+        '<span class="badge bg">'+esc(shortGrp(ind.group||''))+'</span>' +
+        (ind.unit ? '<span class="badge bu">'+esc(ind.unit)+'</span>' : '') +
+        (yr       ? '<span class="badge by">'+yr+'</span>' : '') +
+      '</div>' +
+      '<svg class="spark" viewBox="0 0 200 15" preserveAspectRatio="none">'+spark(ind)+'</svg>';
+    el.addEventListener('click', function(){ selectInd(ind); });
+    el.addEventListener('dragstart', function(e){ e.dataTransfer.setData('indId',ind.id); el.style.opacity='.35'; });
+    el.addEventListener('dragend',   function(){ el.style.opacity=''; });
+    list.appendChild(el);
+  });
+}
+
+function selectInd(ind) {
+  selInd = ind; renderInd();
+  var dp = document.getElementById('detail'); dp.classList.add('on');
+  document.getElementById('d-name').textContent = ind.title||ind.id;
+  document.getElementById('d-grp').textContent  = (ind.group||'')+(ind.unit?' · '+ind.unit:'');
+  drawSvg(ind);
+  var vals = Object.values(ind.series||{}).filter(isFinite);
+  var yrs  = Object.keys(ind.series||{}).map(Number).sort(function(a,b){return a-b;});
+  var last = yrs[yrs.length-1];
+  document.getElementById('d-stats').innerHTML = vals.length ?
+    '<div class="ds"><div class="dsv">'+fmt(ind.series[last])+'</div><div class="dsl">'+last+'</div></div>' +
+    '<div class="ds"><div class="dsv">'+fmt(Math.min.apply(null,vals))+'</div><div class="dsl">Min</div></div>' +
+    '<div class="ds"><div class="dsv">'+fmt(Math.max.apply(null,vals))+'</div><div class="dsl">Max</div></div>'
+    : '<div class="ds"><div class="dsv">–</div><div class="dsl">Ei sarjaa</div></div>';
+  var ct = document.getElementById('d-ct'); ct.innerHTML='';
+  ['line','bar','area'].forEach(function(t,i) {
+    var b=document.createElement('button'); b.className='ctbtn'+(i===0?' on':'');
+    b.textContent={line:'Viiva',bar:'Pylväs',area:'Alue'}[t];
+    b.onclick=function(){ document.querySelectorAll('.ctbtn').forEach(function(x){x.classList.remove('on');}); b.classList.add('on'); };
+    ct.appendChild(b);
+  });
+  renderChapter();
+}
+
+// ── Charts ──
+function spark(ind) {
+  var s=ind.series||{}, yrs=Object.keys(s).map(Number).sort(function(a,b){return a-b;});
+  if (yrs.length<2) return '';
+  var vs=yrs.map(function(y){return s[y];}), mn=Math.min.apply(null,vs), mx=Math.max.apply(null,vs), rng=mx-mn||1;
+  var W=200,H=15;
+  return '<polyline points="'+yrs.map(function(y,i){ return (i/(yrs.length-1)*W).toFixed(1)+','+(H-((vs[i]-mn)/rng*H)).toFixed(1); }).join(' ')+'" fill="none" stroke="#9b5e2a" stroke-width="1.2" opacity=".65"/>';
+}
+
+function drawSvg(ind) {
+  var svg=document.getElementById('d-svg'), s=ind.series||{};
+  var yrs=Object.keys(s).map(Number).sort(function(a,b){return a-b;});
+  if (yrs.length<2){svg.innerHTML='';return;}
+  var vs=yrs.map(function(y){return s[y];}), mn=Math.min.apply(null,vs), mx=Math.max.apply(null,vs), rng=mx-mn||1;
+  var W=280,H=58,P=3;
+  var x=function(i){return P+(i/(yrs.length-1))*(W-P*2);};
+  var y=function(v){return P+(1-(v-mn)/rng)*(H-P*2);};
+  var pts=yrs.map(function(_,i){return x(i).toFixed(1)+','+y(vs[i]).toFixed(1);}).join(' ');
+  var area='M'+x(0).toFixed(1)+','+H+' '+yrs.map(function(_,i){return 'L'+x(i).toFixed(1)+','+y(vs[i]).toFixed(1);}).join(' ')+' L'+x(yrs.length-1).toFixed(1)+','+H+' Z';
+  var zl=mn<0?'<line x1="'+P+'" y1="'+y(0).toFixed(1)+'" x2="'+(W-P)+'" y2="'+y(0).toFixed(1)+'" stroke="#ccc" stroke-width=".5"/>':'';
+  svg.innerHTML=zl+'<path d="'+area+'" fill="rgba(155,94,42,.07)"/><polyline points="'+pts+'" fill="none" stroke="#9b5e2a" stroke-width="1.5" stroke-linejoin="round"/><circle cx="'+x(yrs.length-1).toFixed(1)+'" cy="'+y(vs[vs.length-1]).toFixed(1)+'" r="2.5" fill="#9b5e2a"/><text x="'+P+'" y="'+H+'" font-size="7" fill="#bbb" font-family="monospace">'+yrs[0]+'</text><text x="'+(W-P)+'" y="'+H+'" font-size="7" fill="#bbb" font-family="monospace" text-anchor="end">'+yrs[yrs.length-1]+'</text>';
+}
+
+// ── Chapter view ──
+function renderChapter() {
+  var chId=document.getElementById('chsel').value, ch=null;
+  for(var i=0;i<CHAPTERS.length;i++){if(CHAPTERS[i].id===chId){ch=CHAPTERS[i];break;}}
+  var body=document.getElementById('chbody');
+  if(!ch){body.innerHTML='<div class="empty"><div class="empty-i">📖</div><div class="empty-t">Valitse luku</div></div>';return;}
+  document.getElementById('chinfo').textContent=ch.paras.length+' kappaletta · Luku '+ch.index;
+  body.innerHTML='';
+  var hdr=document.createElement('div'); hdr.className='chhdr';
+  hdr.innerHTML=(ch.part?'<div class="chpart">'+esc(ch.part)+'</div>':'')+'<div class="chtitle">'+esc(ch.title)+'</div>';
+  body.appendChild(hdr);
+  ch.paras.forEach(function(txt,i) {
+    var wrap=document.createElement('div'); wrap.className='pwrap';
+    links.filter(function(l){return l.chapterId===chId&&l.paraIdx===i-1;}).forEach(function(l){wrap.appendChild(makePlCard(l));});
+    var row=document.createElement('div'); row.className='prow';
+    var num=document.createElement('div'); num.className='pnum'; num.textContent=i+1;
+    var pt=document.createElement('div');  pt.className='ptxt';  pt.textContent=txt;
+    var npl=links.filter(function(l){return l.chapterId===chId&&l.paraIdx===i;}).length;
+    if(npl>0){var pc=document.createElement('span');pc.className='plcount';pc.textContent=npl;pt.appendChild(pc);}
+    var ab=document.createElement('button'); ab.className='addbtn'; ab.textContent='+ Lisää tähän';
+    ab.addEventListener('click',function(){addLink(chId,ch.title,i);});
+    pt.addEventListener('dragover',function(e){e.preventDefault();pt.classList.add('dragover');});
+    pt.addEventListener('dragleave',function(){pt.classList.remove('dragover');});
+    pt.addEventListener('drop',function(e){
+      e.preventDefault();pt.classList.remove('dragover');
+      var id=e.dataTransfer.getData('indId');
+      if(id&&EDATA[id]){selInd=Object.assign({id:id},EDATA[id]);addLink(chId,ch.title,i);}
+    });
+    row.appendChild(num);row.appendChild(pt);row.appendChild(ab);
+    wrap.appendChild(row);body.appendChild(wrap);
+  });
+  var last=ch.paras.length-1;
+  links.filter(function(l){return l.chapterId===chId&&l.paraIdx===last;}).forEach(function(l){
+    var w=document.createElement('div');w.className='pwrap';w.appendChild(makePlCard(l));body.appendChild(w);
+  });
+}
+
+function makePlCard(lnk) {
+  var slot=document.createElement('div');slot.className='plslot';
+  var card=document.createElement('div');card.className='plcard';
+  var ind=EDATA[lnk.indId]||{title:lnk.indId,unit:''};
+  card.innerHTML='<div class="plicon"><svg viewBox="0 0 24 24"><path d="M3 3h18v2H3zm0 4h12v2H3zm0 4h18v2H3zm0 4h12v2H3z"/></svg></div>'
+    +'<div class="plname" title="'+esc(ind.title||lnk.indId)+'">'+esc(ind.title||lnk.indId)+'</div>'
+    +'<div class="plmeta">'+lnk.chartType+' · '+(ind.unit||'')+'</div>'
+    +'<div class="plsynced">'+(lnk._synced?'☁':'')+'</div>';
+  var rm=document.createElement('button');rm.className='rmbtn';rm.textContent='×';
+  rm.addEventListener('click',function(){removeLink(lnk);});
+  card.appendChild(rm);slot.appendChild(card);
+  return slot;
+}
+
+// ── Link ops ──
+function addLink(chId,chTitle,paraIdx) {
+  if(!selInd){toast('Valitse ensin indikaattori');return;}
+  if(links.filter(function(l){return l.chapterId===chId&&l.paraIdx===paraIdx&&l.indId===selInd.id;}).length){toast('Jo lisätty tähän kohtaan');return;}
+  var ct=document.querySelector('.ctbtn.on');
+  var chartType=ct?({Pylväs:'bar',Alue:'area',Viiva:'line'}[ct.textContent]||'line'):'line';
+  links.push({_id:++_pid,_synced:false,chapterId:chId,chTitle:chTitle,paraIdx:paraIdx,indId:selInd.id,chartType:chartType});
+  updateStats();renderChapter();renderElList();
+  toast('✓ '+( selInd.title||selInd.id).slice(0,40));
+}
+
+function removeLink(lnk) {
+  links=links.filter(function(l){return l!==lnk;});
+  updateStats();renderChapter();renderElList();updateJSON();
+}
+
+function updateStats() {
+  var n=links.length;
+  document.getElementById('st-lnk').textContent=n;
+  document.getElementById('lcount').textContent=n;
+  updateJSON();
+}
+
+function renderElList() {
+  var list=document.getElementById('ellist');
+  if(!links.length){list.innerHTML='<div class="empty"><div class="empty-i">🔗</div><div class="empty-t">Ei linkityksiä</div></div>';return;}
+  list.innerHTML='';
+  links.forEach(function(lnk){
+    var ind=EDATA[lnk.indId]||{title:lnk.indId,unit:''};
+    var el=document.createElement('div');el.className='elentry';
+    var rm=document.createElement('button');rm.className='rmbtn';rm.textContent='×';
+    rm.addEventListener('click',function(e){e.stopPropagation();removeLink(lnk);});
+    el.innerHTML='<div class="elch">'+esc(lnk.chTitle)+'</div>'
+      +'<div class="elname">'+esc(ind.title||lnk.indId)+'</div>'
+      +'<div class="elloc">¶'+(lnk.paraIdx+1)+' · '+lnk.chartType+' · '+(ind.unit||'')+(lnk._synced?' ☁':'')+'</div>';
+    el.appendChild(rm);
+    el.addEventListener('click',function(){document.getElementById('chsel').value=lnk.chapterId;renderChapter();});
+    list.appendChild(el);
+  });
+  updateJSON();
+}
+
+// ── elink build ──
+function buildElink() {
+  return {
+    version:'1.0',
+    generated:new Date().toISOString().split('T')[0],
+    placements:links.map(function(lnk){
+      return {chapter:lnk.chapterId,afterParagraph:lnk.paraIdx,module:{type:'chart',chartType:lnk.chartType,dataset:lnk.indId}};
+    })
+  };
+}
+
+// ── Firebase ──
+function checkFB(){if(!window._fb){toast('Firebase ei valmis');return false;}return true;}
+
+function setBusy(b){
+  ['fb-sl','fb-sed','fb-sek','fb-all','fb-ll','fb-led','fb-lek','btn-save'].forEach(function(id){var el=document.getElementById(id);if(el)el.disabled=b;});
+  setFbSt(b?'busy':'ok',b?'Käsitellään…':'Yhdistetty');
+}
+
+function setFbSt(cls,txt){
+  var el=document.getElementById('fbs');el.className='fbs '+cls;
+  document.getElementById('fbs-txt').textContent=txt;
+}
+
+function setProgress(pct,txt){
+  var pt=document.getElementById('progtxt');pt.style.display='block';pt.textContent=txt;
+  var pw=document.getElementById('progwrap');pw.style.display='block';
+  document.getElementById('progbar').style.width=pct+'%';
+}
+
+function log(type,msg){
+  var el=document.getElementById('fblog');
+  var sp=document.createElement('span');sp.className=type;
+  sp.textContent='['+new Date().toLocaleTimeString('fi')+'] '+msg+'\n';
+  el.appendChild(sp);el.scrollTop=el.scrollHeight;
+}
+
+async function saveLinkToFirebase(){
+  if(!checkFB())return;
+  setBusy(true);log('info','Tallennetaan elink…');
+  try{
+    var fb=window._fb,elink=buildElink();
+    await fb.setDoc(fb.doc(fb.db,'elink','placements'),Object.assign({},elink,{savedAt:fb.serverTimestamp()}));
+    links.forEach(function(l){l._synced=true;});
+    renderChapter();renderElList();
+    log('ok','elink tallennettu — '+links.length+' linkitystä');
+    toast('☁ elink tallennettu');
+  }catch(e){log('err','✗ '+e.message);toast('Virhe: '+e.message);}
+  setBusy(false);
+}
+
+async function saveEdataToFirebase(){
+  if(!checkFB())return;
+  var fb=window._fb,ids=Object.keys(EDATA);
+  setBusy(true);log('info','Tallennetaan '+ids.length+' indikaattoria…');setProgress(0,'0 / '+ids.length);
+  try{
+    var BSIZE=400,done=0;
+    for(var s=0;s<ids.length;s+=BSIZE){
+      var batch=fb.writeBatch(fb.db);
+      ids.slice(s,s+BSIZE).forEach(function(id){
+        var safe=id.replace(new RegExp('[/.#$[\\\\]\\]]','g'),'_');
+        batch.set(fb.doc(fb.db,'edata',safe),Object.assign({id:id},EDATA[id],{savedAt:fb.serverTimestamp()}));
+      });
+      await batch.commit();
+      done+=Math.min(BSIZE,ids.length-s);
+      setProgress(done/ids.length*100,done+' / '+ids.length);
+      log('info','  Erä '+(Math.floor(s/BSIZE)+1)+' valmis ('+done+'/'+ids.length+')');
+    }
+    log('ok','edata tallennettu — '+ids.length+' indikaattoria');
+    toast('☁ edata tallennettu ('+ids.length+' kpl)');
+  }catch(e){log('err','✗ '+e.message);toast('Virhe: '+e.message);}
+  setBusy(false);
+}
+
+async function saveAllToFirebase(){
+  if(!checkFB())return;
+  await saveLinkToFirebase();
+  await saveEdataToFirebase();
+  await saveEkirjaToFirebase();
+}
+
+async function loadLinkFromFirebase(){
+  if(!checkFB())return;
+  var fb=window._fb;
+  log('info','Haetaan elink…');
+  try{
+    var snap=await fb.getDoc(fb.doc(fb.db,'elink','placements'));
+    if(!snap.exists()){log('info','Ei aiempia linkityksiä Firestoressa');return;}
+    var data=snap.data();
+    links=(data.placements||[]).map(function(pl){
+      var ch=null;for(var i=0;i<CHAPTERS.length;i++){if(CHAPTERS[i].id===pl.chapter){ch=CHAPTERS[i];break;}}
+      return {_id:++_pid,_synced:true,chapterId:pl.chapter,chTitle:ch?ch.title:pl.chapter,paraIdx:pl.afterParagraph,indId:pl.module&&pl.module.dataset||'?',chartType:pl.module&&pl.module.chartType||'line'};
+    });
+    updateStats();renderChapter();renderElList();
+    log('ok','Haettu '+links.length+' linkitystä');
+    if(links.length) toast('☁ '+links.length+' linkitystä ladattu');
+  }catch(e){log('err','Elink-virhe: '+e.message);}
+}
+
+async function loadEdataFromFirebase(){
+  if(!checkFB())return;
+  var fb=window._fb;
+  log('info','Haetaan edata…');
+  try{
+    var snap=await fb.getDocs(fb.collection(fb.db,'edata'));
+    if(snap.empty){log('info','edata-kokoelma on tyhjä Firestoressa');return;}
+    var newData={};
+    snap.forEach(function(d){
+      var dat=d.data();
+      var id=dat.id||d.id;
+      newData[id]=dat;
+    });
+    EDATA=newData;
+    filtered=Object.keys(EDATA).map(function(id){return Object.assign({id:id},EDATA[id]);});
+    populateGroups();renderInd();
+    document.getElementById('st-ind').textContent=Object.keys(EDATA).length;
+    log('ok','edata haettu — '+Object.keys(EDATA).length+' indikaattoria');
+  }catch(e){log('err','edata-virhe: '+e.message);}
+}
+
+async function loadEkirjaFromFirebase(){
+  if(!checkFB())return;
+  var fb=window._fb;
+  log('info','Haetaan ekirja-kokoelma (kirja/*)…');
+  try{
+    // Each chapter is its own document in the 'kirja' collection
+    var snap=await fb.getDocs(fb.collection(fb.db,'kirja'));
+    if(snap.empty){
+      log('info','kirja-kokoelma on tyhjä — lataa ekirja.json tiedostosta');
+      return;
+    }
+    var raw=[];
+    snap.forEach(function(d){
+      var data=d.data();
+      // Document id is the chapter id (e.g. '001', '101')
+      raw.push(Object.assign({id:d.id},data));
+    });
+    // Sort by document id (chapter order)
+    raw.sort(function(a,b){
+      var ai=parseInt(a.id)||0, bi=parseInt(b.id)||0;
+      return ai-bi;
+    });
+    CHAPTERS=raw.map(function(ch){
+      var content=ch.content||'';
+      var paras=content.split(new RegExp('\\n\\n+')).map(function(p){return p.trim();}).filter(Boolean);
+      if(!paras.length) paras=ch.paragraphs||[];
+      return {
+        index: ch.index||parseInt(ch.id)||0,
+        id:    String(ch.id),
+        part:  ch.part||'',
+        title: ch.title||ch.id,
+        paras: paras
+      };
+    });
+    populateChapters();
+    document.getElementById('st-ch').textContent=CHAPTERS.length;
+    log('ok','ekirja haettu — '+CHAPTERS.length+' lukua');
+  }catch(e){log('err','ekirja-virhe: '+e.message);}
+}
+
+async function saveEkirjaToFirebase(){
+  if(!checkFB())return;
+  if(!CHAPTERS.length){toast('Ei ladattuja lukuja — lataa ekirja.json ensin');return;}
+  var fb=window._fb;
+  setBusy(true);log('info','Tallennetaan ekirja ('+CHAPTERS.length+' lukua)…');
+  try{
+    // Save each chapter as its own document (matching Firestore structure)
+    var batch=fb.writeBatch(fb.db);
+    CHAPTERS.forEach(function(ch){
+      var ref=fb.doc(fb.db,'kirja',String(ch.id));
+      batch.set(ref,{
+        index:   ch.index,
+        id:      ch.id,
+        part:    ch.part||'',
+        title:   ch.title||'',
+        content: ch.paras.join('\n\n'),
+        savedAt: fb.serverTimestamp()
+      });
+    });
+    await batch.commit();
+    log('ok','ekirja tallennettu — '+CHAPTERS.length+' lukua');
+    toast('☁ ekirja tallennettu Firestoreen');
+  }catch(e){log('err','✗ '+e.message);toast('Virhe: '+e.message);}
+  setBusy(false);
+}
+
+// ── Tabs / export / utils ──
+function tab(name,btn){
+  document.querySelectorAll('.tabbtn').forEach(function(b){b.classList.remove('on');});
+  document.querySelectorAll('.tabpane').forEach(function(p){p.classList.remove('on');});
+  btn.classList.add('on');document.getElementById('tp-'+name).classList.add('on');
+  if(name==='json')updateJSON();
+}
+
+function updateJSON(){
+  var j=JSON.stringify(buildElink(),null,2)
+    .replace(new RegExp('"([^"]+)":', 'g'),'<span class="jk">"$1"</span>:')
+    .replace(new RegExp(': "([^"]*)"','g'),': <span class="js">"$1"</span>')
+    .replace(new RegExp(': (-?[0-9]+\\.?[0-9]*)','g'),': <span class="jn">$1</span>');
+  document.getElementById('jsonpre').innerHTML=j;
+}
+
+function exportJSON(){
+  var blob=new Blob([JSON.stringify(buildElink(),null,2)],{type:'application/json'});
+  var url=URL.createObjectURL(blob);var a=document.createElement('a');
+  a.href=url;a.download='elink.json';a.click();URL.revokeObjectURL(url);
+  toast('✓ elink.json viety ('+links.length+' linkitystä)');
+}
+
+function esc(s){return String(s||'').replace(new RegExp('&','g'),'&amp;').replace(new RegExp('<','g'),'&lt;').replace(new RegExp('>','g'),'&gt;');}
+function fmt(v){if(!isFinite(v))return'–';if(Math.abs(v)>=1e6)return(v/1e6).toFixed(1)+'M';if(Math.abs(v)>=1e3)return(v/1e3).toFixed(1)+'k';return v.toFixed(1);}
+function shortGrp(g){var m={'Julkinen sektori ja verotus':'Julkinen','Inhimillinen hyvinvointi ja kapasiteetti':'Hyvinvointi','Makrotalous ja tuotanto':'Makrotalous','Tulevaisuuden kapasiteetti':'Tulevaisuus','Kansantulo js kotitaloudet':'Kansantulo','Kulutus ja investoinnit':'Kulutus','Riippuvuudet ja avoimuus':'Avoimuus','Sosiaalinen rakenne, luottamus ja osallisuus':'Sosiaalinen','Ikäryhmittäinen työ':'Ikäryhmät','Koulutus, osaaminen ja sivistys':'Koulutus'};return m[g]||String(g||'').slice(0,15);}
+var _tt;
+function toast(m){var el=document.getElementById('toast');el.textContent=m;el.classList.add('show');clearTimeout(_tt);_tt=setTimeout(function(){el.classList.remove('show');},2600);}
+
+init();
+</script>
+</body>
+</html>

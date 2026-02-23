@@ -1,0 +1,1778 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Järjestelmä – Ihmiset – Muutos · Harri Käyhkö</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,300;0,7..72,400;0,7..72,500;0,7..72,600;1,7..72,300;1,7..72,400;1,7..72,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:           hsl(38,30%,94%);
+  --bg-card:      hsl(35,25%,90%);
+  --ink:          hsl(24,40%,14%);
+  --ink-light:    hsl(24,25%,28%);
+  --muted:        hsl(28,18%,52%);
+  --hairline:     hsl(32,18%,76%);
+  --copper:       hsl(20,60%,31%);
+  --copper-light: hsl(25,50%,45%);
+  --gold:         hsl(38,70%,58%);
+  --gold-light:   hsl(42,60%,72%);
+  --secondary:    hsl(35,22%,85%);
+  --font-body:    'Literata', Georgia, 'Times New Roman', serif;
+  --font-ui:      'Inter', system-ui, sans-serif;
+  --max-w:        660px;
+  --radius:       6px;
+}
+body.theme-dark {
+  --bg:           hsl(24,20%,12%);
+  --bg-card:      hsl(24,18%,18%);
+  --ink:          hsl(35,30%,88%);
+  --ink-light:    hsl(35,25%,75%);
+  --muted:        hsl(28,15%,55%);
+  --hairline:     hsl(24,15%,30%);
+  --copper:       hsl(20,60%,50%);
+  --copper-light: hsl(25,50%,60%);
+  --gold:         hsl(38,70%,65%);
+  --gold-light:   hsl(42,50%,60%);
+  --secondary:    hsl(24,15%,25%);
+}
+body.theme-sepia {
+  --bg:           hsl(35,40%,90%);
+  --bg-card:      hsl(35,35%,84%);
+  --ink:          hsl(30,30%,20%);
+  --ink-light:    hsl(30,25%,30%);
+  --muted:        hsl(30,20%,45%);
+  --hairline:     hsl(30,25%,65%);
+  --copper:       hsl(20,50%,35%);
+  --copper-light: hsl(25,45%,45%);
+  --gold:         hsl(38,60%,50%);
+  --gold-light:   hsl(42,50%,65%);
+  --secondary:    hsl(35,25%,75%);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: auto; }
+body {font-family: var(--font-body);background: var(--bg);color: var(--ink);-webkit-font-smoothing: antialiased;height: 100dvh;overflow: hidden;display: flex;flex-direction: column;}
+::selection { background: hsl(42,60%,72%,0.4); color: var(--ink); }
+#progress-bar-wrap {position: fixed; top: 0; left: 0; right: 0; z-index: 100;height: 2px; background: hsl(32,18%,76%,0.4);}
+#progress-bar {height: 100%; width: 0%;background: linear-gradient(90deg, hsl(20,60%,31%), hsl(38,70%,58%));transition: width 0.4s ease-out;}
+#toolbar {flex-shrink: 0;display: flex; align-items: center; justify-content: space-between;padding: 10px 14px;background: var(--bg-card);backdrop-filter: blur(12px);-webkit-backdrop-filter: blur(12px);border-bottom: 1px solid var(--hairline);position: relative; z-index: 30;}
+.tb-cluster { display: flex; align-items: center; gap: 2px; }
+.tb-btn {display: flex; align-items: center; gap: 5px;padding: 6px 8px; border: none; background: transparent;border-radius: var(--radius); cursor: pointer;color: var(--muted); font-family: var(--font-ui);font-size: 12px; transition: background 0.15s, color 0.15s;}
+.tb-btn:hover { background: var(--secondary); color: var(--ink); }
+.tb-btn.active { background: var(--secondary); color: var(--copper); }
+.tb-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.tb-sep { width: 1px; height: 16px; background: var(--hairline); margin: 0 4px; }
+.tb-center {position: absolute; left: 50%; transform: translateX(-50%);text-align: center; pointer-events: none;font-family: var(--font-ui);}
+.tb-part { font-size: 9px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted); display: block; }
+.tb-idx  { font-size: 11px; font-weight: 500; color: var(--ink-light); display: block; }
+#font-size-display { font-family: var(--font-ui); font-size: 11px; color: var(--muted); width: 24px; text-align: center; }
+#reader {flex: 1;overflow-y: auto;scroll-behavior: auto;}
+#reader::-webkit-scrollbar { width: 5px; }
+#reader::-webkit-scrollbar-track { background: transparent; }
+#reader::-webkit-scrollbar-thumb { background: var(--hairline); border-radius: 10px; }
+#reader::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+.chapter-block { display: block; }
+.chapter-inner {max-width: var(--max-w);margin: 0 auto;padding: 56px 24px 48px;}
+@media (min-width: 640px) { .chapter-inner { padding: 56px 40px 48px; } }
+.ch-header {margin-bottom: 40px;padding-bottom: 32px;border-bottom: 1px solid var(--hairline);}
+.ch-part {font-family: var(--font-ui);font-size: 9px;text-transform: uppercase;letter-spacing: 0.18em;color: var(--muted);margin-bottom: 8px;}
+.ch-title {font-family: var(--font-body);font-weight: 600;color: var(--copper);letter-spacing: -0.02em;line-height: 1.25;font-size: clamp(1.35rem, 5vw, 1.85rem);}
+.ch-subtitle {font-family: var(--font-body);font-size: 1rem;font-style: italic;color: var(--muted);margin-top: 8px;}
+.reader-body {font-family: var(--font-body);color: var(--ink);line-height: 1.85;letter-spacing: 0.01em;}
+.reader-body p {margin-bottom: 1.5em;hyphens: auto;}
+.reader-body h2 {font-family: var(--font-ui);font-size: 0.68rem;font-weight: 500;text-transform: uppercase;letter-spacing: 0.18em;color: var(--muted);border-top: 1px solid var(--hairline);border-bottom: 1px solid var(--hairline);padding: 0.85rem 0;margin: 2.6rem 0 1.7rem;text-align: center;}
+.reader-body blockquote {border-left: 2px solid var(--gold);padding: 0.2rem 0 0.2rem 1.4rem;font-style: italic;font-size: 1.13em;color: var(--ink-light);margin-bottom: 2em;line-height: 1.72;}
+.reader-body ul {margin: 1.4rem 0 1.8rem 0;list-style: none;}
+.reader-body ul li {position: relative;padding-left: 1.4rem;margin-bottom: 0.55em;line-height: 1.72;}
+.reader-body ul li::before {content: '—';position: absolute; left: 0;color: var(--copper-light);font-weight: 300;}
+.reader-body mark {background: hsl(42,60%,72%,0.42);padding: 1px 3px;border-radius: 2px;color: inherit;}
+.reader-table {width: 100%;border-collapse: collapse;margin: 2rem 0;font-family: var(--font-ui);font-size: 0.83rem;}
+.reader-table th {font-weight: 500;text-align: left;padding: 0.55rem 0.75rem;border-bottom: 2px solid var(--hairline);color: var(--muted);text-transform: uppercase;letter-spacing: 0.08em;font-size: 0.67rem;}
+.reader-table td {padding: 0.55rem 0.75rem;border-bottom: 1px solid hsl(32,18%,76%,0.55);color: var(--ink-light);line-height: 1.5;}
+.reader-table tr:last-child td { border-bottom: none; }
+/* ── Kuvaajat ─────────────────────────────────────────── */
+.chart-wrap {
+  margin: 1.6rem 0 2rem;
+  overflow: hidden;
+  border-radius: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--hairline);
+  padding: 16px 16px 12px;
+}
+.chart-wrap svg { display: block; width: 100%; height: auto; }
+.chart-title {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 10px;
+  color: var(--muted);
+}
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 10px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--ink-light);
+}
+.legend-item { display: flex; align-items: center; gap: 6px; }
+.legend-swatch {
+  width: 10px; height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.path-wrap {
+  margin: 2rem 0 2.6rem;
+  overflow: hidden;
+  background: var(--bg-card);
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  padding: 16px;
+}
+.path-wrap svg { display: block; width: 100%; height: auto; }
+.stat-container { margin: 1rem 0 1.5rem; }
+.stat-wrap { overflow: hidden; }
+.stat-wrap svg { display: block; width: 100%; height: auto; }
+/* SVG-tekstit käyttävät aina UI-fonttia */
+.chart-wrap svg text,
+.path-wrap svg text,
+.stat-wrap svg text {
+  font-family: var(--font-ui), system-ui, sans-serif;
+}
+/* ── Navigaatio ───────────────────────────────────────── */
+.ch-nav {display: flex; align-items: center; justify-content: space-between;margin-top: 60px; padding-top: 28px;border-top: 1px solid var(--hairline);}
+.ch-nav-btn {display: flex; align-items: center; gap: 6px;background: none; border: none; cursor: pointer;font-family: var(--font-ui); font-size: 11px;color: var(--muted); max-width: 150px;text-align: left; line-height: 1.4;transition: opacity 0.15s;}
+.ch-nav-btn:hover { opacity: 0.7; }
+.ch-nav-btn.right { text-align: right; }
+.ch-nav-btn svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+.ch-dots { display: flex; gap: 4px; align-items: center; }
+.ch-dot {height: 5px; border-radius: 10px;background: var(--hairline); border: none; cursor: pointer;padding: 0; transition: all 0.25s;}
+.ch-dot.active { background: var(--copper); width: 18px !important; }
+.ch-end { font-family: var(--font-ui); font-size: 9px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted); }
+.ornament {display: flex; align-items: center; gap: 12px;margin: 56px 0 0; color: var(--hairline);font-family: var(--font-ui); font-size: 11px;}
+.ornament::before, .ornament::after {content: ''; flex: 1; height: 1px; background: var(--hairline);}
+.panel-overlay {position: fixed; inset: 0; z-index: 40;background: hsl(24,40%,14%,0.42);backdrop-filter: blur(3px);opacity: 0; pointer-events: none;transition: opacity 0.25s;}
+.panel-overlay.open { opacity: 1; pointer-events: auto; }
+.panel {position: fixed; top: 0; bottom: 0; z-index: 50;width: min(85vw, 360px);background: var(--bg-card);display: flex; flex-direction: column;transition: transform 0.3s cubic-bezier(0.32,0,0.24,1);box-shadow: 8px 0 40px hsl(24,40%,14%,0.14);}
+.panel.left { left: 0; transform: translateX(-100%); }
+.panel.right { right: 0; transform: translateX(100%); box-shadow: -8px 0 40px hsl(24,40%,14%,0.14); }
+.panel.left.open { transform: translateX(0); }
+.panel.right.open { transform: translateX(0); }
+.panel-head {display: flex; align-items: center; justify-content: space-between;padding: 16px 20px; flex-shrink: 0;border-bottom: 1px solid var(--hairline);}
+.panel-head-sub { font-family: var(--font-ui); font-size: 9px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted); margin-bottom: 2px; }
+.panel-head-title { font-family: var(--font-body); font-size: 0.85rem; font-weight: 600; color: var(--ink); line-height: 1.3; }
+.panel-close {padding: 7px; border: none; background: transparent; cursor: pointer;border-radius: var(--radius); color: var(--muted); transition: background 0.15s;flex-shrink: 0;}
+.panel-close:hover { background: var(--secondary); }
+.panel-close svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
+.panel-body {flex: 1; overflow-y: auto; padding: 12px;}
+.panel-body::-webkit-scrollbar { width: 4px; }
+.panel-body::-webkit-scrollbar-thumb { background: var(--hairline); border-radius: 8px; }
+.toc-author {padding: 10px 20px;border-bottom: 1px solid hsl(32,18%,76%,0.45);font-family: var(--font-ui); font-size: 11px; color: var(--muted);flex-shrink: 0;}
+.toc-part-label {font-family: var(--font-ui); font-size: 9px; font-weight: 500;text-transform: uppercase; letter-spacing: 0.12em;color: var(--copper); padding: 16px 12px 8px;}
+.toc-item {display: block; width: 100%; text-align: left;padding: 10px 12px; border: none; background: transparent;border-radius: var(--radius); margin-bottom: 2px;cursor: pointer; transition: background 0.15s;}
+.toc-item:hover { background: var(--secondary); }
+.toc-item.active { background: hsl(20,60%,31%,0.09); }
+.toc-item-title {display: block; font-family: var(--font-body); font-size: 0.85rem;line-height: 1.4; color: var(--ink-light);}
+.toc-item.active .toc-item-title { font-weight: 600; color: var(--copper); }
+.toc-item-sub { display: block; font-family: var(--font-ui); font-size: 10px; color: var(--muted); margin-top: 2px; }
+.search-input-row {display: flex; align-items: center; gap: 10px;padding: 12px 16px; border-bottom: 1px solid var(--hairline); flex-shrink: 0;}
+.search-input-row svg { width: 15px; height: 15px; stroke: var(--muted); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+#search-input {flex: 1; border: none; background: transparent; outline: none;font-family: var(--font-ui); font-size: 13px; color: var(--ink);}
+#search-input::placeholder { color: var(--muted); }
+.search-hint { font-family: var(--font-ui); font-size: 12px; color: var(--muted); text-align: center; padding: 36px 0; }
+.search-count { font-family: var(--font-ui); font-size: 10px; color: var(--muted); padding: 0 4px 12px; }
+.search-result {display: block; width: 100%; text-align: left;padding: 12px; border: 1px solid var(--hairline); border-radius: var(--radius);background: transparent; cursor: pointer; margin-bottom: 8px;transition: background 0.15s;}
+.search-result:hover { background: var(--secondary); }
+.search-result-title { font-family: var(--font-ui); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--copper); margin-bottom: 6px;}
+.search-result-snippet { font-family: var(--font-body); font-size: 0.83rem; color: var(--ink-light); line-height: 1.6; }
+.comment-form { display: flex; flex-direction: column; gap: 16px; padding: 4px 8px; }
+.form-label { font-family: var(--font-ui); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); display: block; margin-bottom: 6px; }
+.form-control {width: 100%; border-radius: var(--radius); padding: 10px 12px;font-family: var(--font-ui); font-size: 13px; outline: none;background: var(--bg); border: 1px solid var(--hairline); color: var(--ink);transition: border-color 0.2s;}
+.form-control:focus { border-color: var(--copper-light); }
+textarea.form-control { resize: vertical; min-height: 110px; }
+.form-submit {width: 100%; padding: 10px; border: none; border-radius: var(--radius);background: var(--copper); color: hsl(35,50%,95%);font-family: var(--font-ui); font-size: 13px; font-weight: 500;cursor: pointer; transition: opacity 0.2s;}
+.form-submit:hover { opacity: 0.88; }
+.form-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+.form-error { font-family: var(--font-ui); font-size: 11px; color: hsl(0,70%,50%); text-align: center; }
+.chart-toggle {
+  display: flex;
+  gap: 3px;
+  background: var(--secondary);
+  border: 1px solid var(--hairline);
+  border-radius: 20px;
+  padding: 3px;
+  margin-bottom: 10px;
+  width: max-content;
+}
+.chart-toggle button {
+  border: none;
+  background: transparent;
+  padding: 5px 11px;
+  border-radius: 16px;
+  font-weight: 500;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  cursor: pointer;
+  color: var(--muted);
+  transition: background 0.15s, color 0.15s;
+}
+.chart-toggle button.active {
+  background: var(--bg-card);
+  color: var(--copper);
+  box-shadow: 0 1px 3px hsl(24,40%,14%,0.12);
+}
+@media (min-width: 500px) { .hidden-sm { display: inline; } }
+@media (max-width: 499px) { .hidden-sm { display: none; } }
+.chart-legend-text {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 6px;
+  font-family: var(--font-ui);
+  line-height: 1.6;
+}
+</style>
+</head>
+<body>
+
+<div id="progress-bar-wrap"><div id="progress-bar"></div></div>
+<header id="toolbar">
+  <div class="tb-cluster">
+    <button class="tb-btn" id="btn-toc" title="Sisällysluettelo">
+      <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      <span class="hidden-sm">Sisällys</span>
+    </button>
+    <div class="tb-sep"></div>
+    <button class="tb-btn" id="btn-theme" title="Vaihda teemaa">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+    </button>
+    <button class="tb-btn" id="btn-tts" title="Lue ääneen">
+      <svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+    </button>
+  </div>
+
+  <div class="tb-center">
+    <span class="tb-part" id="tb-part">—</span>
+    <span class="tb-idx" id="tb-idx">1 / 1</span>
+  </div>
+
+  <div class="tb-cluster">
+    <button class="tb-btn" id="btn-font-down" title="Pienennä fonttia">
+      <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+    <span id="font-size-display">17</span>
+    <button class="tb-btn" id="btn-font-up" title="Suurenna fonttia">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+    <div class="tb-sep"></div>
+    <button class="tb-btn" id="btn-search" title="Haku">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="17" y1="17" x2="22" y2="22"/></svg>
+    </button>
+    <button class="tb-btn" id="btn-comment" title="Kommentoi">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    </button>
+    <button class="tb-btn" id="btn-link" title="Kopioi linkki">
+      <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+    </button>
+    <button class="tb-btn" id="btn-export" title="Kopioi tekstiversio">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+    </button>
+  </div>
+</header>
+
+<main id="reader"></main>
+
+<div class="panel-overlay" id="overlay-toc"></div>
+<aside class="panel left" id="panel-toc">
+  <div class="panel-head">
+    <div>
+      <div class="panel-head-sub">Sisällysluettelo</div>
+      <div class="panel-head-title">Järjestelmä – Ihmiset – Muutos</div>
+    </div>
+    <button class="panel-close" id="close-toc">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="toc-author">Harri Käyhkö</div>
+  <div class="panel-body" id="toc-body"></div>
+</aside>
+
+<div class="panel-overlay" id="overlay-search"></div>
+<aside class="panel right" id="panel-search">
+  <div class="search-input-row">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="17" y1="17" x2="22" y2="22"/></svg>
+    <input type="search" id="search-input" placeholder="Hae kirjasta…" autocomplete="off"/>
+    <button class="panel-close" id="close-search">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="panel-body" id="search-body">
+    <div class="search-hint">Kirjoita vähintään 3 merkkiä…</div>
+  </div>
+</aside>
+
+<div class="panel-overlay" id="overlay-comment"></div>
+<aside class="panel right" id="panel-comment" style="width:min(85vw,380px)">
+  <div class="panel-head">
+    <div>
+      <div class="panel-head-sub">Palautelomake</div>
+      <div class="panel-head-title" id="comment-chapter-title">Kommentoi sisältöä</div>
+    </div>
+    <button class="panel-close" id="close-comment">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="panel-body">
+    <form class="comment-form" id="comment-form">
+      <div>
+        <label class="form-label" for="comment-type">Kommentin tyyppi</label>
+        <select class="form-control" id="comment-type">
+          <option>Oikaisuehdotus</option>
+          <option>Lisäysehdotus</option>
+          <option>Täsmennys</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label" for="comment-msg">Kommentti *</label>
+        <textarea class="form-control" id="comment-msg" required placeholder="Kirjoita kommenttisi…"></textarea>
+      </div>
+      <div>
+        <label class="form-label" for="comment-email">Sähköposti (valinnainen)</label>
+        <input type="email" class="form-control" id="comment-email" placeholder="nimi@esimerkki.fi"/>
+      </div>
+      <button type="submit" class="form-submit" id="comment-submit">Lähetä palaute</button>
+      <div class="form-error" id="comment-error" style="display:none">Lähetys epäonnistui. Yritä uudelleen.</div>
+    </form>
+  </div>
+</aside>
+<script>
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function highlight(text, q) {
+  if (!q || q.length < 3) return text;
+  const re = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+  return text.replace(re, '<mark>$1</mark>');
+}
+
+function parseBlocks(text) {
+
+  const lines = text.split('\n');
+
+  const blocks = [];
+  let buffer = [];
+  let mode = null;
+  let statType = 'hair';
+
+  // kerätään selitteet yhteen
+  let legendBuffer = [];
+
+  lines.forEach(line => {
+
+    line = line.trim();
+
+    // ─────────────────────────
+    // SELITTEET (legendatekstit)
+    // ─────────────────────────
+    if (line.startsWith('selite:')) {
+      legendBuffer.push(line.replace('selite:', '').trim());
+      return;
+    }
+
+    // ─────────────────────────
+    // TAULUKOT
+    // ─────────────────────────
+    if (line.startsWith('taulukko:polku')) {
+      mode = 'path';
+      buffer = [];
+      return;
+    }
+
+    if (line.startsWith('taulukko:')) {
+      const name = line.split(':')[1]?.trim();
+      mode = name === 'kasvu_vs_tuottavuus' ? 'growth' : 'table';
+      buffer = [];
+      return;
+    }
+
+    // ─────────────────────────
+    // TILASTOT / KAAVIOT
+    // ─────────────────────────
+    if (line.startsWith('tilasto:')) {
+      statType = line.split(':')[1]?.trim() || 'hair';
+      mode = 'stat';
+      buffer = [];
+      return;
+    }
+
+    if (line.startsWith('kaavio:')) {
+      mode = 'chart';
+      buffer = [];
+      return;
+    }
+
+    if (line.startsWith('lista:')) {
+      mode = 'list';
+      buffer = [];
+      return;
+    }
+
+    // ─────────────────────────
+    // BLOKIN LOPETUS
+    // ─────────────────────────
+    if (line.match(/^:(taulukko|tilasto|kaavio|lista)/)) {
+
+      if (mode) {
+        const block = { mode, content: [...buffer], type: statType };
+
+        // liitä legendatekstit jos niitä on
+        if (legendBuffer.length) {
+          block.legend = legendBuffer.join("||");
+          legendBuffer = [];
+        }
+
+        blocks.push(block);
+      }
+
+      mode = null;
+      buffer = [];
+      return;
+    }
+
+    // ─────────────────────────
+    // BLOKIN SISÄLTÖ
+    // ─────────────────────────
+    if (mode) {
+      buffer.push(line);
+    } else if (line !== "") {
+      blocks.push({ mode: 'text', content: [line] });
+    }
+
+  });
+
+  return blocks;
+}
+
+let ELINK = null;
+let EDATA = null;
+
+async function loadIndicators(){
+  EDATA = await fetch("edata.json").then(r=>r.json());
+  ELINK = await fetch("elink.json").then(r=>r.json());
+}
+
+let placementMap = {};
+
+function buildPlacementMap(){
+  placementMap = {};
+
+  ELINK.placements.forEach(p=>{
+    const key = p.chapter + ":" + p.afterParagraph;
+    if(!placementMap[key]) placementMap[key] = [];
+    placementMap[key].push(p.module);
+  });
+}
+
+function createSmoothPath(points, tension = 0.35) {
+  if (points.length < 2) return "";
+
+  let d = `M ${points[0].x} ${points[0].y}`;
+
+  for (let i = 0; i < points.length - 1; i++) {
+    const p0 = points[i === 0 ? i : i - 1];
+    const p1 = points[i];
+    const p2 = points[i + 1];
+    const p3 = points[i + 2] || p2;
+
+    const cp1x = p1.x + (p2.x - p0.x) * tension;
+    const cp1y = p1.y + (p2.y - p0.y) * tension;
+
+    const cp2x = p2.x - (p3.x - p1.x) * tension;
+    const cp2y = p2.y - (p3.y - p1.y) * tension;
+
+    d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
+  }
+
+  return d;
+}
+
+
+
+function detectChartModes(data){
+  const cols = data[0].length;
+  // Kaikki palautetut tyypit löytyvät chartRenderers-rekisteristä
+  if(cols >= 4) return ["heatmap","grouped","stacked"];
+  if(cols === 2){
+    if(data[0][0].match(/^\d{4}$/)) return ["line","area","bar"];
+    return ["lollipop","bar","donut","waffle"];
+  }
+  if(cols === 3) return ["lollipop","grouped","stacked"];
+  return ["bar"];
+}
+
+function renderToggle(modes, active, onChange){
+  if(modes.length <= 1) return "";
+
+  const btns = modes.map(m =>
+    `<button data-mode="${m}" class="${m===active?'active':''}">
+      ${modeLabels[m]}
+    </button>`
+  ).join("");
+
+  return `<div class="chart-toggle">${btns}</div>`;
+}
+
+/* ══════════════════════════════════════════════════════════
+   KUVAAJAJÄRJESTELMÄ  –  älykkäät tyylit & asetukset
+   ══════════════════════════════════════════════════════════ */
+
+const modeLabels = {
+  growth: "Kasvu",
+  line: "Viiva",
+  area: "Alue",
+  bar: "Pylväät",
+  donut: "Donitsi",
+  waffle: "Vohveli",
+  lollipop: "Pisteet",
+  stacked: "Pinottu",
+  grouped: "Ryhmitelty",
+  heatmap: "Lämpökartta"
+};
+
+// ── Teemantietoiset värit CSS-muuttujista ──────────────────
+function getCSSVar(name) {
+  return getComputedStyle(document.documentElement)
+    .getPropertyValue(name).trim();
+}
+
+// Sarjavärit: teeman copper/gold + neutraalit sävyt
+const S_COLORS = [
+  "hsl(20,60%,42%)",   // copper
+  "hsl(200,55%,45%)",  // sininen
+  "hsl(38,70%,52%)",   // kulta
+  "hsl(155,45%,40%)",  // vihreä
+  "hsl(280,40%,52%)",  // violetti
+  "hsl(14,70%,52%)",   // oranssi
+];
+
+const HEAT_COLORS = [
+  "hsl(38,30%,94%)",
+  "hsl(38,60%,85%)",
+  "hsl(38,65%,72%)",
+  "hsl(32,65%,58%)",
+  "hsl(25,60%,46%)",
+  "hsl(20,60%,36%)",
+  "hsl(15,55%,28%)",
+];
+
+// ── Apufunktiot ────────────────────────────────────────────
+const NS = "http://www.w3.org/2000/svg";
+
+function svgEl(tag, attrs = {}) {
+  const el = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+  return el;
+}
+
+function svgText(x, y, txt, attrs = {}) {
+  const t = svgEl("text", { x, y, ...attrs });
+  t.textContent = txt;
+  return t;
+}
+
+function niceYTicks(min, max, count = 5) {
+  const range = max - min || 1;
+  const step = Math.pow(10, Math.floor(Math.log10(range / count)));
+  const nice = [1, 2, 2.5, 5, 10].map(m => m * step);
+  const s = nice.find(s => range / s <= count + 1) || step;
+  const lo = Math.floor(min / s) * s;
+  const hi = Math.ceil(max / s) * s;
+  const ticks = [];
+  for (let v = lo; v <= hi + s * 0.001; v += s) ticks.push(+v.toPrecision(6));
+  return ticks;
+}
+
+// ── Yhtenäinen CHART_THEME ─────────────────────────────────
+const CHART_THEME = {
+  width: 520,
+  height: 240,
+  padding: { top: 28, right: 20, bottom: 44, left: 52 },
+  font: { label: 10, axis: 9, title: 11 },
+  get axisColor() { return getCSSVar("--ink"); },
+  get gridColor() { return getCSSVar("--hairline"); },
+  get mutedColor() { return getCSSVar("--muted"); },
+  get bgColor() { return getCSSVar("--bg-card"); },
+};
+
+function getChartArea(cfg) {
+  return {
+    innerW: cfg.width - cfg.padding.left - cfg.padding.right,
+    innerH: cfg.height - cfg.padding.top - cfg.padding.bottom,
+    left: cfg.padding.left,
+    top: cfg.padding.top,
+    right: cfg.padding.left + cfg.width - cfg.padding.left - cfg.padding.right,
+    bottom: cfg.padding.top + cfg.height - cfg.padding.top - cfg.padding.bottom,
+  };
+}
+
+// ── Akselit + ruudukko ────────────────────────────────────
+function drawAxesWithTicks(svg, cfg, xLabels, yMin, yMax) {
+  const { left, top, innerW, innerH, bottom } = getChartArea(cfg);
+  const muted = cfg.mutedColor;
+  const axis = cfg.axisColor;
+  const grid = cfg.gridColor;
+
+  // X-akseli
+  svg.appendChild(svgEl("line", {
+    x1: left, y1: bottom, x2: left + innerW, y2: bottom,
+    stroke: axis, "stroke-width": 1.5
+  }));
+  // Y-akseli
+  svg.appendChild(svgEl("line", {
+    x1: left, y1: top, x2: left, y2: bottom,
+    stroke: axis, "stroke-width": 1.5
+  }));
+
+  // Y-tikkaukset & vaakaviivat
+  const yTicks = niceYTicks(yMin, yMax, 5);
+  const yRange = yTicks[yTicks.length - 1] - yTicks[0] || 1;
+
+  yTicks.forEach(val => {
+    const y = bottom - ((val - yTicks[0]) / yRange) * innerH;
+    if (y < top - 2 || y > bottom + 2) return;
+
+    // Ruudukkoviiva
+    svg.appendChild(svgEl("line", {
+      x1: left, y1: y, x2: left + innerW, y2: y,
+      stroke: grid, "stroke-width": 1, "stroke-dasharray": "4 3"
+    }));
+    // Tikkausteksti
+    const label = formatAxisVal(val);
+    svg.appendChild(svgText(left - 5, y + 3, label, {
+      "text-anchor": "end", "font-size": cfg.font.axis,
+      fill: muted
+    }));
+  });
+
+  // X-tikkaukset
+  if (xLabels && xLabels.length) {
+    const step = innerW / (xLabels.length - 1 || 1);
+    const maxLabels = Math.floor(innerW / 44);
+    const stride = Math.max(1, Math.ceil(xLabels.length / maxLabels));
+
+    xLabels.forEach((lbl, i) => {
+      if (i % stride !== 0 && i !== xLabels.length - 1) return;
+      const x = left + i * step;
+      svg.appendChild(svgText(x, bottom + 13, lbl, {
+        "text-anchor": "middle", "font-size": cfg.font.axis, fill: muted
+      }));
+    });
+  }
+
+  // Palauta skaalausfunktiot
+  return {
+    sy: val => bottom - ((val - yTicks[0]) / yRange) * innerH,
+    yTicks
+  };
+}
+
+function formatAxisVal(v) {
+  if (Math.abs(v) >= 1e6) return (v / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (Math.abs(v) >= 1e3) return (v / 1e3).toFixed(1).replace(/\.0$/, '') + 'k';
+  if (Number.isInteger(v)) return String(v);
+  return v.toPrecision(3).replace(/\.?0+$/, '');
+}
+
+// ── LÄMPÖKARTTA ───────────────────────────────────────────
+function drawHeatmap(container, data) {
+  const cellW = 54, cellH = 36;
+  const headers = data[0].slice(1);
+  const rows = data;
+  const rowLabelW = Math.min(130, Math.max(60, headers.length > 4 ? 70 : 110));
+  const startX = rowLabelW;
+  const startY = 32;
+  const svgW = startX + headers.length * cellW + 20;
+  const svgH = startY + rows.length * cellH + 16;
+
+  const values = rows.flatMap(r => r.slice(1).map(Number));
+  const maxV = Math.max(...values), minV = Math.min(...values);
+
+  function colorScale(v) {
+    const t = (v - minV) / (maxV - minV || 1);
+    const i = Math.min(HEAT_COLORS.length - 1, Math.floor(t * HEAT_COLORS.length));
+    return HEAT_COLORS[i];
+  }
+
+  function contrastText(bg) {
+    // warm dark on light, light on dark
+    return "#fff";
+  }
+
+  const svg = svgEl("svg", {
+    viewBox: `0 0 ${svgW} ${svgH}`,
+    width: svgW, height: svgH
+  });
+
+  const muted = getCSSVar("--muted");
+  const ink = getCSSVar("--ink");
+
+  // Sarake-otsikot
+  headers.forEach((h, i) => {
+    svg.appendChild(svgText(
+      startX + i * cellW + cellW / 2, 18, h,
+      { "text-anchor": "middle", "font-size": 10, fill: muted, "font-weight": 500 }
+    ));
+  });
+
+  rows.forEach((row, ri) => {
+    // Rivin nimi
+    svg.appendChild(svgText(
+      startX - 8, startY + ri * cellH + cellH / 2 + 4,
+      row[0],
+      { "text-anchor": "end", "font-size": 10, fill: ink, "font-weight": 500 }
+    ));
+
+    row.slice(1).forEach((val, ci) => {
+      const x = startX + ci * cellW;
+      const y = startY + ri * cellH;
+      const num = Number(val);
+      const fill = colorScale(num);
+
+      const rect = svgEl("rect", {
+        x: x + 2, y: y + 2, width: cellW - 6, height: cellH - 6,
+        rx: 5, fill, opacity: 0.92
+      });
+      svg.appendChild(rect);
+
+      svg.appendChild(svgText(
+        x + cellW / 2, y + cellH / 2 + 4,
+        num, {
+          "text-anchor": "middle", "font-size": 10,
+          fill: "#fff", "font-weight": 600,
+          "paint-order": "stroke",
+          stroke: "rgba(0,0,0,0.3)", "stroke-width": 2
+        }
+      ));
+    });
+  });
+
+  container.appendChild(svg);
+}
+
+// ── POLKUKAAVIO (scatter + vuosimerkinnät) ─────────────────
+function renderPath(lines) {
+  const xLabel = lines.find(l => l.startsWith('x_akseli:'))?.split(':')[1]?.trim() || '';
+  const yLabel = lines.find(l => l.startsWith('y_akseli:'))?.split(':')[1]?.trim() || '';
+  const title = lines.find(l => l.startsWith('otsikko:'))?.split(':')[1]?.trim() || '';
+
+  const pts = lines
+    .filter(l => /^\d{4}[,\s]/.test(l))
+    .map(l => {
+      const parts = l.split(',');
+      return { year: parts[0]?.trim(), x: parseFloat(parts[1]), y: parseFloat(parts[2]) };
+    })
+    .filter(p => !isNaN(p.x) && !isNaN(p.y));
+
+  if (!pts.length) return '';
+
+  const W = 520, H = 260;
+  const pad = { t: 36, r: 32, b: 52, l: 56 };
+  const innerW = W - pad.l - pad.r;
+  const innerH = H - pad.t - pad.b;
+
+  const xs = pts.map(p => p.x), ys = pts.map(p => p.y);
+  const xMin = Math.min(...xs), xMax = Math.max(...xs);
+  const yMin = Math.min(...ys), yMax = Math.max(...ys);
+  const xPad = (xMax - xMin) * 0.15 || 1;
+  const yPad = (yMax - yMin) * 0.2 || 1;
+
+  const xExt = [xMin - xPad, xMax + xPad];
+  const yExt = [yMin - yPad, yMax + yPad];
+
+  const sx = v => pad.l + ((v - xExt[0]) / (xExt[1] - xExt[0])) * innerW;
+  const sy = v => pad.t + (1 - (v - yExt[0]) / (yExt[1] - yExt[0])) * innerH;
+
+  const muted = getCSSVar("--muted");
+  const ink = getCSSVar("--ink");
+  const hairline = getCSSVar("--hairline");
+  const copper = getCSSVar("--copper");
+
+  let inner = '';
+
+  // Ruudukko
+  const xTicks = niceYTicks(xExt[0], xExt[1], 5);
+  const yTicks = niceYTicks(yExt[0], yExt[1], 5);
+
+  xTicks.forEach(v => {
+    const x = sx(v);
+    if (x < pad.l || x > W - pad.r) return;
+    inner += `<line x1="${x}" y1="${pad.t}" x2="${x}" y2="${H - pad.b}" stroke="${hairline}" stroke-width="1" stroke-dasharray="4 3"/>`;
+    inner += `<text x="${x}" y="${H - pad.b + 14}" text-anchor="middle" font-size="9" fill="${muted}">${formatAxisVal(v)}</text>`;
+  });
+
+  yTicks.forEach(v => {
+    const y = sy(v);
+    if (y < pad.t || y > H - pad.b) return;
+    inner += `<line x1="${pad.l}" y1="${y}" x2="${W - pad.r}" y2="${y}" stroke="${hairline}" stroke-width="1" stroke-dasharray="4 3"/>`;
+    inner += `<text x="${pad.l - 6}" y="${y + 3}" text-anchor="end" font-size="9" fill="${muted}">${formatAxisVal(v)}</text>`;
+  });
+
+  // Akselit
+  inner += `
+    <line x1="${pad.l}" y1="${pad.t}" x2="${pad.l}" y2="${H - pad.b}" stroke="${ink}" stroke-width="1.5"/>
+    <line x1="${pad.l}" y1="${H - pad.b}" x2="${W - pad.r}" y2="${H - pad.b}" stroke="${ink}" stroke-width="1.5"/>`;
+
+  // Akseli-otsikot
+  if (xLabel) inner += `<text x="${W / 2}" y="${H - 4}" text-anchor="middle" font-size="9" fill="${muted}" font-weight="500">${esc(xLabel)}</text>`;
+  if (yLabel) inner += `<text x="${12}" y="${H / 2}" text-anchor="middle" font-size="9" fill="${muted}" font-weight="500" transform="rotate(-90 12 ${H / 2})">${esc(yLabel)}</text>`;
+
+  // Polku (aikajärjestys)
+  const sorted = [...pts].sort((a, b) => parseInt(a.year) - parseInt(b.year));
+  if (sorted.length > 1) {
+    const pathPts = sorted.map(p => `${sx(p.x)},${sy(p.y)}`).join(' L ');
+    inner += `<polyline points="${pathPts}" fill="none" stroke="${copper}" stroke-width="1.5" stroke-dasharray="5 3" opacity="0.5"/>`;
+  }
+
+  // Pisteet & vuosiluvut
+  sorted.forEach((p, i) => {
+    const cx = sx(p.x), cy = sy(p.y);
+    const color = S_COLORS[i % S_COLORS.length];
+    const lAnchor = cx > W * 0.75 ? 'end' : cx < W * 0.25 ? 'start' : 'middle';
+    const ldx = lAnchor === 'end' ? -7 : lAnchor === 'start' ? 7 : 0;
+
+    inner += `
+      <circle cx="${cx}" cy="${cy}" r="6" fill="${color}" opacity="0.9"/>
+      <circle cx="${cx}" cy="${cy}" r="6" fill="none" stroke="${ink}" stroke-width="1.5" opacity="0.4"/>
+      <text x="${cx + ldx}" y="${cy - 10}" font-size="9" fill="${ink}" font-weight="600" text-anchor="${lAnchor}">${esc(p.year)}</text>`;
+  });
+
+  const titleHTML = title ? `<div class="chart-title">${esc(title)}</div>` : '';
+
+  return `<div class="path-wrap">
+    ${titleHTML}
+    <svg viewBox="0 0 ${W} ${H}" style="overflow:visible">${inner}</svg>
+  </div>`;
+}
+
+// ── KASVUVERTAILU (growth) ────────────────────────────────
+function renderGrowthBlock(lines) {
+  const rows = lines.slice(1);
+  const data = rows.map(l => {
+    const [year, g, p] = l.split('|');
+    return { year, bkt_asukas_kasvu: +g, tuottavuus_kasvu: +p };
+  }).filter(d => !isNaN(d.bkt_asukas_kasvu) && !isNaN(d.tuottavuus_kasvu));
+
+  if (!data.length) return '';
+
+  const id = "growth_" + Math.random().toString(36).slice(2);
+  requestAnimationFrame(() => {
+    const el = document.getElementById(id);
+    if (el) drawGrowthComparison(el, data);
+  });
+
+  return `<div class="chart-wrap"><div id="${id}" style="height:280px"></div></div>`;
+}
+
+// ── PYLVÄSKAAVIO ──────────────────────────────────────────
+function drawBar(svg, data) {
+  const cfg = CHART_THEME;
+  const { left, top, innerW, innerH, bottom } = getChartArea(cfg);
+
+  svg.setAttribute("viewBox", `0 0 ${cfg.width} ${cfg.height}`);
+  svg.setAttribute("height", cfg.height);
+
+  const values = data.map(d => d.value);
+  const minV = Math.min(0, ...values);
+  const maxV = Math.max(...values);
+
+  const { sy } = drawAxesWithTicks(svg, cfg, data.map(d => d.label), minV, maxV);
+
+  const barW = Math.min(40, (innerW / data.length) * 0.7);
+  const step = innerW / data.length;
+
+  data.forEach((d, i) => {
+    const x = left + i * step + step / 2;
+    const yTop = sy(Math.max(0, d.value));
+    const yBot = sy(Math.min(0, d.value));
+    const h = Math.max(2, yBot - yTop);
+    const color = S_COLORS[i % S_COLORS.length];
+
+    svg.appendChild(svgEl("rect", {
+      x: x - barW / 2, y: yTop, width: barW, height: h,
+      rx: 3, fill: color, opacity: 0.88
+    }));
+
+    // Arvo pylvään päällä
+    const valStr = formatAxisVal(d.value);
+    svg.appendChild(svgText(x, yTop - 5, valStr, {
+      "text-anchor": "middle", "font-size": 9,
+      fill: getCSSVar("--ink-light"), "font-weight": 600
+    }));
+  });
+}
+
+// ── PISTEKUVAAJA (lollipop) ───────────────────────────────
+function drawLollipop(svg, data) {
+  const cfg = CHART_THEME;
+  const { left, top, innerW, innerH, bottom } = getChartArea(cfg);
+  svg.setAttribute("viewBox", `0 0 ${cfg.width} ${cfg.height}`);
+  svg.setAttribute("height", cfg.height);
+
+  const values = data.map(d => d.value);
+  const minV = Math.min(0, ...values), maxV = Math.max(...values);
+  const { sy } = drawAxesWithTicks(svg, cfg, data.map(d => d.label), minV, maxV);
+
+  const step = innerW / data.length;
+  const zeroY = sy(0);
+
+  data.forEach((d, i) => {
+    const x = left + i * step + step / 2;
+    const y = sy(d.value);
+    const color = S_COLORS[i % S_COLORS.length];
+
+    svg.appendChild(svgEl("line", {
+      x1: x, y1: zeroY, x2: x, y2: y,
+      stroke: color, "stroke-width": 2, opacity: 0.5
+    }));
+    svg.appendChild(svgEl("circle", {
+      cx: x, cy: y, r: 6, fill: color, opacity: 0.9
+    }));
+    svg.appendChild(svgText(x, y - 10, formatAxisVal(d.value), {
+      "text-anchor": "middle", "font-size": 9,
+      fill: getCSSVar("--ink-light"), "font-weight": 600
+    }));
+  });
+}
+
+// ── VIIVAKUVAAJA ──────────────────────────────────────────
+function drawLine(svg, data) {
+  const cfg = CHART_THEME;
+  const { left, top, innerW, innerH, bottom } = getChartArea(cfg);
+  svg.setAttribute("viewBox", `0 0 ${cfg.width} ${cfg.height}`);
+  svg.setAttribute("height", cfg.height);
+
+  const values = data.map(d => d.value);
+  const minV = Math.min(...values), maxV = Math.max(...values);
+  const { sy } = drawAxesWithTicks(svg, cfg, data.map(d => d.label), minV, maxV);
+
+  const xStep = innerW / (data.length - 1 || 1);
+  const points = data.map((d, i) => ({ x: left + i * xStep, y: sy(d.value) }));
+
+  const path = svgEl("path", {
+    d: createSmoothPath(points), fill: "none",
+    stroke: getCSSVar("--copper"), "stroke-width": 2.5,
+    "stroke-linecap": "round"
+  });
+  svg.appendChild(path);
+
+  points.forEach((p, i) => {
+    svg.appendChild(svgEl("circle", {
+      cx: p.x, cy: p.y, r: 4,
+      fill: S_COLORS[i % S_COLORS.length],
+      stroke: getCSSVar("--bg-card"), "stroke-width": 1.5
+    }));
+  });
+}
+
+// ── ALUEKUVAAJA ───────────────────────────────────────────
+function drawArea(svg, data) {
+  const cfg = CHART_THEME;
+  const { left, top, innerW, innerH, bottom } = getChartArea(cfg);
+  svg.setAttribute("viewBox", `0 0 ${cfg.width} ${cfg.height}`);
+  svg.setAttribute("height", cfg.height);
+
+  const values = data.map(d => d.value);
+  const minV = Math.min(...values), maxV = Math.max(...values);
+  const { sy } = drawAxesWithTicks(svg, cfg, data.map(d => d.label), minV, maxV);
+
+  const xStep = innerW / (data.length - 1 || 1);
+  const points = data.map((d, i) => ({ x: left + i * xStep, y: sy(d.value) }));
+  const pathD = createSmoothPath(points);
+
+  // Täyttöalue
+  const area = svgEl("path", {
+    d: pathD + ` L ${points[points.length - 1].x} ${bottom} L ${points[0].x} ${bottom} Z`,
+    fill: getCSSVar("--gold"), opacity: 0.2
+  });
+  svg.appendChild(area);
+
+  // Viiva
+  svg.appendChild(svgEl("path", {
+    d: pathD, fill: "none",
+    stroke: getCSSVar("--copper"), "stroke-width": 2.5, "stroke-linecap": "round"
+  }));
+
+  // Pisteet
+  points.forEach((p, i) => {
+    svg.appendChild(svgEl("circle", {
+      cx: p.x, cy: p.y, r: 3.5,
+      fill: getCSSVar("--copper"), opacity: 0.85
+    }));
+  });
+}
+
+// ── DONITSIKAAVIO ─────────────────────────────────────────
+function drawDonut(svg, data) {
+  const W = 480, H = 220;
+  const cx = 160, cy = H / 2;
+  const rO = 82, rI = 48, labelR = 102;
+  const total = data.reduce((s, d) => s + d.value, 0);
+  const ink = getCSSVar("--ink");
+  const muted = getCSSVar("--muted");
+
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svg.setAttribute("height", H);
+
+  let angle = -Math.PI / 2;
+  data.forEach((d, i) => {
+    const slice = (d.value / total) * Math.PI * 2;
+    const mid = angle + slice / 2;
+    const x1 = cx + rO * Math.cos(angle), y1 = cy + rO * Math.sin(angle);
+    const x2 = cx + rO * Math.cos(angle + slice), y2 = cy + rO * Math.sin(angle + slice);
+    const x3 = cx + rI * Math.cos(angle + slice), y3 = cy + rI * Math.sin(angle + slice);
+    const x4 = cx + rI * Math.cos(angle), y4 = cy + rI * Math.sin(angle);
+    const large = slice > Math.PI ? 1 : 0;
+    const color = S_COLORS[i % S_COLORS.length];
+    const pct = Math.round((d.value / total) * 100);
+    const lx = cx + labelR * Math.cos(mid);
+    const ly = cy + labelR * Math.sin(mid);
+    const anchor = lx > cx ? "start" : "end";
+
+    svg.appendChild(svgEl("path", {
+      d: `M ${x1} ${y1} A ${rO} ${rO} 0 ${large} 1 ${x2} ${y2} L ${x3} ${y3} A ${rI} ${rI} 0 ${large} 0 ${x4} ${y4} Z`,
+      fill: color, opacity: 0.9
+    }));
+    svg.appendChild(svgEl("line", {
+      x1: cx + rO * Math.cos(mid), y1: cy + rO * Math.sin(mid),
+      x2: lx, y2: ly, stroke: muted, "stroke-width": 1
+    }));
+    svg.appendChild(svgText(lx + (anchor === "start" ? 5 : -5), ly + 4, `${pct}%`, {
+      "text-anchor": anchor, "font-size": 10, fill: ink, "font-weight": 600
+    }));
+    angle += slice;
+  });
+
+  // Selite oikealla
+  data.forEach((d, i) => {
+    const ly = 40 + i * 22;
+    const color = S_COLORS[i % S_COLORS.length];
+    svg.appendChild(svgEl("rect", {
+      x: W - 200, y: ly - 8, width: 10, height: 10, rx: 2, fill: color
+    }));
+    svg.appendChild(svgText(W - 185, ly + 2, d.label, {
+      "font-size": 10, fill: ink
+    }));
+  });
+}
+
+// ── VOHVELIKAAVIO ─────────────────────────────────────────
+function drawWaffle(svg, data) {
+  const grid = 10, cell = 18, gap = 3, pad = 14;
+  const totalCells = grid * grid;
+  const total = data.reduce((s, d) => s + d.value, 0);
+  const size = grid * (cell + gap) - gap;
+  const W = size + pad * 2 + 180, H = size + pad * 2;
+
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svg.setAttribute("height", H);
+
+  let filled = 0;
+  data.forEach((d, i) => {
+    const cells = Math.round((d.value / total) * totalCells);
+    const color = S_COLORS[i % S_COLORS.length];
+    for (let c = 0; c < cells; c++) {
+      const index = filled + c;
+      const col = index % grid, row = Math.floor(index / grid);
+      const x = pad + col * (cell + gap), y = pad + row * (cell + gap);
+      svg.appendChild(svgEl("rect", {
+        x, y, width: cell, height: cell, rx: 3,
+        fill: color, opacity: 0.88
+      }));
+    }
+    filled += cells;
+  });
+
+  // Selite
+  const ink = getCSSVar("--ink");
+  data.forEach((d, i) => {
+    const ly = pad + i * 22;
+    const lx = size + pad * 2 + 12;
+    const color = S_COLORS[i % S_COLORS.length];
+    const pct = Math.round((d.value / total) * 100);
+    svg.appendChild(svgEl("rect", { x: lx, y: ly, width: 10, height: 10, rx: 2, fill: color }));
+    svg.appendChild(svgText(lx + 14, ly + 9, `${d.label} (${pct}%)`, { "font-size": 10, fill: ink }));
+  });
+}
+
+// ── STACKED / GROUPED (yksinkertainen fallback) ────────────
+function drawStacked(svg, data) { drawBar(svg, data); }
+function drawGrouped(svg, data) { drawBar(svg, data); }
+
+// renderPath on toteutettu yllä
+
+function parseData(lines){
+  return lines
+    .map(l => l.split('|').map(x => x.trim()))
+    .filter(r => r.length && r[0] !== "");
+}
+
+// renderGrowthBlock on määritelty ylempänä kuvaajajärjestelmässä
+
+function renderStat(lines, forcedType){
+
+  const data = lines
+    .map(l => {
+      const parts = l.split('|').map(x => x.trim());
+      if(parts.length < 2) return null;
+
+      const value = parseFloat(parts[1].replace(',', '.'));
+      if(isNaN(value)) return null;
+
+      return {
+        label: parts[0],
+        value
+      };
+    })
+    .filter(Boolean);
+
+  if (!data.length) return '';
+
+
+if(lines[0].includes("bkt_asukas_kasvu")){
+  return renderGrowthBlock(lines);
+}
+
+const detectedModes = detectChartModes(
+  data.map(d => [d.label, d.value])
+);
+
+  const modes = forcedType && detectedModes.includes(forcedType)
+    ? [forcedType]
+    : detectedModes;
+
+  let active = forcedType && modes.includes(forcedType)
+    ? forcedType
+    : modes[0];
+
+  const id = "chart_" + Math.random().toString(36).slice(2);
+
+  requestAnimationFrame(() => {
+    const wrap = document.getElementById(id);
+    if(!wrap) return;
+
+    function draw() {
+      wrap.innerHTML = '';
+      drawMode(wrap, data, active);
+      // Legenda kaikille kaaviotyypeille joissa useita datapisteitä
+      if (data.length > 1 && !["line","area"].includes(active)) {
+        const legendHTML = buildLegend(data.map(d => d.label));
+        if (legendHTML) {
+          const div = document.createElement('div');
+          div.innerHTML = legendHTML;
+          if (div.firstElementChild) wrap.appendChild(div.firstElementChild);
+        }
+      }
+    }
+
+    const container = wrap.closest('.stat-container');
+
+    container?.querySelectorAll(".chart-toggle button")
+      .forEach(btn => {
+        btn.onclick = () => {
+          active = btn.dataset.mode;
+
+          container.querySelectorAll(".chart-toggle button")
+            .forEach(b => b.classList.remove("active"));
+
+          btn.classList.add("active");
+          draw();
+        };
+      });
+
+    draw();
+  });
+
+  return `
+    <div class="stat-container">
+      ${renderToggle(modes, active)}
+      <div id="${id}" class="stat-wrap"></div>
+    </div>
+  `;
+}
+
+
+// drawBar, drawLollipop, drawLine, drawArea, drawDonut, drawWaffle on toteutettu yllä
+
+const chartRenderers = {
+  bar: drawBar,
+  line: drawLine,
+  area: drawArea,
+  donut: drawDonut,
+  waffle: drawWaffle,
+  lollipop: drawLollipop,
+  stacked: drawStacked,
+  grouped: drawGrouped,
+  heatmap: drawHeatmap,
+  growth: drawGrowthComparison
+};
+function drawMode(container, data, mode) {
+  container.innerHTML = '';
+  if (mode === "heatmap") {
+    // heatmap needs matrix data, not {label,value} – needs raw lines, skip for now
+    drawHeatmap(container, data);
+    return;
+  }
+  if (mode === "growth") {
+    drawGrowthComparison(container, data);
+    return;
+  }
+  const fn = chartRenderers[mode] ?? chartRenderers.bar;
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  container.appendChild(svg);
+  fn(svg, data);
+}
+
+// CHART_THEME ja getChartArea on määritelty yllä
+
+
+function drawGrowthComparison(container, data) {
+  const w = 520, h = 280;
+  const pad = { t: 32, r: 28, b: 44, l: 52 };
+  const innerW = w - pad.l - pad.r;
+  const innerH = h - pad.t - pad.b;
+
+  const copper = getCSSVar("--copper");
+  const muted = getCSSVar("--muted");
+  const ink = getCSSVar("--ink");
+  const hairline = getCSSVar("--hairline");
+
+  const svgNS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(svgNS, "svg");
+  svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+
+  const years = data.map(d => +d.year || +d.label);
+  const gdp  = data.map(d => +d.bkt_asukas_kasvu);
+  const prod = data.map(d => +d.tuottavuus_kasvu);
+
+  const allVals = [...gdp, ...prod];
+  const rawMin = Math.min(...allVals), rawMax = Math.max(...allVals);
+  const yTicks = niceYTicks(rawMin, rawMax, 5);
+  const yMin = yTicks[0], yMax = yTicks[yTicks.length - 1];
+  const yRange = yMax - yMin || 1;
+
+  const bottom = pad.t + innerH;
+  const xStep = innerW / (data.length - 1 || 1);
+
+  const sy = v => pad.t + innerH - ((v - yMin) / yRange) * innerH;
+  const sx = i => pad.l + i * xStep;
+
+  // Ruudukkoviivat
+  yTicks.forEach(val => {
+    const y = sy(val);
+    const line = svgEl("line", {
+      x1: pad.l, y1: y, x2: w - pad.r, y2: y,
+      stroke: hairline, "stroke-width": 1, "stroke-dasharray": "4 3"
+    });
+    svg.appendChild(line);
+    svg.appendChild(svgText(pad.l - 5, y + 3, formatAxisVal(val), {
+      "text-anchor": "end", "font-size": 9, fill: muted
+    }));
+  });
+
+  // Nolla-akseli
+  if (yMin < 0 && yMax > 0) {
+    const zy = sy(0);
+    svg.appendChild(svgEl("line", {
+      x1: pad.l, y1: zy, x2: w - pad.r, y2: zy,
+      stroke: muted, "stroke-width": 1, "stroke-dasharray": "6 3", opacity: 0.7
+    }));
+  }
+
+  // Vuosimerkinnät
+  const stride = Math.max(1, Math.ceil(years.length / 8));
+  years.forEach((year, i) => {
+    if (!year || i % stride !== 0) return;
+    svg.appendChild(svgText(sx(i), h - pad.b + 14, year, {
+      "text-anchor": "middle", "font-size": 9, fill: muted
+    }));
+  });
+
+  // Akselit
+  svg.appendChild(svgEl("line", { x1: pad.l, y1: pad.t, x2: pad.l, y2: bottom, stroke: ink, "stroke-width": 1.5 }));
+  svg.appendChild(svgEl("line", { x1: pad.l, y1: bottom, x2: w - pad.r, y2: bottom, stroke: ink, "stroke-width": 1.5 }));
+
+  // Defs: täyttökuviot erotusalueelle
+  const defs = document.createElementNS(svgNS, "defs");
+  defs.innerHTML = `
+    <pattern id="diagUp" patternUnits="userSpaceOnUse" width="8" height="8">
+      <path d="M0,8 l8,-8" stroke="${copper}" stroke-width="1.2" opacity="0.5"/>
+    </pattern>
+    <pattern id="diagDown" patternUnits="userSpaceOnUse" width="8" height="8">
+      <path d="M0,0 l8,8" stroke="hsl(200,55%,45%)" stroke-width="1.2" opacity="0.5"/>
+    </pattern>`;
+  svg.appendChild(defs);
+
+  // Erotusalueet
+  const pointsGDP  = gdp.map((v, i) => [sx(i), sy(v)]);
+  const pointsPROD = prod.map((v, i) => [sx(i), sy(v)]);
+
+  for (let i = 0; i < data.length - 1; i++) {
+    const x1 = sx(i), x2 = sx(i + 1);
+    const d = `M ${x1} ${sy(gdp[i])} L ${x2} ${sy(gdp[i+1])} L ${x2} ${sy(prod[i+1])} L ${x1} ${sy(prod[i])} Z`;
+    const fill = ((gdp[i] + gdp[i+1]) / 2 > (prod[i] + prod[i+1]) / 2) ? "url(#diagUp)" : "url(#diagDown)";
+    svg.appendChild(svgEl("path", { d, fill, opacity: 0.5 }));
+  }
+
+  // Viivat
+  function addLine(points, color) {
+    const d = smoothPath(points);
+    svg.appendChild(svgEl("path", {
+      d, fill: "none", stroke: color, "stroke-width": 2.5, "stroke-linecap": "round"
+    }));
+  }
+  addLine(pointsGDP, copper);
+  addLine(pointsPROD, "hsl(200,55%,45%)");
+
+  container.innerHTML = "";
+  container.appendChild(svg);
+
+  // Selite
+  const legendEl = document.createElement("div");
+  legendEl.className = "chart-legend";
+  legendEl.innerHTML = `
+    <span class="legend-item"><span class="legend-swatch" style="background:${copper}"></span>BKT/asukas kasvu</span>
+    <span class="legend-item"><span class="legend-swatch" style="background:hsl(200,55%,45%)"></span>Tuottavuuskasvu</span>`;
+  container.appendChild(legendEl);
+}
+
+
+function smoothPath(points, tension=0.18){
+  let d=`M ${points[0][0]} ${points[0][1]}`;
+  for(let i=1;i<points.length-1;i++){
+    const xc=(points[i][0]+points[i+1][0])/2;
+    const yc=(points[i][1]+points[i+1][1])/2;
+    d+=` Q ${points[i][0]} ${points[i][1]} ${xc} ${yc}`;
+  }
+  const last=points.length-1;
+  d+=` T ${points[last][0]} ${points[last][1]}`;
+  return d;
+}
+
+function drawPath(d, color, width){
+  const svgNS="http://www.w3.org/2000/svg";
+  const path=document.createElementNS(svgNS,"path");
+  path.setAttribute("d",d);
+  path.setAttribute("fill","none");
+  path.setAttribute("stroke",color);
+  path.setAttribute("stroke-width",width);
+  path.setAttribute("stroke-linecap","round");
+  return path;
+}
+
+// drawAxesWithTicks on toteutettu yllä – tämä vanha versio ei enää käytössä
+
+function chartTitle(title){
+  if(!title) return "";
+  return `<div class="chart-title">${title}</div>`;
+}
+
+function buildLegend(labels) {
+  if (!labels || labels.length <= 1) return "";
+  return `<div class="chart-legend">
+    ${labels.map((l, i) => `
+      <span class="legend-item">
+        <span class="legend-swatch" style="background:${S_COLORS[i % S_COLORS.length]}"></span>
+        ${esc(l)}
+      </span>`).join("")}
+  </div>`;
+}
+function chartFrame({title, legend, svg}) {
+  return `<div class="chart-wrap">${chartTitle(title)}${svg}${buildLegend(legend)}</div>`;
+}
+
+// buildBarChart on korvattu suorilla drawBar-kutsuilla
+
+function renderList(lines) {
+  const items = lines.map(l => l.trim()).filter(l => l.length);
+  if (!items.length) return '';
+  return `<ul class="reader-body" style="margin-top:0">${items.map(i => `<li>${esc(i)}</li>`).join('')}</ul>`;
+}
+
+function renderTable(lines) {
+  let headers = null;
+  const rows = [...lines];
+  if (rows[0]?.startsWith('otsikot:')) {
+    headers = rows.shift().replace('otsikot:', '').split('|');
+  }
+  const rowData = rows.map(r => r.split('|'));
+  let html = '<table class="reader-table">';
+  if (headers) html += '<thead><tr>' + headers.map(h => `<th>${esc(h.trim())}</th>`).join('') + '</tr></thead>';
+  html += '<tbody>' + rowData.map(r => '<tr>' + r.map(c => `<td>${esc(c.trim())}</td>`).join('') + '</tr>').join('') + '</tbody></table>';
+  return html;
+}
+
+const blockRenderers = {
+  path:   (b) => renderPath(b.content),
+  table:  (b) => renderTable(b.content),
+  list:   (b) => renderList(b.content),
+  stat:   (b) => renderStat(b.content, b.type),
+  chart:  (b) => renderStat(b.content, b.type),
+  growth: (b) => renderGrowthBlock(b.content),
+  'legend-text': b =>
+  `<p class="chart-legend-text">${esc(b.content[0])}</p>`,
+};
+
+function renderBody(content, fontSize, query) {
+  const blocks = parseBlocks(content);
+  let html = '';
+  blocks.forEach((block, i) => {
+    const renderer = blockRenderers[block.mode];
+    if (renderer) { html += renderer(block); return; }
+
+    // Tavallinen teksti
+    const text = block.content.join(' ').trim();
+    if (!text) return;
+
+    const hi = highlight(esc(text), query);
+    const isHeading = i !== 0 && text.length < 60 && !/[.:,;!?]$/.test(text) && !/^\d/.test(text) && !/^-/.test(text);
+
+    if (isHeading) {
+      html += `<h2>${hi}</h2>`;
+    } else if (i === 0 && text.length < 150) {
+      html += `<blockquote>${hi}</blockquote>`;
+    } else {
+      html += `<p>${hi}</p>`;
+    }
+  });
+  return html;
+}
+
+(async () => {
+  const WEBHOOK = 'https://script.google.com/macros/s/AKfycbymZpTBcrfjNSyyovHsVqcuTmvnGmDT3EzjDdFnj-pX-qv4-IecyGhGtEGemD7VKmRN5g/exec';
+
+  let book, chapters;
+  let currentIndex = 0;
+  let fontSize = 17;
+  let searchQuery = '';
+  const themes = ['', 'theme-dark', 'theme-sepia'];
+  let themeIndex = 0;
+  let isSpeaking = false;
+  let utterance = null;
+
+  // Load book data – try same dir, then ./ekirja.json
+  try {
+    const res = await fetch('ekirja.json');
+    if (!res.ok) throw new Error();
+    book = await res.json();
+  } catch {
+    document.getElementById('reader').innerHTML =
+      '<div style="padding:60px;text-align:center;font-family:Inter,sans-serif;color:hsl(28,18%,52%)">Tiedostoa ekirja.json ei löydy.</div>';
+    return;
+  }
+  chapters = book.chapters;
+
+  // ── Render chapters ──
+  const reader = document.getElementById('reader');
+  function renderChapters() {
+    reader.innerHTML = '';
+    chapters.forEach((ch, i) => {
+      const section = document.createElement('section');
+      section.className = 'chapter-block';
+      section.dataset.index = i;
+
+      // Nav dots
+      const dots = chapters.map((_, j) =>
+        `<button class="ch-dot${j === i ? ' active' : ''}" data-goto="${j}" style="width:${j === i ? 18 : 5}px" title="Luku ${j+1}"></button>`
+      ).join('');
+
+      const prevBtn = i > 0
+        ? `<button class="ch-nav-btn" data-goto="${i-1}"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>${esc(chapters[i-1].title)}</span></button>`
+        : `<span></span>`;
+      const nextBtn = i < chapters.length - 1
+        ? `<button class="ch-nav-btn right" data-goto="${i+1}"><span>${esc(chapters[i+1].title)}</span><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>`
+        : `<div class="ch-end">— Loppu —</div>`;
+
+      section.innerHTML = `
+        <div class="chapter-inner">
+          <header class="ch-header">
+            ${ch.part ? `<p class="ch-part">${esc(ch.part)}</p>` : ''}
+            <h1 class="ch-title">${esc(ch.title)}</h1>
+            ${ch.subtitle ? `<p class="ch-subtitle">${esc(ch.subtitle)}</p>` : ''}
+          </header>
+          <div class="reader-body" id="body-${i}" style="font-size:${fontSize}px">
+            ${ch.content ? renderBody(ch.content, fontSize, searchQuery) : ''}
+          </div>
+          <nav class="ch-nav">
+            ${prevBtn}
+            <div class="ch-dots">${dots}</div>
+            ${nextBtn}
+          </nav>
+          ${i < chapters.length - 1 ? '<div class="ornament"><span>✦</span></div>' : ''}
+        </div>`;
+
+      reader.appendChild(section);
+    });
+
+    // Nav dot / btn click
+    reader.querySelectorAll('[data-goto]').forEach(el => {
+      el.addEventListener('click', () => goTo(parseInt(el.dataset.goto)));
+    });
+  }
+
+  function updateBodyFontSize() {
+    chapters.forEach((_, i) => {
+      const el = document.getElementById(`body-${i}`);
+      if (el) el.style.fontSize = fontSize + 'px';
+    });
+    document.getElementById('font-size-display').textContent = fontSize;
+  }
+
+  function updateToolbar() {
+    const ch = chapters[currentIndex];
+    document.getElementById('tb-part').textContent = ch?.part || 'Johdanto';
+    document.getElementById('tb-idx').textContent = `${currentIndex + 1} / ${chapters.length}`;
+  }
+
+  function scrollToChapter(index) {
+    const block = reader.querySelector(`.chapter-block[data-index="${index}"]`);
+    if (block) reader.scrollTop = block.offsetTop;
+  }
+
+  function goTo(index) {
+    if (index < 0 || index >= chapters.length) return;
+    stopTTS();
+    currentIndex = index;
+    requestAnimationFrame(() => {
+      scrollToChapter(index);
+      updateToolbar();
+    });
+    const url = new URL(location.href);
+    url.searchParams.set('chapter', index);
+    history.replaceState(null, '', url);
+  }
+
+  reader.addEventListener('scroll', () => {
+    const total = reader.scrollHeight - reader.clientHeight;
+    document.getElementById('progress-bar').style.width =
+      total > 0 ? (reader.scrollTop / total * 100) + '%' : '0%';
+
+    const threshold = reader.getBoundingClientRect().top + reader.clientHeight * 0.35;
+    for (const block of reader.querySelectorAll('.chapter-block')) {
+      const rect = block.getBoundingClientRect();
+      if (rect.top <= threshold && rect.bottom > threshold) {
+        const idx = parseInt(block.dataset.index);
+        if (idx !== currentIndex) {
+          currentIndex = idx;
+          updateToolbar();
+          const url = new URL(location.href);
+          url.searchParams.set('chapter', idx);
+          history.replaceState(null, '', url);
+        }
+        break;
+      }
+    }
+  });
+
+  window.addEventListener('keydown', e => {
+    if (e.key === 'ArrowLeft' && currentIndex > 0) goTo(currentIndex - 1);
+    if (e.key === 'ArrowRight' && currentIndex < chapters.length - 1) goTo(currentIndex + 1);
+    if (e.key === 'Escape') closeAllPanels();
+  });
+
+  document.getElementById('btn-font-down').addEventListener('click', () => {
+    fontSize = Math.max(14, fontSize - 2);
+    updateBodyFontSize();
+  });
+  document.getElementById('btn-font-up').addEventListener('click', () => {
+    fontSize = Math.min(28, fontSize + 2);
+    updateBodyFontSize();
+  });
+
+  document.getElementById('btn-link').addEventListener('click', () => {
+    const url = `${location.origin}${location.pathname}?chapter=${currentIndex}`;
+    navigator.clipboard.writeText(url).catch(() => {});
+  });
+
+  document.getElementById('btn-theme').addEventListener('click', () => {
+    themeIndex = (themeIndex + 1) % themes.length;
+    document.body.className = themes[themeIndex];
+  });
+
+  document.getElementById('btn-tts').addEventListener('click', () => {
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      isSpeaking = false;
+      document.getElementById('btn-tts').classList.remove('active');
+      return;
+    }
+    const bodyEl = document.getElementById(`body-${currentIndex}`);
+    if (!bodyEl) return;
+    const text = bodyEl.innerText;
+    if (!text) return;
+    utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'fi-FI';
+    utterance.rate = 1.0;
+    utterance.onstart = () => { isSpeaking = true; document.getElementById('btn-tts').classList.add('active'); };
+    utterance.onend = () => { isSpeaking = false; document.getElementById('btn-tts').classList.remove('active'); };
+    utterance.onerror = () => { isSpeaking = false; document.getElementById('btn-tts').classList.remove('active'); };
+    window.speechSynthesis.speak(utterance);
+  });
+
+  function stopTTS() {
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      isSpeaking = false;
+      document.getElementById('btn-tts').classList.remove('active');
+    }
+  }
+
+  document.getElementById('btn-export').addEventListener('click', () => {
+    let txt = `${book.title}\n${book.author}\n${'='.repeat(40)}\n\nSISÄLLYSLUETTELO\n${'-'.repeat(40)}\n`;
+    chapters.forEach((ch, i) => { txt += `${i+1}. ${ch.title}\n`; });
+    txt += '\n\n';
+    chapters.forEach((ch, i) => {
+      txt += `${'='.repeat(40)}\n${i+1}. ${ch.title}\n`;
+      if (ch.part) txt += `${ch.part}\n`;
+      txt += `${'-'.repeat(40)}\n\n`;
+      (ch.content || '').split(/\n\n+/).forEach(p => { const t = p.trim(); if (t) txt += t + '\n\n'; });
+    });
+    navigator.clipboard.writeText(txt).catch(() => {});
+  });
+
+  function openPanel(overlayId, panelId) {
+    closeAllPanels();
+    document.getElementById(overlayId).classList.add('open');
+    document.getElementById(panelId).classList.add('open');
+  }
+  function closePanel(overlayId, panelId) {
+    document.getElementById(overlayId).classList.remove('open');
+    document.getElementById(panelId).classList.remove('open');
+  }
+  function closeAllPanels() {
+    ['overlay-toc','overlay-search','overlay-comment'].forEach(id => document.getElementById(id).classList.remove('open'));
+    ['panel-toc','panel-search','panel-comment'].forEach(id => document.getElementById(id).classList.remove('open'));
+  }
+
+  document.getElementById('btn-toc').addEventListener('click', () => openPanel('overlay-toc', 'panel-toc'));
+  document.getElementById('close-toc').addEventListener('click', () => closePanel('overlay-toc', 'panel-toc'));
+  document.getElementById('overlay-toc').addEventListener('click', () => closePanel('overlay-toc', 'panel-toc'));
+
+  const tocBody = document.getElementById('toc-body');
+  const partsSeen = new Set();
+  chapters.forEach((ch, i) => {
+    const part = ch.part || 'Johdanto';
+    if (!partsSeen.has(part)) {
+      partsSeen.add(part);
+      const label = document.createElement('div');
+      label.className = 'toc-part-label';
+      label.textContent = part;
+      tocBody.appendChild(label);
+    }
+    const btn = document.createElement('button');
+    btn.className = 'toc-item' + (i === currentIndex ? ' active' : '');
+    btn.dataset.index = i;
+    btn.innerHTML = `<span class="toc-item-title">${esc(ch.title)}</span>${ch.subtitle ? `<span class="toc-item-sub">${esc(ch.subtitle)}</span>` : ''}`;
+    btn.addEventListener('click', () => { goTo(i); closePanel('overlay-toc', 'panel-toc'); });
+    tocBody.appendChild(btn);
+  });
+
+  document.getElementById('btn-search').addEventListener('click', () => {
+    openPanel('overlay-search', 'panel-search');
+    setTimeout(() => document.getElementById('search-input').focus(), 150);
+  });
+  document.getElementById('close-search').addEventListener('click', () => {
+    closePanel('overlay-search', 'panel-search');
+    if (searchQuery) { searchQuery = ''; renderChapters(); }
+  });
+  document.getElementById('overlay-search').addEventListener('click', () => {
+    closePanel('overlay-search', 'panel-search');
+    if (searchQuery) { searchQuery = ''; renderChapters(); }
+  });
+
+  document.getElementById('search-input').addEventListener('input', e => {
+    const q = e.target.value.trim();
+    const body = document.getElementById('search-body');
+    if (q.length < 3) {
+      if (searchQuery) { searchQuery = ''; renderChapters(); }
+      body.innerHTML = '<div class="search-hint">Kirjoita vähintään 3 merkkiä…</div>';
+      return;
+    }
+    const results = chapters.map((ch, i) => ({ ch, i })).filter(({ ch }) => ch.content?.toLowerCase().includes(q.toLowerCase()));
+    if (!results.length) { body.innerHTML = '<div class="search-hint">Ei tuloksia</div>'; return; }
+
+    function snippet(content, query, max = 80) {
+      const idx = content.toLowerCase().indexOf(query.toLowerCase());
+      if (idx < 0) return esc(content.slice(0, max)) + '…';
+      const start = Math.max(0, idx - 20), end = Math.min(content.length, idx + 60);
+      const raw = (start > 0 ? '…' : '') + content.slice(start, end) + (end < content.length ? '…' : '');
+      return highlight(esc(raw), q);
+    }
+
+    body.innerHTML = `<div class="search-count">${results.length} osumaa</div>`;
+    results.forEach(({ ch, i }) => {
+      const btn = document.createElement('button');
+      btn.className = 'search-result';
+      btn.innerHTML = `<div class="search-result-title">${esc(ch.title)}</div><div class="search-result-snippet">${snippet(ch.content || '', q)}</div>`;
+      btn.addEventListener('click', () => {
+        searchQuery = q;
+        goTo(i);
+        renderChapters(); // re-render with highlight
+        closePanel('overlay-search', 'panel-search');
+      });
+      body.appendChild(btn);
+    });
+  });
+
+  document.getElementById('btn-comment').addEventListener('click', () => {
+    document.getElementById('comment-chapter-title').textContent = chapters[currentIndex]?.title || 'Kommentoi sisältöä';
+    openPanel('overlay-comment', 'panel-comment');
+  });
+  document.getElementById('close-comment').addEventListener('click', () => closePanel('overlay-comment', 'panel-comment'));
+  document.getElementById('overlay-comment').addEventListener('click', () => closePanel('overlay-comment', 'panel-comment'));
+
+  document.getElementById('comment-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const submit = document.getElementById('comment-submit');
+    const errEl = document.getElementById('comment-error');
+    submit.disabled = true;
+    submit.textContent = 'Lähetetään…';
+    errEl.style.display = 'none';
+    try {
+      await fetch(WEBHOOK, {
+        method: 'POST',
+        body: JSON.stringify({
+          chapter: chapters[currentIndex]?.index,
+          message: document.getElementById('comment-msg').value,
+          type: document.getElementById('comment-type').value,
+          email: document.getElementById('comment-email').value,
+        }),
+      });
+      submit.textContent = 'Kiitos! ✓';
+      document.getElementById('comment-msg').value = '';
+      document.getElementById('comment-email').value = '';
+      setTimeout(() => { submit.disabled = false; submit.textContent = 'Lähetä palaute'; closePanel('overlay-comment', 'panel-comment'); }, 1400);
+    } catch {
+      submit.disabled = false;
+      submit.textContent = 'Lähetä palaute';
+      errEl.style.display = 'block';
+    }
+  });
+
+  renderChapters();
+
+  const params = new URLSearchParams(location.search);
+  const startIdx = parseInt(params.get('chapter') || '0', 10);
+  currentIndex = (!isNaN(startIdx) && startIdx >= 0 && startIdx < chapters.length) ? startIdx : 0;
+  updateToolbar();
+  requestAnimationFrame(() => scrollToChapter(currentIndex));
+})();
+</script>
+</body>
+</html>

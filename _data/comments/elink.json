@@ -1,0 +1,114 @@
+{
+  "version": "1.0",
+  "generated": "2026-02-23",
+  "placements": [
+    {
+      "chapter": "104",
+      "afterParagraph": 8,
+      "module": {
+        "type": "chart",
+        "chartType": "line",
+        "dataset": "tyon_tuottavuus"
+      }
+    },
+    {
+      "chapter": "104",
+      "afterParagraph": 8,
+      "module": {
+        "type": "chart",
+        "chartType": "line",
+        "dataset": "kokonaistuottavuus"
+      }
+    },
+    {
+      "chapter": "102",
+      "afterParagraph": 10,
+      "module": {
+        "type": "chart",
+        "chartType": "scatter",
+        "dataset": "EDP_alijaama"
+      }
+    },
+    {
+      "chapter": "102",
+      "afterParagraph": 10,
+      "module": {
+        "type": "chart",
+        "chartType": "scatter",
+        "dataset": "EDP_velka"
+      }
+    },
+    {
+      "chapter": "102",
+      "afterParagraph": 15,
+      "module": {
+        "type": "chart",
+        "chartType": "heatmap",
+        "dataset": "tulot_med_tyottomat"
+      }
+    },
+    {
+      "chapter": "102",
+      "afterParagraph": 15,
+      "module": {
+        "type": "chart",
+        "chartType": "heatmap",
+        "dataset": "tulot_med_elakelaiset"
+      }
+    },
+    {
+      "chapter": "102",
+      "afterParagraph": 15,
+      "module": {
+        "type": "chart",
+        "chartType": "heatmap",
+        "dataset": "tulot_med_opiskelijat"
+      }
+    },
+    {
+      "chapter": "102",
+      "afterParagraph": 15,
+      "module": {
+        "type": "chart",
+        "chartType": "heatmap",
+        "dataset": "tulot_med_tyontekijat"
+      }
+    },
+    {
+      "chapter": "102",
+      "afterParagraph": 15,
+      "module": {
+        "type": "chart",
+        "chartType": "heatmap",
+        "dataset": "tulot_med_atoimihenkilot"
+      }
+    },
+    {
+      "chapter": "102",
+      "afterParagraph": 15,
+      "module": {
+        "type": "chart",
+        "chartType": "heatmap",
+        "dataset": "tulot_med_ytoimihenkilöt"
+      }
+    },
+    {
+      "chapter": "102",
+      "afterParagraph": 15,
+      "module": {
+        "type": "chart",
+        "chartType": "heatmap",
+        "dataset": "tulot_med_yrittajat"
+      }
+    },
+    {
+      "chapter": "102",
+      "afterParagraph": 15,
+      "module": {
+        "type": "chart",
+        "chartType": "heatmap",
+        "dataset": "tulot_med_maatalousyrittajat"
+      }
+    }
+  ]
+}
