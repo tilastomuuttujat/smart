@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Järjestelmä – Ihmiset – Muutos | Harri Käyhkö 2026</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,700;1,400&display=swap');
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a28;
+    --blue: #4a7cf7;
+    --blue-glow: rgba(74,124,247,0.15);
+    --red: #e85d5d;
+    --red-glow: rgba(232,93,93,0.15);
+    --green: #3ecf8e;
+    --green-glow: rgba(62,207,142,0.15);
+    --amber: #f5a623;
+    --amber-glow: rgba(245,166,35,0.15);
+    --purple: #a78bfa;
+    --purple-glow: rgba(167,139,250,0.15);
+    --text: #e8e8f0;
+    --text-dim: #8888a0;
+    --text-dimmer: #555568;
+    --border: #2a2a3a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(10,10,15,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 56px;
+    transition: transform 0.3s;
+  }
+  nav .logo { font-weight: 700; font-size: 0.9rem; letter-spacing: 0.5px; color: var(--text-dim); }
+  nav .logo span { color: var(--blue); }
+  nav .nav-links { display: flex; gap: 1.5rem; }
+  nav .nav-links a {
+    color: var(--text-dim); text-decoration: none; font-size: 0.8rem; font-weight: 500;
+    letter-spacing: 0.3px; transition: color 0.2s;
+  }
+  nav .nav-links a:hover { color: var(--text); }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 6rem 2rem 4rem; position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: ''; position: absolute; top: -30%; left: 50%; transform: translateX(-50%);
+    width: 800px; height: 800px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(74,124,247,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    background: var(--surface2); border: 1px solid var(--border);
+    padding: 0.4rem 1rem; border-radius: 100px; font-size: 0.75rem; color: var(--text-dim);
+    margin-bottom: 2rem; letter-spacing: 0.5px;
+  }
+  .hero-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .hero h1 {
+    font-family: 'Playfair Display', serif; font-size: clamp(2.5rem, 6vw, 5rem);
+    font-weight: 700; line-height: 1.1; margin-bottom: 1.5rem;
+    background: linear-gradient(135deg, #fff 0%, #8888a0 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .hero .subtitle {
+    font-size: clamp(1rem, 2vw, 1.25rem); color: var(--text-dim);
+    max-width: 640px; margin-bottom: 3rem; font-weight: 300;
+  }
+  .hero .author { color: var(--text-dimmer); font-size: 0.85rem; margin-bottom: 3rem; }
+  .hero .author strong { color: var(--text-dim); }
+  .scroll-cue {
+    position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+    color: var(--text-dimmer); font-size: 0.7rem; letter-spacing: 1px;
+    animation: bob 2s ease-in-out infinite;
+  }
+  @keyframes bob { 0%,100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(8px); } }
+  .scroll-cue svg { width: 20px; height: 20px; stroke: var(--text-dimmer); }
+
+  /* ── SECTION BASICS ── */
+  section { padding: 6rem 2rem; max-width: 1100px; margin: 0 auto; }
+  .section-label {
+    font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--blue); font-weight: 600; margin-bottom: 0.75rem;
+  }
+  .section-title {
+    font-family: 'Playfair Display', serif; font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 700; margin-bottom: 1rem; line-height: 1.2;
+  }
+  .section-desc { color: var(--text-dim); max-width: 700px; margin-bottom: 3rem; font-size: 1rem; }
+
+  /* ── CORE MESSAGE ── */
+  .core-msg {
+    background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%);
+    border: 1px solid var(--border); border-radius: 20px;
+    padding: 3rem; margin-bottom: 2rem; text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .core-msg::before {
+    content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 200px; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--blue), transparent);
+  }
+  .core-msg blockquote {
+    font-family: 'Playfair Display', serif; font-style: italic;
+    font-size: clamp(1.1rem, 2.5vw, 1.6rem); color: var(--text);
+    line-height: 1.6; max-width: 800px; margin: 0 auto;
+  }
+
+  /* ── THREE PARTS ── */
+  .parts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+  .part-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    padding: 2rem; position: relative; overflow: hidden; cursor: pointer;
+    transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+  }
+  .part-card:hover { transform: translateY(-4px); }
+  .part-card.p1 { border-top: 3px solid var(--blue); }
+  .part-card.p1:hover { box-shadow: 0 8px 40px var(--blue-glow); border-color: var(--blue); }
+  .part-card.p2 { border-top: 3px solid var(--red); }
+  .part-card.p2:hover { box-shadow: 0 8px 40px var(--red-glow); border-color: var(--red); }
+  .part-card.p3 { border-top: 3px solid var(--green); }
+  .part-card.p3:hover { box-shadow: 0 8px 40px var(--green-glow); border-color: var(--green); }
+  .part-num {
+    font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase;
+    font-weight: 700; margin-bottom: 0.75rem;
+  }
+  .part-card.p1 .part-num { color: var(--blue); }
+  .part-card.p2 .part-num { color: var(--red); }
+  .part-card.p3 .part-num { color: var(--green); }
+  .part-card h3 { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.5rem; }
+  .part-card .part-question {
+    font-family: 'Playfair Display', serif; font-style: italic;
+    color: var(--text-dim); font-size: 0.95rem; margin-bottom: 1.25rem;
+  }
+  .part-card ul { list-style: none; }
+  .part-card ul li {
+    padding: 0.4rem 0; font-size: 0.85rem; color: var(--text-dim);
+    padding-left: 1.2rem; position: relative;
+  }
+  .part-card ul li::before {
+    content: '→'; position: absolute; left: 0; font-weight: 600;
+  }
+  .part-card.p1 ul li::before { color: var(--blue); }
+  .part-card.p2 ul li::before { color: var(--red); }
+  .part-card.p3 ul li::before { color: var(--green); }
+
+  /* ── EXPANDABLE DETAIL PANELS ── */
+  .detail-panel {
+    max-height: 0; overflow: hidden; transition: max-height 0.5s ease;
+    margin-top: 0;
+  }
+  .detail-panel.open { max-height: 2000px; margin-top: 1rem; }
+  .detail-content {
+    padding-top: 1rem; border-top: 1px solid var(--border);
+    font-size: 0.85rem; color: var(--text-dim); line-height: 1.7;
+  }
+  .detail-content p { margin-bottom: 0.75rem; }
+  .detail-content strong { color: var(--text); }
+  .expand-hint {
+    display: block; text-align: center; margin-top: 1rem;
+    font-size: 0.7rem; color: var(--text-dimmer); letter-spacing: 1px;
+  }
+
+  /* ── PARADIGM SHIFT ── */
+  .paradigm { margin: 4rem 0; }
+  .paradigm-grid {
+    display: grid; grid-template-columns: 1fr auto 1fr; gap: 0;
+    align-items: stretch;
+  }
+  .paradigm-col { display: flex; flex-direction: column; gap: 0; }
+  .paradigm-col.old .p-item { background: rgba(232,93,93,0.05); border: 1px solid rgba(232,93,93,0.15); }
+  .paradigm-col.new .p-item { background: rgba(62,207,142,0.05); border: 1px solid rgba(62,207,142,0.15); }
+  .paradigm-col-header {
+    padding: 1rem 1.5rem; font-weight: 700; font-size: 0.8rem;
+    letter-spacing: 1px; text-transform: uppercase; text-align: center;
+    border-radius: 12px 12px 0 0;
+  }
+  .paradigm-col.old .paradigm-col-header { background: rgba(232,93,93,0.1); color: var(--red); }
+  .paradigm-col.new .paradigm-col-header { background: rgba(62,207,142,0.1); color: var(--green); }
+  .p-item {
+    padding: 1rem 1.5rem; font-size: 0.9rem; display: flex; align-items: center;
+    min-height: 60px;
+  }
+  .p-item:last-child { border-radius: 0 0 12px 12px; }
+  .paradigm-arrow {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 0; padding: 0 1rem;
+  }
+  .paradigm-arrow .arrow {
+    font-size: 1.2rem; color: var(--amber); display: flex; align-items: center;
+    justify-content: center; height: 60px;
+  }
+  .paradigm-arrow .arrow-header { height: 44px; display: flex; align-items: center; }
+
+  /* ── 10 LENSES ── */
+  .lenses-container { position: relative; }
+  .lens-ring {
+    display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center;
+    margin-bottom: 2rem;
+  }
+  .lens-btn {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 100px;
+    padding: 0.5rem 1rem; font-size: 0.8rem; color: var(--text-dim);
+    cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.4rem;
+    font-family: inherit;
+  }
+  .lens-btn:hover, .lens-btn.active {
+    border-color: var(--blue); color: var(--text); background: var(--blue-glow);
+  }
+  .lens-btn .emoji { font-size: 1rem; }
+  .lens-detail-box {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    padding: 2rem; min-height: 200px;
+    transition: opacity 0.3s;
+  }
+  .lens-detail-box h4 { font-size: 1.1rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
+  .lens-detail-box .ld-q {
+    color: var(--amber); font-size: 0.9rem; font-weight: 500; margin-bottom: 1rem;
+    font-style: italic;
+  }
+  .lens-detail-box .ld-desc { color: var(--text-dim); font-size: 0.9rem; margin-bottom: 1rem; }
+  .lens-detail-box .ld-example {
+    background: var(--surface2); border-radius: 10px; padding: 1rem;
+    font-size: 0.85rem; color: var(--text-dim); border-left: 3px solid var(--amber);
+  }
+  .lens-detail-box .ld-example strong { color: var(--amber); }
+  .lens-to-solution {
+    margin-top: 1rem; display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.75rem 1rem; background: var(--green-glow); border-radius: 10px;
+    font-size: 0.85rem; border: 1px solid rgba(62,207,142,0.2);
+  }
+  .lens-to-solution .arrow-icon { color: var(--green); font-weight: 700; }
+  .lens-to-solution .sol-name { color: var(--green); font-weight: 600; }
+
+  /* ── 8 SOLUTIONS ── */
+  .solutions-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; }
+  .sol-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 1.5rem; transition: all 0.3s; cursor: pointer; position: relative;
+  }
+  .sol-card:hover { border-color: var(--green); box-shadow: 0 4px 24px var(--green-glow); transform: translateY(-2px); }
+  .sol-card .sol-letter {
+    display: inline-flex; width: 28px; height: 28px; border-radius: 8px;
+    background: var(--green-glow); color: var(--green); font-weight: 700; font-size: 0.8rem;
+    align-items: center; justify-content: center; margin-bottom: 0.75rem;
+    border: 1px solid rgba(62,207,142,0.2);
+  }
+  .sol-card h4 { font-size: 0.95rem; margin-bottom: 0.4rem; }
+  .sol-card p { font-size: 0.8rem; color: var(--text-dim); }
+  .sol-detail-panel {
+    max-height: 0; overflow: hidden; transition: max-height 0.4s ease;
+  }
+  .sol-detail-panel.open { max-height: 500px; }
+  .sol-detail-inner {
+    margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);
+    font-size: 0.8rem; color: var(--text-dim); line-height: 1.6;
+  }
+  .sol-detail-inner ul { list-style: none; margin: 0.5rem 0; }
+  .sol-detail-inner ul li { padding: 0.3rem 0 0.3rem 1rem; position: relative; }
+  .sol-detail-inner ul li::before { content: '✓'; position: absolute; left: 0; color: var(--green); font-weight: 700; }
+
+  /* ── FEEDBACK LOOPS ── */
+  .loops-section { padding: 4rem 0; }
+  .loop-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 1.5rem 2rem; margin-bottom: 1rem;
+    display: flex; align-items: flex-start; gap: 1rem;
+  }
+  .loop-icon {
+    width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+    background: var(--red-glow); border: 1px solid rgba(232,93,93,0.2);
+  }
+  .loop-card p { font-size: 0.9rem; color: var(--text-dim); }
+  .loop-card strong { color: var(--text); }
+
+  /* ── KEY NUMBER ── */
+  .stat-row { display: flex; flex-wrap: wrap; gap: 1.5rem; margin: 3rem 0; justify-content: center; }
+  .stat-box {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 1.5rem 2rem; text-align: center; min-width: 200px; flex: 1; max-width: 260px;
+  }
+  .stat-box .stat-num {
+    font-size: 2rem; font-weight: 800;
+    background: linear-gradient(135deg, var(--amber), var(--red));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .stat-box .stat-label { font-size: 0.75rem; color: var(--text-dim); margin-top: 0.25rem; }
+
+  /* ── 10 THESES ── */
+  .theses-list { counter-reset: thesis; }
+  .thesis-item {
+    counter-increment: thesis; padding: 1.25rem 1.5rem 1.25rem 3.5rem;
+    position: relative; border-left: 2px solid var(--border);
+    margin-left: 1rem; transition: border-color 0.3s;
+  }
+  .thesis-item:hover { border-left-color: var(--purple); }
+  .thesis-item::before {
+    content: counter(thesis); position: absolute; left: -14px; top: 1.25rem;
+    width: 26px; height: 26px; border-radius: 50%; background: var(--surface2);
+    border: 2px solid var(--border); color: var(--text-dim);
+    font-size: 0.7rem; font-weight: 700; display: flex; align-items: center;
+    justify-content: center; transition: all 0.3s;
+  }
+  .thesis-item:hover::before { border-color: var(--purple); color: var(--purple); background: var(--purple-glow); }
+  .thesis-item h4 { font-size: 0.95rem; margin-bottom: 0.25rem; }
+  .thesis-item p { font-size: 0.85rem; color: var(--text-dim); }
+
+  /* ── ARCHITECTURE ── */
+  .arch-flow {
+    display: flex; align-items: center; justify-content: center; gap: 0;
+    flex-wrap: wrap; margin: 2rem 0;
+  }
+  .arch-box {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 1.25rem 1.5rem; text-align: center; min-width: 180px;
+  }
+  .arch-box h4 { font-size: 0.85rem; color: var(--green); margin-bottom: 0.25rem; }
+  .arch-box p { font-size: 0.75rem; color: var(--text-dim); }
+  .arch-arrow { font-size: 1.5rem; color: var(--text-dimmer); padding: 0 0.5rem; }
+
+  /* ── FINAL CTA ── */
+  .final-section {
+    text-align: center; padding: 6rem 2rem 8rem;
+    position: relative;
+  }
+  .final-section::before {
+    content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 600px; height: 600px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(62,207,142,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .final-question {
+    font-family: 'Playfair Display', serif; font-size: clamp(1.5rem, 3.5vw, 2.5rem);
+    font-weight: 700; margin-bottom: 1.5rem; line-height: 1.3;
+  }
+  .final-answer {
+    font-size: 1.1rem; color: var(--text-dim); max-width: 600px;
+    margin: 0 auto 2rem; line-height: 1.7;
+  }
+  .final-one-liner {
+    display: inline-block; padding: 1rem 2rem; border-radius: 14px;
+    background: linear-gradient(135deg, rgba(62,207,142,0.1), rgba(74,124,247,0.1));
+    border: 1px solid rgba(62,207,142,0.2);
+    font-size: 0.9rem; color: var(--text); max-width: 700px; line-height: 1.6;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center; padding: 2rem; border-top: 1px solid var(--border);
+    font-size: 0.75rem; color: var(--text-dimmer);
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    nav .nav-links { display: none; }
+    section { padding: 4rem 1.25rem; }
+    .paradigm-grid { grid-template-columns: 1fr; gap: 0.5rem; }
+    .paradigm-arrow { flex-direction: row; padding: 0.5rem 0; }
+    .paradigm-arrow .arrow { height: auto; }
+    .paradigm-arrow .arrow-header { display: none; }
+    .arch-flow { flex-direction: column; }
+    .arch-arrow { transform: rotate(90deg); }
+    .stat-box { min-width: 140px; }
+  }
+
+  /* ── ANIMATIONS ── */
+  .fade-in { opacity: 0; transform: translateY(30px); transition: opacity 0.7s, transform 0.7s; }
+  .fade-in.visible { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo"><span>J</span> – I – M</div>
+  <div class="nav-links">
+    <a href="#parts">Kolme osaa</a>
+    <a href="#paradigm">Paradigma</a>
+    <a href="#lenses">10 linssiä</a>
+    <a href="#solutions">8 vipua</a>
+    <a href="#theses">10 teesiä</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge"><div class="dot"></div> Hyvinvointivaltion analyysi 2026</div>
+  <h1>Järjestelmä<br>Ihmiset<br>Muutos</h1>
+  <p class="subtitle">Suomen hyvinvointivaltion kriisi ei ole budjettiongelma — se on ohjausjärjestelmän kriisi. Tämä sivu avaa kirjan ydinajatukset visuaalisesti.</p>
+  <p class="author"><strong>Harri Käyhkö</strong> · 2026</p>
+  <div class="scroll-cue">
+    SELAA ALAS
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+  </div>
+</div>
+
+<!-- CORE MESSAGE -->
+<section>
+  <div class="core-msg fade-in">
+    <blockquote>
+      "Hyvinvointivaltion tulevaisuus ratkaistaan muuttamalla järjestelmän logiikkaa niin, että se vahvistaa elinvoimaa, ehkäisee ongelmia ennakolta ja jakaa vastuun sekä hyödyt oikeudenmukaisesti."
+    </blockquote>
+  </div>
+</section>
+
+<!-- KEY NUMBERS -->
+<section>
+  <div class="stat-row fade-in">
+    <div class="stat-box">
+      <div class="stat-num">1,2 M€</div>
+      <div class="stat-label">Yhden syrjäytyneen nuoren<br>elinkaaren kustannus</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num">10–20 %</div>
+      <div class="stat-label">väestöstä aiheuttaa<br>70–80 % sote-kuluista</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num">400 000</div>
+      <div class="stat-label">omaishoitajaa tekee<br>miljardiluokan työn</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num">3–10×</div>
+      <div class="stat-label">ennaltaehkäisyn tuotto<br>vs. korjaava työ</div>
+    </div>
+  </div>
+</section>
+
+<!-- THREE PARTS -->
+<section id="parts">
+  <div class="section-label">Kirjan rakenne</div>
+  <div class="section-title">Kolme osaa, kolme näkökulmaa</div>
+  <p class="section-desc">Sama kriisi katsottuna rakenteista, ihmisten arjesta ja ratkaisujen suunnasta. Klikkaa kortteja nähdäksesi lisää.</p>
+
+  <div class="parts-grid">
+    <!-- PART I -->
+    <div class="part-card p1 fade-in" onclick="toggleDetail(this)">
+      <div class="part-num">Osa I</div>
+      <h3>Järjestelmä</h3>
+      <p class="part-question">Miten tähän päädyttiin?</p>
+      <ul>
+        <li>1990-luvun laman ratkaisut jämähtivät "luonnonlaeiksi"</li>
+        <li>Budjettikehys suosii menneisyyttä tulevaisuuden kustannuksella</li>
+        <li>BKT ei näe omaishoitoa, mielenterveyttä eikä luottamusta</li>
+        <li>Hajautunut hallinto — kukaan ei omista kokonaisuutta</li>
+        <li>Passiivisuus on lyhyellä aikavälillä "ilmaista" mutta pitkällä moninkertaisesti kalliimpaa</li>
+      </ul>
+      <div class="detail-panel">
+        <div class="detail-content">
+          <p><strong>Viisi toisiaan vahvistavaa mekanismia</strong> pitää vanhaa logiikkaa paikoillaan:</p>
+          <p><strong>1. Polkuriippuvuus:</strong> Laman ratkaisut synnyttivät kolme ajattelutapaa — kasvu päämääränä, velka pahana, tehokkuus pakkomielteenä — jotka elivät yli kriisitilanteen ja ovat nyt rakenteellisia normeja.</p>
+          <p><strong>2. Rahoituslogiikan vinoumat:</strong> Menokehykset suosivat automaattisesti eläkkeitä koulutuksen kustannuksella. Riskit siirtyvät kotitalouksille. Velka esitetään moraalisena ongelmana, vaikka investointi- ja kulutusvelka ovat täysin eri asioita.</p>
+          <p><strong>3. EU-kehysvalta:</strong> Suomi on noudattanut sääntöjä pyrkimättä muokkaamaan niitä. Budjettikuri rajaa investointeja, vaikka nykytilanne vaatisi niitä.</p>
+          <p><strong>4. Sokeat mittarit:</strong> BKT on 1930-luvun työkalu. Se kasvaa, kun sairaudet lisääntyvät, mutta ei näe vapaaehtoistyötä. Ennaltaehkäisy jää näkymättömäksi.</p>
+          <p><strong>5. Hajautunut hallinto:</strong> Valtio, hyvinvointialueet ja kunnat toimivat omissa siiloissaan. Ihmiset, joiden tarpeet ylittävät hallinnolliset rajat, putoavat "lokeroiden väliin".</p>
+        </div>
+      </div>
+      <span class="expand-hint">▾ KLIKKAA LISÄÄ</span>
+    </div>
+
+    <!-- PART II -->
+    <div class="part-card p2 fade-in" onclick="toggleDetail(this)">
+      <div class="part-num">Osa II</div>
+      <h3>Ihmiset</h3>
+      <p class="part-question">Mitä järjestelmä tuottaa arjessa?</p>
+      <ul>
+        <li>Ulossulkeminen syntyy rakenteellisesti, ei tahallisesti</li>
+        <li>Eriarvoisuus periytyy sukupolvelta toiselle</li>
+        <li>Viralliset luvut paranevat mutta arki tuntuu huonommalta</li>
+        <li>Kompensaatiotalous paikkaa mutta ei paranna</li>
+        <li>"Oma syy" -narratiivi siirtää vastuun sinne, missä on vähiten valtaa</li>
+      </ul>
+      <div class="detail-panel">
+        <div class="detail-content">
+          <p><strong>Kuusi tapaa, joilla kriisi näkyy ihmisten elämässä:</strong></p>
+          <p><strong>Ulossulkeminen:</strong> Nuorten työttömyysaste on kaksinkertainen. Ulkomaalaistaustaisten työllisyysaste jää 15 %-yksikköä matalammaksi. Palvelujonot luovat kaksoisjärjestelmän: rahaa omaavat pääsevät yksityiselle, muut odottavat.</p>
+          <p><strong>Periytyvä eriarvoisuus:</strong> Kotitausta ennustaa koulutuspolkua enemmän kuin lahjakkuus. Asuntojen hintojen nousu on kasvattanut omistavien ja ei-omistavien välistä kuilua.</p>
+          <p><strong>Kokemuksellinen kierre:</strong> Yksinäisyys → epävarmuus → luottamuksen lasku → poliittinen vieraantuminen. Nämä kierrokset pyörivät yhtä aikaa ja ruokkivat toisiaan.</p>
+          <p><strong>Kompensaatiotalous:</strong> Korjaava työ voittaa aina ennaltaehkäisyn. Projektirahoitus korvaa pysyvää perusrahoitusta. Oireita hoidetaan, mutta juurisyyt pahenevat.</p>
+          <p><strong>Toimijuus:</strong> Ihmiset eivät ole passiivisia uhreja — he rakentavat vertaistukea ja venyttävät rakenteiden rajoja. Mutta toimijuus ei voi korvata toimivia rakenteita.</p>
+        </div>
+      </div>
+      <span class="expand-hint">▾ KLIKKAA LISÄÄ</span>
+    </div>
+
+    <!-- PART III -->
+    <div class="part-card p3 fade-in" onclick="toggleDetail(this)">
+      <div class="part-num">Osa III</div>
+      <h3>Muutos</h3>
+      <p class="part-question">Mitä pitäisi tehdä?</p>
+      <ul>
+        <li>Paikkaaminen ei riitä — tarvitaan paradigman vaihto</li>
+        <li>Viisi rakenteellista lukkoa estää muutoksen</li>
+        <li>Elinvoima ennen BKT:tä, tulevaisuus ennen nykyhetkeä</li>
+        <li>Konkreettiset instrumentit: kansalaisrahasto, tulevaisuusvaltuutettu</li>
+        <li>Muutos on mahdollista — mutta vaatii poliittista tahtoa</li>
+      </ul>
+      <div class="detail-panel">
+        <div class="detail-content">
+          <p><strong>Viisi lukkoa, jotka estävät muutoksen:</strong></p>
+          <p>1. <strong>Polkuriippuvuus</strong> — 90-luvun kriisiratkaisut näyttävät luonnonlaeilta</p>
+          <p>2. <strong>Poliittinen lyhytjänteisyys</strong> — vaalikausi 4 v., ennaltaehkäisyn hyödyt 20 v.</p>
+          <p>3. <strong>Kehysvalta</strong> — BKT ja velkasuhde määrittävät, mikä on "järkevää"</p>
+          <p>4. <strong>Hajautunut vastuu</strong> — kaikki optimoivat omaa siiloaan</p>
+          <p>5. <strong>Ajautuma</strong> — pienet perustellut päätökset kumuloituvat vääräksi suunnaksi</p>
+          <p style="margin-top:1rem;"><strong>Uuden paradigman kolme periaatetta:</strong></p>
+          <p>🟢 <strong>Elinvoima ennen BKT:tä</strong> — tuotanto on väline, mielenterveys ja luottamus ovat tavoite</p>
+          <p>🟢 <strong>Tulevaisuus ennen nykyhetkeä</strong> — sukupolvien välinen oikeudenmukaisuus</p>
+          <p>🟢 <strong>Ennaltaehkäisy ennen korjausta</strong> — vahvistetaan kantokykyä, ei paikata oireita</p>
+        </div>
+      </div>
+      <span class="expand-hint">▾ KLIKKAA LISÄÄ</span>
+    </div>
+  </div>
+</section>
+
+<!-- PARADIGM SHIFT -->
+<section id="paradigm">
+  <div class="section-label">Suunnanmuutos</div>
+  <div class="section-title">Vanhasta logiikasta uuteen</div>
+  <p class="section-desc">Korjaus ei riitä. Tarvitaan paradigman vaihdos — koko järjestelmän toimintalogiikan kääntäminen.</p>
+
+  <div class="paradigm fade-in">
+    <div class="paradigm-grid">
+      <div class="paradigm-col old">
+        <div class="paradigm-col-header">🔴 Vanha logiikka (1995–)</div>
+        <div class="p-item">Reagoidaan kriiseihin</div>
+        <div class="p-item">Hoidetaan omaa budjettia</div>
+        <div class="p-item">4 vuotta kerrallaan</div>
+        <div class="p-item">Mitataan tuotantoa (BKT)</div>
+        <div class="p-item">BKT on tavoite</div>
+        <div class="p-item">Yksilön vastuu / Stigma</div>
+        <div class="p-item">Säästöt lyhyellä aikavälillä</div>
+      </div>
+      <div class="paradigm-arrow">
+        <div class="arrow-header">&nbsp;</div>
+        <div class="arrow">➔</div>
+        <div class="arrow">➔</div>
+        <div class="arrow">➔</div>
+        <div class="arrow">➔</div>
+        <div class="arrow">➔</div>
+        <div class="arrow">➔</div>
+        <div class="arrow">➔</div>
+      </div>
+      <div class="paradigm-col new">
+        <div class="paradigm-col-header">🟢 Uusi logiikka (2026–)</div>
+        <div class="p-item">Ennakoidaan ja ehkäistään</div>
+        <div class="p-item">Hoidetaan kokonaisuutta</div>
+        <div class="p-item">Sukupolvien yli</div>
+        <div class="p-item">Mitataan elinvoimaa</div>
+        <div class="p-item">BKT on väline</div>
+        <div class="p-item">Rakenteellinen osallisuus</div>
+        <div class="p-item">Investoinnit tulevaisuuteen</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEEDBACK LOOPS -->
+<section>
+  <div class="section-label">Noidankehät</div>
+  <div class="section-title">Itseään vahvistavat kierrot</div>
+  <p class="section-desc">Järjestelmä tuottaa systemaattisesti todellisuutta, joka vaikeuttaa sen omaa toimintaa.</p>
+
+  <div class="loops-section fade-in">
+    <div class="loop-card">
+      <div class="loop-icon">🔄</div>
+      <p><strong>Ulossulkeminen</strong> heikentää veropohjaa → leikkauksia → lisää ulossulkemista → veropohja heikkenee entisestään</p>
+    </div>
+    <div class="loop-card">
+      <div class="loop-icon">🔄</div>
+      <p><strong>Eriarvoisuus</strong> heikentää sosiaalista koheesiota → yhteisten ratkaisujen vaikeus → eriarvoisuus syvenee</p>
+    </div>
+    <div class="loop-card">
+      <div class="loop-icon">🔄</div>
+      <p><strong>Epävarmuus</strong> heikentää luottamusta → lyhytnäköinen politiikka → lisää epävarmuutta</p>
+    </div>
+    <div class="loop-card">
+      <div class="loop-icon">🔄</div>
+      <p><strong>Kompensaatiotalous</strong> kuluttaa resurssit korjaavaan työhön → ennaltaehkäisyyn ei jää rahaa → korjaustarve kasvaa</p>
+    </div>
+  </div>
+</section>
+
+<!-- 10 LENSES -->
+<section id="lenses">
+  <div class="section-label">Diagnoosityökalu</div>
+  <div class="section-title">10 ongelmalinssiä</div>
+  <p class="section-desc">Ongelman määrittelytapa ratkaisee, millaiset ratkaisut ovat mahdollisia. Valitse linssi nähdäksesi, mitä se paljastaa.</p>
+
+  <div class="lenses-container fade-in">
+    <div class="lens-ring" id="lensRing"></div>
+    <div class="lens-detail-box" id="lensDetail">
+      <p style="color:var(--text-dimmer);text-align:center;padding:2rem 0;">← Valitse linssi yllä</p>
+    </div>
+  </div>
+</section>
+
+<!-- 8 SOLUTIONS -->
+<section id="solutions">
+  <div class="section-label">Ratkaisut</div>
+  <div class="section-title">8 ratkaisuvipua</div>
+  <p class="section-desc">Konkreettiset menetelmät, joilla siirrytään uuteen logiikkaan. Klikkaa vipua nähdäksesi tarkemmat mekanismit.</p>
+
+  <div class="solutions-grid" id="solGrid"></div>
+</section>
+
+<!-- ARCHITECTURE -->
+<section>
+  <div class="section-label">Toteutusarkkitehtuuri</div>
+  <div class="section-title">Kolme instrumenttia yhdessä</div>
+  <p class="section-desc">Nämä kolme mekanismia muodostavat rakenteellisen kokonaisuuden, jolla paradigman vaihto toteutetaan.</p>
+
+  <div class="arch-flow fade-in">
+    <div class="arch-box">
+      <h4>💰 Kansalaisrahasto</h4>
+      <p>Rahoittaa ennaltaehkäisevät<br>investoinnit vaalikausia pidemmälle</p>
+    </div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-box">
+      <h4>🤝 Yhteensovitettu rahoitus</h4>
+      <p>Mahdollistaa sektorirajat<br>ylittävän vaikuttavuuden</p>
+    </div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-box">
+      <h4>🧩 Älykäs palveluintegraatio</h4>
+      <p>Toteuttaa muutoksen<br>ihmisten arjessa</p>
+    </div>
+  </div>
+</section>
+
+<!-- 10 THESES -->
+<section id="theses">
+  <div class="section-label">Ydinväitteet</div>
+  <div class="section-title">Kirjan 10 teesiä</div>
+  <p class="section-desc">Koko teoksen keskeisimmät väitteet tiivistettyinä.</p>
+
+  <div class="theses-list fade-in">
+    <div class="thesis-item">
+      <h4>Kriisi on ohjausjärjestelmän kriisi</h4>
+      <p>Se syntyy mittareista, rahoituslogiikasta, rakenteista ja päätöksenteon aikahorisontista.</p>
+    </div>
+    <div class="thesis-item">
+      <h4>Rakenteet ohjaavat enemmän kuin yksittäiset päätökset</h4>
+      <p>Hyvätkin päätökset voivat tuottaa huonoja lopputuloksia väärässä järjestelmässä.</p>
+    </div>
+    <div class="thesis-item">
+      <h4>Taloudelliset mittarit eivät kuvaa todellista tilaa</h4>
+      <p>Elinvoima, luottamus ja osallisuus ratkaisevat kestävyyden.</p>
+    </div>
+    <div class="thesis-item">
+      <h4>Ennaltaehkäisy on tehokkaampaa kuin korjaaminen</h4>
+      <p>Passiivisuuden kustannukset kasvavat eksponentiaalisesti.</p>
+    </div>
+    <div class="thesis-item">
+      <h4>Eriarvoisuus ja ulossulkeminen ovat järjestelmän tuottamia</h4>
+      <p>Ne eivät ole yksilön epäonnistumisia vaan rakenteellisia seurauksia.</p>
+    </div>
+    <div class="thesis-item">
+      <h4>Lyhyen aikavälin optimointi syö tulevaisuuden elinvoimaa</h4>
+      <p>Nelivuotinen poliittinen sykli on ristiriidassa sukupolvivaikutusten kanssa.</p>
+    </div>
+    <div class="thesis-item">
+      <h4>Hajautettu vastuu ilman kokonaisohjausta heikentää järjestelmää</h4>
+      <p>Kun kukaan ei omista kokonaisuutta, ongelmat siirtyvät sektorilta toiselle ratkaisematta.</p>
+    </div>
+    <div class="thesis-item">
+      <h4>Järjestelmät eivät ole luonnonlakeja</h4>
+      <p>Ne ovat ihmisten rakentamia ja siksi muutettavissa.</p>
+    </div>
+    <div class="thesis-item">
+      <h4>Menestys mitataan elinvoimalla, ei tuotannolla</h4>
+      <p>Mielenterveys, luottamus, osallisuus ja kestävyys ovat keskeisiä pääomia.</p>
+    </div>
+    <div class="thesis-item">
+      <h4>Muutos on suunnan valinta</h4>
+      <p>Kysymys ei ole siitä, voidaanko muuttaa, vaan halutaanko.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL -->
+<div class="final-section">
+  <div class="section-label" style="margin-bottom:1rem;">Lopuksi</div>
+  <div class="final-question">Haluammeko hallitun siirtymän<br>vai hallitsemattoman murtumisen?</div>
+  <p class="final-answer">
+    Kaikki tarvittavat ratkaisut ovat olemassa. Esteet eivät ole tietämyksessä vaan poliittisessa tahdossa ja rakenteellisissa lukoissa. Muutos ei tapahdu yhdellä päätöksellä, mutta se alkaa siitä, että tunnistetaan lukitukset lukituksiksi — ja uskalletaan rakentaa uutta ennen kuin vanha romahtaa.
+  </p>
+  <div class="final-one-liner">
+    Valinta on nyt meidän: <strong>siiloista saumattomuuteen, korjauksesta uudelleenmallinnukseen, nykyhetkestä tulevaisuuteen.</strong>
+  </div>
+</div>
+
+<footer>
+  Järjestelmä – Ihmiset – Muutos · Harri Käyhkö · 2026 · Tämä sivu on interaktiivinen tiivistelmä kirjan työstödokumenteista.
+</footer>
+
+<script>
+// ── LENS DATA ──
+const lenses = [
+  { emoji:'🏛️', name:'Rakenteellinen', q:'Mitkä pysyvät rakenteet tuottavat tätä ongelmaa?',
+    desc:'Pysyvyyksiin katsominen — lakeihin, budjettikehyksiin ja hallintorakenteisiin. Paljastaa, että ongelma ei ole yksilöiden vika vaan rakenteisiin sisäänrakennettu.',
+    example:'Työttömyys ei ole yksilön laiskuutta vaan rakenteellista: työmarkkinat on rakennettu oletukselle kokoaikaisesta, terveestä, suomea puhuvasta työntekijästä.',
+    solution:'Hallinnon integraatio & lainsäädännölliset uudistukset' },
+  { emoji:'📜', name:'Historiallinen', q:'Mitkä menneisyyden ratkaisut lukitsevat nykytilaa?',
+    desc:'Kriisien jälkeen tehdyt ratkaisut, jotka ovat jämähtäneet pysyviksi käytännöiksi. "Luonnonlaeiksi" muuttuneita päätöksiä, jotka rajoittavat muutosta.',
+    example:'1990-luvun laman ratkaisut (tehokkuus, velan vastustus, säästöt) elävät yhä rakenteissa, vaikka maailma on muuttunut täysin.',
+    solution:'Systeeminen muutosjohtaminen & uudet koalitiot' },
+  { emoji:'🔄', name:'Systeeminen', q:'Miten ongelma vahvistaa itseään?',
+    desc:'Itseään vahvistavat kierrot ja takaisinkytkennät. Paljastaa, että pieni muutos oikeassa kohdassa voi katkaista koko kierteen — tai väärässä kohdassa pahentaa sitä.',
+    example:'Ulossulkeminen heikentää veropohjaa → leikkaukset palveluihin → lisää ulossulkemista → veropohja heikkenee entisestään.',
+    solution:'Ennaltaehkäisy & investointipohjaiset menetelmät' },
+  { emoji:'❤️', name:'Kokemuksellinen', q:'Miltä tämä ongelma tuntuu ihmisistä?',
+    desc:'Tunteet, arjen kokemukset, kuilu virallisten mittareiden ja koetun todellisuuden välillä. Paljastaa ongelmia, jotka eivät näy tilastoissa.',
+    example:'BKT kasvaa, mutta ihmiset kokevat arjen epävarmuuden lisääntyneen — tämä kuilu on itsessään ongelma.',
+    solution:'Demokraattinen osallistaminen & viestinnälliset menetelmät' },
+  { emoji:'⚖️', name:'Institutionaalinen', q:'Miten kannustimet palkitsevat vääristä asioista?',
+    desc:'Säännöt ja kannustimet, jotka ohjaavat toimintaa ongelmalliseen suuntaan. Hyvät ihmiset voivat tuottaa huonoja tuloksia, jos instituutiot ohjaavat väärin.',
+    example:'Sairaanhoitopiiriä ei palkita ennaltaehkäisystä, koska säästöt näkyvät toisen budjetissa. Järjestelmä palkitsee korjaavaa työtä.',
+    solution:'Vastuun uudelleenjako & yhteensovitettu rahoitus' },
+  { emoji:'⏳', name:'Ajallinen', q:'Miten aikajänteet vääristävät päätöksentekoa?',
+    desc:'Milloin ongelman kustannukset syntyvät ja milloin hyödyt näkyvät? Poliittinen järjestelmä on rakennettu lyhyelle aikajänteelle, pitkän aikavälin ongelmilla ei ole omistajaa.',
+    example:'Ennaltaehkäisyyn ei investoida, koska säästöt näkyvät vasta 20 vuoden päästä — ja ne näkyvät eri toimijan budjetissa.',
+    solution:'Investointipohjaiset menetelmät & pitkä budjettikehys' },
+  { emoji:'📏', name:'Episteeminen', q:'Mitä emme mittaa — ja miten se sokeuttaa?',
+    desc:'Sokeat pisteet: mitä jää mittausten ulkopuolelle? Mittarit itsessään ohjaavat toimintaa. Jos jokin ei näy mittareissa, sitä ei pidetä todellisena.',
+    example:'BKT ei mittaa vapaaehtoistyötä, omaishoitoa tai mielenterveyttä. Siksi nämä eivät näyttäydy päätöksenteossa tärkeinä.',
+    solution:'Mittarireformi & elinvoimaindikaattorit' },
+  { emoji:'👑', name:'Vallan', q:'Kuka hyötyy siitä, että ongelmaa ei ratkaista?',
+    desc:'Eturyhmät, professiot ja toimijat, joiden asema perustuu ongelman olemassaoloon. Muutoksen esteet eivät ole teknisiä vaan poliittisia.',
+    example:'Erikoissairaanhoito on vahva professio, joka saa resursseja, koska ongelmat määritellään lääketieteellisiksi — ennaltaehkäisy jää vähemmälle.',
+    solution:'Uudet koalitiot & systeeminen muutosjohtaminen' },
+  { emoji:'👥', name:'Demografinen', q:'Miten väestörakenne ja muuttoliike tuottavat ongelmaa?',
+    desc:'Huoltosuhde, ikäluokkien koko, alueellinen keskittyminen. Paljastaa väistämättömiä kehityskulkuja, joihin on pakko varautua.',
+    example:'Syntyvyyden lasku ja ikääntyvien määrän kasvu tuottavat hoivavelkaa, joka realisoituu väistämättä — mutta hitaasti.',
+    solution:'Investoinnit, ennaltaehkäisy & varautuminen' },
+  { emoji:'💬', name:'Diskursiivinen', q:'Miten tapa puhua ongelmasta estää ratkaisuja?',
+    desc:'Syyllistäminen, yksilöllistäminen, häpeä. Kieli ei ole neutraalia — se luo todellisuutta. Kielen muuttaminen voi avata uusia ratkaisuja.',
+    example:'"Työtön" vs. "ihminen, jolla ei ole työtä" — ensimmäinen tuottaa identiteetin, toinen kuvaa tilanteen. "Oma syy" -puhe estää rakenteellisten ratkaisujen hakemisen.',
+    solution:'Viestinnälliset menetelmät & kokemusasiantuntijuus' },
+];
+
+// ── SOLUTION DATA ──
+const solutions = [
+  { letter:'A', name:'Kansalaisrahasto', short:'Irrotetaan ennaltaehkäisyn rahoitus vaalikausista.',
+    details:'Julkisesti ohjattu investointirahasto, joka rahoittaa varhaisen tuen ohjelmia, mielenterveyden ennaltaehkäisyä ja nuorten kiinnittymistä. Rahoitus kohdistetaan vaikuttavuuden perusteella. Tuotto mitataan säästyneinä kustannuksina.' },
+  { letter:'B', name:'Mittarireformi', short:'Elinvoimaindikaattorit päätöksenteon ytimeen.',
+    details:'BKT:n rinnalle viisi uutta mittaria: mielenterveys, luottamus, osallisuus, demografinen kestävyys, ekologinen kestävyys. Uuden-Seelannin hyvinvointibudjetti on jo osoittanut, että tämä on mahdollista.' },
+  { letter:'C', name:'Älykäs palveluintegraatio', short:'Koordinointivastuu siirretään ihmiseltä järjestelmälle.',
+    details:'Yhteinen tilannekuva asiakkaasta, monialaiset tiimit, digitaalinen tiedon jakaminen. Yksi vastuuhenkilö katsoo kokonaisuuden — ei luukkuja, joiden välissä ihminen ponnistelee.' },
+  { letter:'D', name:'Yhteensovitettu rahoitus', short:'Puretaan siilot yhteisillä budjeteilla.',
+    details:'Useat hallinnonalat rahoittavat yhteisiä tavoitteita yhden kokonaisbudjetin kautta. Säästöt ohjataan takaisin investoinnin tehneelle. Poistaa perusongelman: "yksi maksaa, toinen hyötyy".' },
+  { letter:'E', name:'Tulevaisuusvaltuutettu', short:'Ääni niille, jotka eivät vielä äänestä.',
+    details:'Institutionaalinen toimija, joka edustaa tulevia sukupolvia. Kolme mahdollista muotoa: konsultatiivinen, prosessuaalinen (pakollinen vaikutusarvio) tai rajoittava (viivytysoikeus). 30 vuoden budjettikehys neljän vuoden rinnalle.' },
+  { letter:'F', name:'Investointiajattelu', short:'Erotetaan kulutusmenot tulevaisuushyödyistä.',
+    details:'Julkiset menot jaetaan kolmeen: investoinnit (varhaiskasvatus, koulutus, tutkimus), kulutus (hallinto, päivittäinen palvelu) ja korjaava työ (kriisityö, sairaalahoito). Ennaltaehkäisy on investointi, jonka tuotto on 3–10-kertainen.' },
+  { letter:'G', name:'Uudet koalitiot', short:'Siltoja nuorten, eläkeläisten ja yritysten välille.',
+    details:'Muutos vaatii uusien toimijoiden yhteenliittymää: nuoret, osa ikääntyneistä, yritykset, kolmas sektori ja hallinnon edelläkävijät. Tarvitaan kieltä, joka kytkee rakenteet arkeen — abstrakti talouskieli sulkee korvat.' },
+  { letter:'H', name:'Osallisuusarkkitehtuuri', short:'Työ ja kieli nähdään yhteisöllisenä infrastruktuurina.',
+    details:'Työ ei ole vain tulonlähde vaan yhteisöön kuulumisen väline. Omaishoitajille lakisääteinen vapaa ja eläke-etuudet. Kansalaisraadit, osallistuva budjetointi ja kokemusasiantuntijuuden systemaattinen käyttö.' },
+];
+
+// ── RENDER LENSES ──
+const lensRing = document.getElementById('lensRing');
+const lensDetail = document.getElementById('lensDetail');
+let activeLens = -1;
+
+lenses.forEach((l, i) => {
+  const btn = document.createElement('button');
+  btn.className = 'lens-btn';
+  btn.innerHTML = `<span class="emoji">${l.emoji}</span> ${l.name}`;
+  btn.onclick = () => showLens(i);
+  lensRing.appendChild(btn);
+});
+
+function showLens(i) {
+  activeLens = i;
+  const l = lenses[i];
+  document.querySelectorAll('.lens-btn').forEach((b,j) => b.classList.toggle('active', j===i));
+  lensDetail.innerHTML = `
+    <h4>${l.emoji} ${l.name} ongelma-ajattelu</h4>
+    <div class="ld-q">${l.q}</div>
+    <div class="ld-desc">${l.desc}</div>
+    <div class="ld-example"><strong>Esimerkki:</strong> ${l.example}</div>
+    <div class="lens-to-solution">
+      <span class="arrow-icon">→</span> Ensisijainen ratkaisu: <span class="sol-name">${l.solution}</span>
+    </div>
+  `;
+}
+
+// ── RENDER SOLUTIONS ──
+const solGrid = document.getElementById('solGrid');
+solutions.forEach((s, i) => {
+  const card = document.createElement('div');
+  card.className = 'sol-card fade-in';
+  card.innerHTML = `
+    <div class="sol-letter">${s.letter}</div>
+    <h4>${s.name}</h4>
+    <p>${s.short}</p>
+    <div class="sol-detail-panel" id="solPanel${i}">
+      <div class="sol-detail-inner">${s.details}</div>
+    </div>
+  `;
+  card.onclick = () => {
+    const panel = document.getElementById('solPanel'+i);
+    panel.classList.toggle('open');
+  };
+  solGrid.appendChild(card);
+});
+
+// ── TOGGLE DETAIL ──
+function toggleDetail(card) {
+  const panel = card.querySelector('.detail-panel');
+  const hint = card.querySelector('.expand-hint');
+  panel.classList.toggle('open');
+  if (panel.classList.contains('open')) {
+    hint.textContent = '▴ SULJE';
+  } else {
+    hint.textContent = '▾ KLIKKAA LISÄÄ';
+  }
+}
+
+// ── SCROLL ANIMATIONS ──
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+}, { threshold: 0.1 });
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>
