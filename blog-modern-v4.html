@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="fi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TTT · Kirjoitukset</title>
+<meta name="description" content="TTT — esseitä, päättelyartikkeleita, visualisointeja ja yhteiskunnallisia pitkän aikavälin analyysejä.">
+<meta name="theme-color" content="#f3f1eb">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#10151d;--paper:#f3f1eb;--surface:#faf9f5;--white:#fff;--muted:#6e737b;--line:rgba(16,21,29,.14);--blue:#1e4bd1;--cyan:#177f7a;--rust:#b95135;--soft:#e8e6df;--max:1320px}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font-family:"DM Sans",system-ui,sans-serif;text-rendering:optimizeLegibility}a{color:inherit}.hidden{display:none!important}
+.top{position:sticky;top:0;z-index:40;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:28px;min-height:70px;padding:0 max(22px,calc((100vw - var(--max))/2));border-bottom:1px solid var(--line);background:rgba(243,241,235,.92);backdrop-filter:blur(18px)}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-size:10px;font-weight:700;letter-spacing:.14em}.brand b{display:grid;place-items:center;width:34px;height:34px;background:var(--ink);color:#fff;font-size:11px}.nav{display:flex;justify-content:center;gap:4px}.nav a{padding:9px 11px;border-radius:8px;text-decoration:none;font-size:10px;font-weight:700;letter-spacing:.05em;color:var(--muted)}.nav a:hover{background:var(--soft);color:var(--ink)}.top-right{font-size:9px;font-weight:700;letter-spacing:.12em;color:var(--muted)}
+.hero{max-width:var(--max);margin:auto;padding:92px 22px 62px}.hero-kicker{margin-bottom:16px;color:var(--blue);font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase}.hero-grid{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:60px;align-items:end}.hero h1{max-width:900px;margin:0;font:500 clamp(4.4rem,9vw,9.4rem)/.83 "Source Serif 4",serif;letter-spacing:-.065em}.hero p{max-width:760px;margin:30px 0 0;font:500 1.17rem/1.65 "DM Sans",sans-serif;color:#505761}.manifesto{padding:20px;border:1px solid var(--line);background:rgba(255,255,255,.48)}.manifesto small{display:block;margin-bottom:12px;color:var(--muted);font-size:8px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}.manifesto strong{display:block;font:600 1.35rem/1.2 "Source Serif 4",serif}.manifesto p{margin:9px 0 0;font-size:10.5px;line-height:1.55}.manifesto-line{height:5px;margin-top:18px;background:linear-gradient(90deg,var(--blue) 0 45%,var(--cyan) 45% 72%,var(--rust) 72%)}
+.filters{max-width:var(--max);margin:auto;padding:0 22px 28px}.filterbar{display:flex;gap:7px;overflow:auto;padding:14px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.filterbar button{white-space:nowrap;min-height:34px;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--ink);font:700 9px/1 "DM Sans";letter-spacing:.06em;cursor:pointer}.filterbar button.active{background:var(--ink);border-color:var(--ink);color:#fff}.filterbar button:hover:not(.active){border-color:var(--blue);color:var(--blue)}
+.section{max-width:var(--max);margin:auto;padding:56px 22px}.section-head{display:flex;justify-content:space-between;align-items:end;gap:24px;margin-bottom:26px}.section-head small{display:block;margin-bottom:7px;color:var(--blue);font-size:8px;font-weight:700;letter-spacing:.15em;text-transform:uppercase}.section-head h2{margin:0;font:600 clamp(2rem,4vw,3.5rem)/1 "Source Serif 4",serif;letter-spacing:-.04em}.section-head p{max-width:470px;margin:0;font-size:11px;line-height:1.55;color:var(--muted)}
+.featured{display:grid;grid-template-columns:minmax(0,1.18fr) minmax(300px,.82fr);min-height:520px;border:1px solid var(--line);background:var(--surface)}.featured-media{position:relative;overflow:hidden;min-height:520px;background:#ddd}.featured-media img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .55s}.featured:hover .featured-media img{transform:scale(1.025)}.badge{position:absolute;left:18px;top:18px;padding:7px 9px;background:var(--ink);color:#fff;font-size:8px;font-weight:700;letter-spacing:.11em;text-transform:uppercase}.featured-body{display:flex;flex-direction:column;justify-content:space-between;padding:38px}.meta{display:flex;flex-wrap:wrap;gap:8px 13px;color:var(--muted);font-size:8.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase}.featured h3{margin:20px 0 15px;font:600 clamp(2.4rem,4.5vw,4.6rem)/.94 "Source Serif 4",serif;letter-spacing:-.05em}.featured .desc{margin:0;font-size:13px;line-height:1.65;color:#5c626b}.actions{display:flex;gap:9px;margin-top:30px}.actions a{padding:11px 14px;border:1px solid var(--ink);text-decoration:none;font-size:9px;font-weight:700;letter-spacing:.08em}.actions a.primary{background:var(--ink);color:#fff}.actions a.secondary:hover{color:var(--blue);border-color:var(--blue)}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.card{display:flex;flex-direction:column;min-height:430px;border:1px solid var(--line);background:var(--surface);text-decoration:none;transition:transform .2s,border-color .2s}.card:hover{transform:translateY(-3px);border-color:rgba(30,75,209,.45)}.card img{width:100%;aspect-ratio:16/10;object-fit:cover;display:block;background:#dedbd3}.card-body{display:flex;flex:1;flex-direction:column;padding:20px}.card h3{margin:14px 0 10px;font:600 1.75rem/1.04 "Source Serif 4",serif;letter-spacing:-.035em}.card p{margin:0 0 18px;font-size:11px;line-height:1.58;color:#666b73}.card-foot{display:flex;justify-content:space-between;gap:12px;margin-top:auto;padding-top:15px;border-top:1px solid var(--line);font-size:8px;font-weight:700;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+.reasoning-wrap{background:var(--ink);color:#fff}.reasoning-wrap .section-head small{color:#9fb4ff}.reasoning-wrap .section-head p{color:#aeb4bf}.reasoning-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:14px}.reasoning-main,.reasoning-side{border:1px solid rgba(255,255,255,.18);background:#151c27}.reasoning-main{padding:38px}.reasoning-main .type{color:#9fb4ff;font-size:8px;font-weight:700;letter-spacing:.15em;text-transform:uppercase}.reasoning-main h3{max-width:760px;margin:15px 0;font:600 clamp(2.7rem,5vw,5.1rem)/.93 "Source Serif 4",serif;letter-spacing:-.055em}.reasoning-main p{max-width:680px;color:#bdc4ce;font-size:12.5px;line-height:1.65}.reasoning-modes{display:flex;flex-wrap:wrap;gap:7px;margin-top:28px}.reasoning-modes span{padding:8px 10px;border:1px solid rgba(255,255,255,.22);font-size:8px;font-weight:700;letter-spacing:.1em}.reasoning-main .actions a{border-color:#fff}.reasoning-main .actions .primary{background:#fff;color:var(--ink)}.reasoning-side{display:grid;align-content:start}.reasoning-side article{padding:23px;border-bottom:1px solid rgba(255,255,255,.12)}.reasoning-side article:last-child{border-bottom:0}.reasoning-side small{color:#9ba3af;font-size:7.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}.reasoning-side h4{margin:8px 0 0;font:600 1.25rem/1.15 "Source Serif 4",serif}
+.topic-grid{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);border-left:1px solid var(--line)}.topic{min-height:170px;padding:22px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:rgba(255,255,255,.34);cursor:pointer}.topic:hover{background:var(--surface)}.topic small{color:var(--muted);font-size:8px;font-weight:700;letter-spacing:.1em}.topic strong{display:block;margin-top:30px;font:600 1.55rem/1.05 "Source Serif 4",serif}.topic span{display:block;margin-top:10px;color:var(--blue);font-size:9px;font-weight:700}
+.tools{display:grid;grid-template-columns:1.3fr .7fr;gap:14px}.tool{position:relative;min-height:320px;padding:30px;border:1px solid var(--line);background:var(--surface);overflow:hidden}.tool:after{content:"";position:absolute;right:-70px;bottom:-70px;width:220px;height:220px;border:1px solid var(--line);border-radius:50%}.tool:nth-child(2):after{border-radius:0;transform:rotate(25deg)}.tool small{color:var(--blue);font-size:8px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}.tool h3{max-width:540px;margin:18px 0 12px;font:600 clamp(2rem,4vw,3.7rem)/.98 "Source Serif 4",serif;letter-spacing:-.04em}.tool p{max-width:550px;color:var(--muted);font-size:11px;line-height:1.6}.tool a{display:inline-block;margin-top:22px;padding-bottom:3px;border-bottom:1px solid var(--ink);text-decoration:none;font-size:9px;font-weight:700;letter-spacing:.08em}
+.empty{padding:40px;border:1px dashed var(--line);text-align:center;color:var(--muted);font-size:12px}.footer{max-width:var(--max);margin:40px auto 0;padding:30px 22px 40px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:20px;color:var(--muted);font-size:8.5px;font-weight:700;letter-spacing:.09em}.status{padding:80px 24px;text-align:center;color:var(--muted);font-weight:600}
+@media(max-width:950px){.hero-grid,.featured,.reasoning-grid,.tools{grid-template-columns:1fr}.hero-grid{gap:34px}.manifesto{max-width:420px}.featured-media{min-height:420px}.cards{grid-template-columns:1fr 1fr}.topic-grid{grid-template-columns:1fr 1fr}.nav{display:none}}
+@media(max-width:620px){.top{grid-template-columns:auto 1fr;padding:0 16px}.top-right{justify-self:end}.hero{padding:62px 18px 42px}.hero h1{font-size:clamp(3.7rem,18vw,6rem)}.filters,.section{padding-left:18px;padding-right:18px}.section{padding-top:44px}.section-head{display:block}.section-head p{margin-top:12px}.cards{grid-template-columns:1fr}.featured-media{min-height:310px}.featured-body,.reasoning-main{padding:24px}.topic-grid{grid-template-columns:1fr}.footer{padding-left:18px;padding-right:18px;display:block}.footer span{display:block;margin-top:8px}}
+</style>
+
+<style id="global-drawer-style">
+.nav-tab{position:fixed;left:0;top:50%;z-index:90;transform:translateY(-50%);width:30px;height:132px;border:1px solid rgba(16,21,29,.22);border-left:0;background:#10151d;color:#fff;cursor:pointer;display:grid;place-items:center;font:800 8px/1 Inter,DM Sans,system-ui,sans-serif;letter-spacing:.16em;writing-mode:vertical-rl;text-orientation:mixed;transform-origin:center}.nav-tab span{transform:rotate(180deg)}
+.nav-drawer{position:fixed;inset:0 auto 0 0;z-index:100;width:min(390px,88vw);background:#f7f5ef;color:#10151d;border-right:1px solid rgba(16,21,29,.2);transform:translateX(-102%);transition:transform .28s ease;box-shadow:20px 0 60px rgba(15,20,28,.16);display:flex;flex-direction:column}.nav-drawer.open{transform:none}.nav-backdrop{position:fixed;inset:0;z-index:99;background:rgba(10,15,22,.38);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .25s}.nav-backdrop.open{opacity:1;pointer-events:auto}
+.nav-drawer-head{display:flex;justify-content:space-between;align-items:center;padding:21px 22px;border-bottom:1px solid rgba(16,21,29,.13)}.nav-drawer-brand{display:flex;align-items:center;gap:10px;font:800 9px/1 Inter,DM Sans,system-ui,sans-serif;letter-spacing:.13em}.nav-drawer-brand b{display:grid;place-items:center;width:34px;height:34px;background:#10151d;color:#fff}.nav-close{width:38px;height:38px;border:1px solid rgba(16,21,29,.2);background:transparent;font-size:22px;cursor:pointer}.nav-drawer-body{padding:18px 22px 28px;overflow:auto}.nav-drawer-label{margin:18px 0 9px;color:#6e737b;font:800 7.5px/1 Inter,DM Sans,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase}.nav-drawer a{display:flex;justify-content:space-between;gap:12px;padding:14px 0;border-bottom:1px solid rgba(16,21,29,.12);text-decoration:none;font:700 13px/1.25 Inter,DM Sans,system-ui,sans-serif}.nav-drawer a span:last-child{color:#3157ff}.nav-drawer a:hover{color:#3157ff}.nav-drawer-note{margin-top:24px;padding:15px;border-left:3px solid #15a397;background:rgba(21,163,151,.07);color:#59606a;font:500 10px/1.55 Inter,DM Sans,system-ui,sans-serif}
+@media(max-width:700px){.nav-tab{top:auto;bottom:16px;left:12px;transform:none;width:46px;height:46px;border:0;border-radius:50%;writing-mode:horizontal-tb;letter-spacing:0}.nav-tab span{transform:none;font-size:0}.nav-tab span:after{content:'☰';font-size:18px}.nav-drawer{width:min(360px,92vw)}}
+@media(prefers-reduced-motion:reduce){.nav-drawer,.nav-backdrop{transition:none}}
+</style>
+
+<style id="featured-editorial-style">
+.featured-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px}
+.featured-card{min-width:0;padding-bottom:8px}
+.featured-card__media{position:relative;display:block;width:100%;padding:0;border:0;background:transparent;cursor:zoom-in;overflow:hidden;border-radius:18px;aspect-ratio:1.91/1}
+.featured-card__media img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .45s ease}
+.featured-card:hover .featured-card__media img{transform:scale(1.025)}
+.featured-card__media:after{content:'SUURENNA ↗';position:absolute;right:10px;bottom:10px;padding:6px 8px;border-radius:999px;background:rgba(16,21,29,.88);color:#fff;font:700 7px/1 DM Sans,sans-serif;letter-spacing:.08em;opacity:0;transform:translateY(3px);transition:.22s}
+.featured-card:hover .featured-card__media:after,.featured-card__media:focus-visible:after{opacity:1;transform:none}
+.featured-card__body{padding:17px 0 0}
+.featured-card__meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;color:#8a8178;font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.featured-card__meta i{width:3px;height:3px;border-radius:50%;background:#b8afa5}
+.featured-card h3{margin:11px 0 10px;font:600 clamp(1.65rem,2.2vw,2.35rem)/1.02 "Source Serif 4",serif;letter-spacing:-.035em}
+.featured-card .desc{display:-webkit-box;margin:0;color:#817970;font-size:11.5px;line-height:1.58;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.featured-card__read{display:inline-flex;align-items:center;gap:6px;margin-top:16px;padding-bottom:2px;border-bottom:1px solid transparent;text-decoration:none;font-size:9px;font-weight:700;letter-spacing:.04em}
+.featured-card__read:hover{border-color:currentColor;color:var(--blue)}
+.featured-lightbox{position:fixed;inset:0;z-index:120;display:none;place-items:center;padding:30px;background:rgba(9,13,19,.92);backdrop-filter:blur(8px)}.featured-lightbox.open{display:grid}.featured-lightbox img{max-width:min(92vw,1200px);max-height:90vh;object-fit:contain;background:#fff;border-radius:12px}.featured-lightbox button{position:fixed;right:20px;top:20px;width:44px;height:44px;border:1px solid rgba(255,255,255,.5);border-radius:50%;background:transparent;color:#fff;font-size:24px;cursor:pointer}
+@media(max-width:950px){.featured-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}.featured-card:nth-child(n+3){display:none}.featured-card h3{font-size:2rem}}
+@media(max-width:620px){.featured-grid{grid-template-columns:1fr}.featured-card:nth-child(n+2){display:none}.featured-card__media{border-radius:16px}.featured-card h3{font-size:2rem}.featured-card .desc{-webkit-line-clamp:3}}
+@media(prefers-reduced-motion:reduce){.featured-card__media img,.featured-card__media:after{transition:none}}
+</style>
+
+<style id="v4-editorial">
+/* V4 · toimituksellinen hierarkia */
+:root{--editorial:#7b6e61;--editorial-soft:#e9e4dc;--editorial-deep:#26231f}
+.top{border-bottom-color:rgba(16,21,29,.22)}
+.hero{padding-top:72px;padding-bottom:44px}.hero h1{max-width:1000px}.hero-grid{align-items:center}
+.section{padding-top:50px;padding-bottom:50px}.section-head{border-bottom:2px solid var(--ink);padding-bottom:13px;margin-bottom:28px}.section-head small{margin-bottom:5px}.section-head h2{font-size:clamp(1.8rem,3.4vw,2.8rem)}
+
+.editorial-split{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(280px,.7fr);gap:38px;align-items:start}
+.editorial-lead{display:grid;grid-template-columns:minmax(260px,.92fr) minmax(0,1.08fr);gap:28px;text-decoration:none}
+.editorial-lead__media{overflow:hidden;aspect-ratio:16/10;background:#ddd;border-radius:3px}.editorial-lead__media img{width:100%;height:100%;object-fit:cover;transition:transform .35s}.editorial-lead:hover img{transform:scale(1.018)}
+.editorial-kicker{display:flex;gap:9px;align-items:center;color:var(--editorial);font-size:8px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}.editorial-kicker i{width:3px;height:3px;border-radius:50%;background:currentColor}
+.editorial-lead h3{margin:12px 0 12px;font:600 clamp(2rem,4vw,3.9rem)/.96 "Source Serif 4",serif;letter-spacing:-.045em}.editorial-lead p{margin:0;color:#676158;font-size:12px;line-height:1.62}.editorial-read{display:inline-block;margin-top:19px;padding-bottom:2px;border-bottom:1px solid var(--ink);font-size:9px;font-weight:800;letter-spacing:.06em}
+.editorial-rail{border-top:1px solid var(--line)}.rail-item{display:block;padding:17px 0;border-bottom:1px solid var(--line);text-decoration:none}.rail-item small{display:block;color:var(--editorial);font-size:7.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}.rail-item h4{margin:6px 0 6px;font:600 1.22rem/1.13 "Source Serif 4",serif;letter-spacing:-.02em}.rail-item p{display:-webkit-box;margin:0;color:#746e66;font-size:10px;line-height:1.45;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.rail-item:hover h4{color:var(--blue)}
+
+.latest-grid{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:44px}.latest-feed{border-top:1px solid var(--line)}.feed-item{display:grid;grid-template-columns:120px minmax(0,1fr) 36px;gap:20px;padding:22px 0;border-bottom:1px solid var(--line);text-decoration:none;align-items:start}.feed-item__meta{color:var(--editorial);font-size:7.5px;font-weight:800;line-height:1.5;letter-spacing:.1em;text-transform:uppercase}.feed-item h3{margin:0 0 6px;font:600 1.48rem/1.08 "Source Serif 4",serif;letter-spacing:-.025em}.feed-item p{margin:0;color:#746e66;font-size:10.5px;line-height:1.5}.feed-item__arrow{font:500 1.35rem/1 "Source Serif 4",serif;text-align:right}.feed-item:hover h3{color:var(--blue)}
+.latest-aside{position:sticky;top:90px;padding:20px;border:1px solid var(--line);background:rgba(255,255,255,.32)}.latest-aside small{font-size:7.5px;font-weight:800;letter-spacing:.14em;color:var(--editorial);text-transform:uppercase}.latest-aside strong{display:block;margin:8px 0;font:600 1.25rem/1.18 "Source Serif 4",serif}.latest-aside p{margin:0;color:#746e66;font-size:10px;line-height:1.55}
+
+.long-arcs{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);border-left:1px solid var(--line)}.arc{min-height:235px;padding:24px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:rgba(255,255,255,.28);text-decoration:none}.arc small{color:var(--editorial);font-size:7.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}.arc h3{margin:30px 0 10px;font:600 1.65rem/1.06 "Source Serif 4",serif;letter-spacing:-.03em}.arc p{margin:0;color:#746e66;font-size:10.5px;line-height:1.55}.arc span{display:block;margin-top:22px;color:var(--blue);font-size:8px;font-weight:800;letter-spacing:.07em}.arc:hover{background:var(--surface)}
+
+.reasoning-wrap{margin:20px 0}.reasoning-main{background:#121923}.reasoning-side{background:#121923}
+.topic-grid{grid-template-columns:repeat(4,1fr)}.topic{min-height:145px}.topic strong{margin-top:22px}
+.tools .tool{min-height:270px}
+
+@media(max-width:1000px){.editorial-split,.latest-grid{grid-template-columns:1fr}.editorial-lead{grid-template-columns:1fr 1fr}.latest-aside{position:static}.long-arcs{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:700px){.editorial-lead{grid-template-columns:1fr}.editorial-split{gap:26px}.feed-item{grid-template-columns:1fr 28px;gap:8px 14px}.feed-item__meta{grid-column:1/-1}.feed-item p{display:none}.long-arcs{grid-template-columns:1fr}.section-head{display:block}.section-head p{margin-top:8px}.editorial-lead h3{font-size:2.2rem}}
+</style>
+
+</head>
+<body>
+<button class="nav-tab" id="global-nav-tab" type="button" aria-label="Avaa navigaatio" aria-expanded="false"><span>NAVIGOI · TTT</span></button>
+<div class="nav-backdrop" id="global-nav-backdrop" aria-hidden="true"></div>
+<aside class="nav-drawer" id="global-nav-drawer" aria-hidden="true" aria-label="TTT navigaatio">
+  <div class="nav-drawer-head"><div class="nav-drawer-brand"><b>TTT</b><span>TAAKKA · TOTUUS · TEKO</span></div><button class="nav-close" id="global-nav-close" type="button" aria-label="Sulje navigaatio">×</button></div>
+  <div class="nav-drawer-body">
+    <div class="nav-drawer-label">Julkaisu</div>
+    <a href="./blog-modern.html"><span>Etusivu</span><span>→</span></a>
+    <a href="#ajankohtainen"><span>Ajankohtainen</span><span>→</span></a><a href="#uusimmat"><span>Uusimmat analyysit</span><span>→</span></a>
+    <a href="./blog-modern.html#paattely"><span>Päättelyartikkelit</span><span>→</span></a>
+    <a href="#aiheet"><span>Aiheet</span><span>→</span></a><a href="#pitkat-kaaret"><span>Pitkät kaaret</span><span>→</span></a>
+    <div class="nav-drawer-label">Tutki</div>
+    <a href="./atlas/murros/index.html"><span>Murrosatlas</span><span>↗</span></a>
+    <a href="./blog-modern.html#tyokalut"><span>Visualisoinnit ja työkalut</span><span>→</span></a>
+    <div class="nav-drawer-label">Lukeminen</div>
+    <a href="#alku"><span>Takaisin alkuun</span><span>↑</span></a>
+    <div class="nav-drawer-note">Yksi navigaattori seuraa mukana blogista artikkeleihin ja päättelytiloihin. Sisältö voi vaihtua, mutta sivuston käyttölogiikka pysyy samana.</div>
+  </div>
+</aside>
+
+<header class="top">
+  <a class="brand" href="./"><b>TTT</b><span>TAAKKA · TOTUUS · TEKO</span></a>
+  <nav class="nav"><a href="#nosto">Nostot</a><a href="#ajankohtainen">Ajankohtainen</a><a href="#paattely">Päättelyartikkelit</a><a href="#uusimmat">Uusimmat</a><a href="#aiheet">Aiheet</a></nav>
+  <div class="top-right">DIGITAALINEN JULKAISU</div>
+</header>
+
+<section class="hero">
+  <div class="hero-kicker">TTT · YHTEISKUNNALLINEN ANALYYSI</div>
+  <div class="hero-grid">
+    <div><h1>Kun ilmiötä ei vain kuvata, vaan sen rakenne tehdään näkyväksi.</h1><p>Esseitä, päättelyartikkeleita ja visualisointeja Suomen yhteiskunnallisista rakenteista, valinnoista ja pitkistä kehityskaareista.</p></div>
+    <aside class="manifesto"><small>Julkaisuperiaate</small><strong>Teksti kertoo tarinan. Visualisointi avaa mekanismin.</strong><p>TTT yhdistää narratiivin, historiallisen päättelyn ja interaktiivisen tutkimisen yhdeksi julkaisuksi.</p><div class="manifesto-line"></div></aside>
+  </div>
+</section>
+
+<section class="filters"><div class="filterbar" id="filters"><button class="active" data-tag="all">KAIKKI</button></div></section>
+<div id="status" class="status">Ladataan kirjoituksia…</div>
+<main id="app" class="hidden">
+  <section class="section" id="nosto">
+    <div class="section-head"><div><small>Toimituksen valinnat</small><h2>Nostot</h2></div><p>Kolme visuaalista sisäänkäyntiä julkaisun keskeisiin teksteihin. Puhelimessa yksi, tabletilla kaksi ja desktopissa kolme.</p></div>
+    <div id="featured"></div>
+  </section>
+
+  <section class="section" id="ajankohtainen">
+    <div class="section-head"><div><small>Ajankohtainen analyysi</small><h2>Yksi ilmiö, useampi näkökulma</h2></div><p>Pääjuttu saa tilaa. Sen rinnalla kulkee tiiviimpi toimituksellinen sivuvirta, joka avaa samaa julkaisua eri suunnista.</p></div>
+    <div class="editorial-split"><div id="editorial-lead"></div><aside class="editorial-rail" id="editorial-rail"></aside></div>
+  </section>
+
+  <section class="reasoning-wrap" id="paattely"><div class="section"><div class="section-head"><div><small>Living Essay</small><h2>Päättelyartikkelit</h2></div><p>Lue, tutki, vertaa ja kokeile. Päättelyartikkeli käyttää esseetä käyttöliittymänään.</p></div><div class="reasoning-grid"><article class="reasoning-main" id="reasoning-main"></article><div class="reasoning-side" id="reasoning-side"></div></div></div></section>
+
+  <section class="section" id="uusimmat">
+    <div class="section-head"><div><small>Julkaisuvirta</small><h2>Uusimmat analyysit</h2></div><p>Kaikki kirjoitukset eivät tarvitse kuvaa. Tiivis tekstivirta tekee suurestakin arkistosta nopeasti silmäiltävän.</p></div>
+    <div class="latest-grid"><div class="latest-feed" id="latest-feed"></div><aside class="latest-aside"><small>TTT · lukutapa</small><strong>Seuraa väitettä, mekanismia ja seurausta.</strong><p>Julkaisun perusmuoto on luettava essee. Interaktiivisuus lisätään silloin, kun se auttaa ymmärtämään syy–seuraussuhdetta tai vaihtoehtoista kehityspolkua.</p></aside></div>
+  </section>
+
+  <section class="section" id="aiheet"><div class="section-head"><div><small>Tutki aiheittain</small><h2>Teemat</h2></div><p>Aiheet syntyvät kirjoitusten tageista ja muodostavat julkaisun temaattisen hakemiston.</p></div><div class="topic-grid" id="topics"></div></section>
+
+  <section class="section" id="pitkat-kaaret"><div class="section-head"><div><small>Historiallinen näkymä</small><h2>Pitkät kaaret</h2></div><p>Kirjoitukset, joissa nykyhetkeä tarkastellaan vuosikymmenten tai sukupolvien läpi.</p></div><div class="long-arcs" id="long-arcs"></div></section>
+
+  <section class="section" id="tyokalut"><div class="section-head"><div><small>Tutki dataa</small><h2>Atlas & visualisoinnit</h2></div><p>Kun teksti ei enää riitä, lukija voi siirtyä tutkimaan rakennetta suoraan.</p></div><div class="tools"><article class="tool"><small>Murrosatlas</small><h3>Katso, miten rakenteet muuttuvat ajassa.</h3><p>Murrosatlas kokoaa pitkän aikavälin kehityksen, mekanismit ja vaihtoehtoiset tarkastelukulmat yhteen interaktiiviseen ympäristöön.</p><a href="./atlas/murros/index.html">AVAA MURROSATLAS →</a></article><article class="tool"><small>Visualisoinnit</small><h3>Näe väite rakenteena.</h3><p>Infografiikat, aikajanat, vertailut ja mekanismikuvat täydentävät narratiivia ilman dashboard-vaikutelmaa.</p><a href="#nosto">SELAA NOSTOJA →</a></article></div></section>
+</main>
+<div class="featured-lightbox" id="featured-lightbox" aria-hidden="true"><img id="featured-lightbox-img" alt=""><button type="button" id="featured-lightbox-close" aria-label="Sulje">×</button></div><footer class="footer"><strong>TTT — TAAKKA · TOTUUS · TEKO</strong><span>Kirjoituksia, päättelyartikkeleita ja rakenteellista analyysiä.</span></footer>
+<script>
+const DATA='./kirjoitukset.json';
+const $=s=>document.querySelector(s);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const img=a=>a.image?`./images/${encodeURIComponent(a.image)}`:'';const og=a=>(a.ogImage||a.image)?`./images/${encodeURIComponent(a.ogImage||a.image)}`:'';const slug=a=>a.slug||a.id;
+const articleUrl=a=>`./kirjoitukset/${encodeURIComponent(slug(a))}/`;
+const classicUrl=a=>`./artikkeli.html?id=${encodeURIComponent(slug(a))}`;
+const livingUrl=a=>`./artikkeli-living.html?id=${encodeURIComponent(slug(a))}`;
+let articles=[];let activeTag='all';
+function meta(a){const tags=(a.tags||[]).slice(0,2).map(esc).join(' · ');return `${tags}${tags&&a.readingTime?' · ':''}${esc(a.readingTime||'')}`}
+function featuredCard(a){const tags=(a.tags||[]).slice(0,1).map(esc).join('');return `<article class="featured-card"><button class="featured-card__media" type="button" data-featured-image="${og(a)}" data-featured-alt="${esc(a.imageAlt||a.title||'')}">${og(a)?`<img src="${og(a)}" alt="${esc(a.imageAlt||a.title||'')}">`:''}</button><div class="featured-card__body"><div class="featured-card__meta"><span>${tags||'ANALYYSI'}</span><i></i><span>${esc(a.readingTime||'')}</span></div><h3>${esc(a.title)}</h3><p class="desc">${esc(a.subtitle||'')}</p><a class="featured-card__read" href="${articleUrl(a)}">Lue artikkeli ↗</a></div></article>`}
+function featured(list){if(!list?.length)return '<div class="empty">Ei kirjoituksia.</div>';return `<div class="featured-grid">${list.slice(0,3).map(featuredCard).join('')}</div>`}
+function editorialLead(a){return `<a class="editorial-lead" href="${articleUrl(a)}"><div class="editorial-lead__media">${og(a)?`<img src="${og(a)}" alt="${esc(a.imageAlt||a.title||'')}">`:''}</div><div><div class="editorial-kicker"><span>${esc((a.tags||[])[0]||'ANALYYSI')}</span><i></i><span>${esc(a.readingTime||'')}</span></div><h3>${esc(a.title)}</h3><p>${esc(a.subtitle||'')}</p><span class="editorial-read">LUE ANALYYSI ↗</span></div></a>`}
+function railItem(a){return `<a class="rail-item" href="${articleUrl(a)}"><small>${meta(a)}</small><h4>${esc(a.title)}</h4><p>${esc(a.subtitle||'')}</p></a>`}
+function renderEditorial(list){const lead=list[0]||articles[0];if(!lead)return;$('#editorial-lead').innerHTML=editorialLead(lead);const rail=(list.slice(1,5).length?list.slice(1,5):articles.slice(1,5));$('#editorial-rail').innerHTML=rail.map(railItem).join('')||railItem(lead)}
+function feedItem(a){return `<a class="feed-item" href="${articleUrl(a)}"><div class="feed-item__meta">${meta(a)}</div><div><h3>${esc(a.title)}</h3><p>${esc(a.subtitle||'')}</p></div><div class="feed-item__arrow">↗</div></a>`}
+function renderLatest(list){$('#latest-feed').innerHTML=list.length?list.map(feedItem).join(''):'<div class="empty">Tällä rajauksella ei löytynyt kirjoituksia.</div>'}
+function renderLongArcs(list){const picked=list.filter(a=>/sukupol|histori|1850|1900|2000|pitk|rakenn|murros/i.test([a.title,a.subtitle,...(a.tags||[])].join(' ')));const use=(picked.length?picked:list).slice(0,6);$('#long-arcs').innerHTML=use.map(a=>`<a class="arc" href="${articleUrl(a)}"><small>${meta(a)}</small><h3>${esc(a.title)}</h3><p>${esc(a.subtitle||'')}</p><span>SEURAA PITKÄÄ KAARTA →</span></a>`).join('')}
+function renderReasoning(list){const main=list[0]||articles[0];if(!main)return;$('#reasoning-main').innerHTML=`<div class="type">PÄÄTTELYARTIKKELI · ${esc(main.readingTime||'')}</div><h3>${esc(main.title)}</h3><p>${esc(main.subtitle||'')}</p><div class="reasoning-modes"><span>LUE</span><span>TUTKI</span><span>VERTAA</span><span>KOKEILE</span></div><div class="actions"><a class="primary" href="${livingUrl(main)}">AVAA LIVING ESSAY →</a><a href="${classicUrl(main)}">TAVALLINEN ARTIKKELI</a></div>`;$('#reasoning-side').innerHTML=list.slice(1,4).map(a=>`<article><small>${meta(a)}</small><h4>${esc(a.title)}</h4></article>`).join('')||'<article><small>FORMAATTI</small><h4>Lisää päättelyartikkeleita voidaan ottaa käyttöön ilman uutta etusivurakennetta.</h4></article>'}
+function buildFilters(){const counts={};articles.forEach(a=>(a.tags||[]).forEach(t=>counts[t]=(counts[t]||0)+1));const tags=Object.entries(counts).sort((a,b)=>b[1]-a[1]);$('#filters').insertAdjacentHTML('beforeend',tags.map(([t,n])=>`<button data-tag="${esc(t)}">${esc(t.toUpperCase())} · ${n}</button>`).join(''));$('#topics').innerHTML=tags.slice(0,8).map(([t,n])=>`<div class="topic" data-topic="${esc(t)}"><small>${String(n).padStart(2,'0')} KIRJOITUSTA</small><strong>${esc(t)}</strong><span>TUTKI AIHETTA →</span></div>`).join('')}
+function applyTag(tag){activeTag=tag;$('#filters').querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.tag===tag));const list=tag==='all'?articles:articles.filter(a=>(a.tags||[]).includes(tag));renderLatest(list);renderEditorial(list);renderLongArcs(list);$('#uusimmat').scrollIntoView({behavior:'smooth',block:'start'})}
+$('#filters').addEventListener('click',e=>{const b=e.target.closest('button[data-tag]');if(b)applyTag(b.dataset.tag)});$('#topics').addEventListener('click',e=>{const t=e.target.closest('[data-topic]');if(t)applyTag(t.dataset.topic)});
+
+const featuredBox=document.getElementById('featured');const featuredLb=document.getElementById('featured-lightbox');const featuredLbImg=document.getElementById('featured-lightbox-img');function closeFeaturedImage(){featuredLb?.classList.remove('open');featuredLb?.setAttribute('aria-hidden','true');document.body.style.overflow=''}featuredBox?.addEventListener('click',e=>{const b=e.target.closest('[data-featured-image]');if(!b)return;featuredLbImg.src=b.dataset.featuredImage;featuredLbImg.alt=b.dataset.featuredAlt||'';featuredLb.classList.add('open');featuredLb.setAttribute('aria-hidden','false');document.body.style.overflow='hidden'});document.getElementById('featured-lightbox-close')?.addEventListener('click',closeFeaturedImage);featuredLb?.addEventListener('click',e=>{if(e.target===featuredLb)closeFeaturedImage()});addEventListener('keydown',e=>{if(e.key==='Escape')closeFeaturedImage()});
+fetch(DATA,{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error(`HTTP ${r.status}`);return r.json()}).then(data=>{articles=Array.isArray(data)?data:(data.kirjoitukset||[]);if(!articles.length)throw new Error('Kirjoituksia ei löytynyt');$('#featured').innerHTML=featured(articles);renderEditorial(articles);renderLatest(articles);renderReasoning(articles);renderLongArcs(articles);buildFilters();$('#status').classList.add('hidden');$('#app').classList.remove('hidden')}).catch(err=>{$('#status').textContent='Julkaisun lataaminen epäonnistui: '+err.message});
+</script>
+
+<script id="global-drawer-script">
+(()=>{const tab=document.getElementById('global-nav-tab'),drawer=document.getElementById('global-nav-drawer'),back=document.getElementById('global-nav-backdrop'),close=document.getElementById('global-nav-close');if(!tab||!drawer)return;const set=open=>{drawer.classList.toggle('open',open);back?.classList.toggle('open',open);drawer.setAttribute('aria-hidden',String(!open));back?.setAttribute('aria-hidden',String(!open));tab.setAttribute('aria-expanded',String(open));document.body.style.overflow=open?'hidden':''};tab.addEventListener('click',()=>set(true));close?.addEventListener('click',()=>set(false));back?.addEventListener('click',()=>set(false));drawer.addEventListener('click',e=>{if(e.target.closest('a'))set(false)});addEventListener('keydown',e=>{if(e.key==='Escape')set(false)})})();
+</script>
+</body>
+</html>
