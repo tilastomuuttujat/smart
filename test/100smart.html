@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="fi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Lääkelaskut</title>
+<style>
+:root{
+  --bg:#eef4f0;
+  --paper:#ffffff;
+  --ink:#17342b;
+  --muted:#6a7973;
+  --line:#d7e3dc;
+  --nav:#153d34;
+  --green:#3f7e48;
+  --greenbg:#edf8ec;
+  --red:#a64841;
+  --redbg:#fff0ee;
+  --yellow:#fff8d8;
+  --bluebg:#f4f8fd;
+}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{
+  margin:0;
+  min-height:100vh;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  -webkit-text-size-adjust:100%;
+  padding-bottom:92px;
+}
+button,select{font:inherit}
+.wrap{
+  width:min(100%,520px);
+  margin:0 auto;
+  padding:0 10px 20px;
+}
+.hero{
+  position:sticky;
+  top:0;
+  z-index:20;
+  margin:0 -10px;
+  padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;
+  background:rgba(238,244,240,.96);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line);
+}
+.hero h1{
+  margin:2px 0 2px;
+  font-size:22px;
+  line-height:1.05;
+  letter-spacing:-.035em;
+}
+.kicker{
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.11em;
+  text-transform:uppercase;
+  color:#608f62;
+}
+.lead{display:none}
+.stats{display:none}
+.toolbar{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:7px;
+  margin-top:8px;
+}
+.count{
+  grid-column:1/-1;
+  order:-1;
+  margin:0;
+  font-size:12px;
+  font-weight:850;
+  color:var(--muted);
+}
+.btn{
+  min-height:44px;
+  border:1px solid #cbd9d2;
+  background:#fff;
+  color:var(--ink);
+  padding:9px 11px;
+  border-radius:13px;
+  font-weight:850;
+  cursor:pointer;
+  touch-action:manipulation;
+}
+.btn.primary{
+  background:var(--nav);
+  color:#fff;
+  border-color:var(--nav);
+}
+.cats{
+  display:flex;
+  gap:7px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  margin:9px -4px 0;
+  padding:0 4px 3px;
+  scroll-snap-type:x proximity;
+}
+.cats::-webkit-scrollbar{display:none}
+.cat{
+  flex:0 0 auto;
+  min-height:40px;
+  max-width:180px;
+  border:1px solid var(--line);
+  background:#fff;
+  color:var(--ink);
+  padding:8px 11px;
+  border-radius:999px;
+  font-weight:850;
+  font-size:11px;
+  cursor:pointer;
+  white-space:nowrap;
+  scroll-snap-align:start;
+  touch-action:manipulation;
+}
+.cat.active{
+  background:var(--nav);
+  color:#fff;
+  border-color:var(--nav);
+}
+.card{
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:20px;
+  box-shadow:0 8px 24px rgba(24,55,45,.07);
+  padding:16px;
+  margin-top:10px;
+}
+.head{
+  display:block;
+}
+h2{
+  margin:0 0 7px;
+  font-size:21px;
+  line-height:1.15;
+  letter-spacing:-.025em;
+}
+.badge{
+  display:inline-block;
+  background:#eef4f0;
+  border-radius:999px;
+  padding:6px 9px;
+  font-size:10px;
+  font-weight:900;
+}
+.task{
+  margin:14px 0 10px;
+  font-size:17px;
+  line-height:1.5;
+  font-weight:650;
+}
+.tip{
+  padding:11px 12px;
+  background:var(--yellow);
+  border:1px solid #eadc8a;
+  border-radius:13px;
+  font-size:12px;
+  line-height:1.45;
+}
+.steps{
+  display:grid;
+  gap:12px;
+  margin-top:13px;
+}
+.step{
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:13px;
+  background:#fcfdfc;
+}
+.stepname{
+  font-size:11px;
+  font-weight:900;
+  color:#4c665e;
+  margin-bottom:8px;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+}
+.calc{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:7px;
+  align-items:stretch;
+}
+.num,.res{
+  width:100%;
+  min-height:52px;
+  padding:9px 12px;
+  border:2px solid #cad9d1;
+  border-radius:12px;
+  text-align:center;
+  background:#fff;
+  font-size:21px;
+  font-weight:900;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  flex-wrap:wrap;
+}
+.unit{
+  display:inline-block;
+  font-size:11px;
+  color:var(--muted);
+  font-weight:750;
+  margin:0;
+}
+select{
+  width:100%;
+  min-height:52px;
+  border:2px solid #aebfb6;
+  border-radius:12px;
+  padding:10px 12px;
+  font-size:20px;
+  text-align:center;
+  text-align-last:center;
+  font-weight:950;
+  background:#fff;
+  color:var(--ink);
+}
+.eq{
+  text-align:center;
+  font-size:18px;
+  font-weight:900;
+  line-height:1;
+  color:#73827c;
+}
+.res{
+  border-style:dashed;
+  color:#89968f;
+}
+.res.ok{
+  background:var(--greenbg);
+  border:2px solid #86bb84;
+  color:#2d6a34;
+}
+.res.bad{
+  background:var(--redbg);
+  border:2px solid #d49a94;
+  color:var(--red);
+}
+.fb{
+  min-height:16px;
+  margin-top:6px;
+  font-size:11px;
+  font-weight:850;
+  text-align:center;
+}
+.oktxt{color:var(--green)}
+.badtxt{color:var(--red)}
+.answer{
+  display:none;
+  margin-top:14px;
+  padding:15px;
+  border-radius:15px;
+  background:var(--greenbg);
+  border:1px solid #a9cfa7;
+  font-size:14px;
+  line-height:1.45;
+}
+.answer.show{display:block}
+.answer strong{
+  display:block;
+  margin-bottom:5px;
+  font-size:15px;
+}
+.note{
+  font-size:11px;
+  color:var(--muted);
+  line-height:1.45;
+  margin:14px 2px 0;
+}
+.nav{
+  position:fixed;
+  z-index:30;
+  left:50%;
+  bottom:0;
+  transform:translateX(-50%);
+  width:min(100%,520px);
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  padding:9px 10px calc(env(safe-area-inset-bottom) + 9px);
+  background:rgba(255,255,255,.96);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  border-top:1px solid var(--line);
+  box-shadow:0 -8px 24px rgba(24,55,45,.08);
+}
+.nav .btn{
+  min-height:50px;
+  border-radius:14px;
+  font-size:14px;
+}
+.triangleBox{
+  display:none;
+  margin-top:10px;
+  padding:12px;
+  border-radius:14px;
+  background:var(--bluebg);
+  border:1px solid #cbd9ea;
+}
+.triangleBox.show{display:block}
+.triangleTitle{
+  font-size:10px;
+  font-weight:900;
+  color:#4d6680;
+  margin-bottom:6px;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  text-align:center;
+}
+.triangleWrap{
+  display:block;
+}
+.triangle{
+  position:relative;
+  width:170px;
+  height:148px;
+  margin:0 auto 6px;
+}
+.triangle svg{
+  width:100%;
+  height:100%;
+  display:block;
+}
+.triText{
+  position:absolute;
+  font-size:13px;
+  font-weight:950;
+  text-align:center;
+  line-height:1.05;
+  max-width:74px;
+}
+.triTop{
+  left:48px;
+  top:21px;
+  width:74px;
+}
+.triLeft{
+  left:6px;
+  bottom:15px;
+  width:74px;
+}
+.triRight{
+  right:6px;
+  bottom:15px;
+  width:74px;
+}
+.triText small{
+  display:block;
+  font-size:8px;
+  font-weight:750;
+  color:#68798a;
+  margin-top:2px;
+}
+.triangleHelp{
+  font-size:11px;
+  line-height:1.4;
+  color:#526475;
+  text-align:center;
+}
+.triangleHelp b{color:#24445f}
+.roman{
+  font-family:Georgia,serif;
+  letter-spacing:.05em;
+}
+@media(min-width:521px){
+  body{padding-top:12px}
+  .hero{
+    border:1px solid var(--line);
+    border-radius:18px;
+    margin:0;
+  }
+}
+</style></head><body><div class="wrap">
+<section class="hero"><div class="kicker">Lääkelaskut</div><h1>100 tehtävää</h1>
+<p class="lead">20 tehtävää jokaisesta tentin pääluokasta. Liuosannoslaskuissa harjoitellaan nyt myös kertolaskua, vähennystä, yksikkömuunnoksia, tippoja, vuorokausiannoksia ja pakkaustietoja. Luvut ovat valmiina laatikoissa. Valitse vain oikea laskutoimitus. Ratkaisu avautuu vasta, kun koko päättelyketju on oikein. Kerto- ja jakosuhteet näytetään lisäksi lääkelaskennan kolmiona aina, kun kolmio sopii kyseiseen vaiheeseen.</p>
+<div class="stats"><span class="stat">20 × liuosannos</span><span class="stat">20 × tabletti</span><span class="stat">20 × valmistus/laimennus</span><span class="stat">20 × tiputus</span><span class="stat">20 × painon mukaan</span></div>
+<div class="cats" id="cats"></div><div class="toolbar"><button class="btn primary" id="random">Satunnainen tehtävä</button><button class="btn" id="reset">Aloita alusta</button><div class="count" id="count"></div></div></section>
+<section class="card"><div class="head"><div><h2 id="title"></h2></div><span class="badge" id="badge"></span></div><div class="task" id="task"></div><div class="tip" id="tip"></div><div class="steps" id="steps"></div>
+<div class="answer" id="answer"><strong>✓ Koko laskuketju oikein</strong><div id="answerText"></div></div>
+<div class="nav"><button class="btn" id="prev">← Edellinen</button><button class="btn primary" id="next">Seuraava →</button></div>
+<p class="note">Harjoitukset noudattavat kirjan lääkelaskennan rakennetta ja laskuperiaatteita. Ne ovat harjoitusmuunnelmia: tarkoitus on oppia tunnistamaan laskutoimitus eikä opetella yksittäistä vastausta ulkoa. Tiputuslaskuissa käytetään oletusta 1 ml = 20 gtt.</p>
+</section></div>
+<script>
+const all=[{"cat":"Liuosannoslasku","title":"Liuosannos 1 · perusannos","task":"Potilaalle on määrätty 15 mg lääkettä. Liuoksen pitoisuus on 20 mg/ml. Kuinka monta millilitraa annat?","steps":[{"a":15,"au":"mg","op":"div","b":20,"bu":"mg/ml","result":0.75,"ru":"ml"}],"answer":"Annos on 0,75 ml.","tip":"Kun määrätty annos ja pitoisuus ovat samoissa massayksiköissä, millilitrat saadaan jakamalla."},{"cat":"Liuosannoslasku","title":"Liuosannos 2 · mg / 5 ml","task":"Oraaliliuoksessa on 400 mg vaikuttavaa ainetta 5 ml:ssa. Potilaalle on määrätty 600 mg. Kuinka monta millilitraa annat?","steps":[{"a":400,"au":"mg","op":"div","b":5,"bu":"ml","result":80,"ru":"mg/ml"},{"a":600,"au":"mg","op":"div","b":80,"bu":"mg/ml","result":7.5,"ru":"ml"}],"answer":"Annos on 7,5 ml.","tip":"Älä hyppää suoraan vastaukseen. Selvitä ensin, kuinka monta milligrammaa yhdessä millilitrassa on."},{"cat":"Liuosannoslasku","title":"Liuosannos 3 · mg → µg","task":"Digoksiiniliuoksen pitoisuus on 0,25 mg/ml. Potilaalle on määrätty 125 µg. Kuinka monta millilitraa annat?","steps":[{"a":0.25,"au":"mg/ml","op":"mul1000","b":1,"bu":"","result":250,"ru":"µg/ml"},{"a":125,"au":"µg","op":"div","b":250,"bu":"µg/ml","result":0.5,"ru":"ml"}],"answer":"Annos on 0,5 ml.","tip":"Ensin yksiköt samoiksi: milligrammat muutetaan mikrogrammoiksi kertomalla 1000:lla."},{"cat":"Liuosannoslasku","title":"Liuosannos 4 · µg → mg","task":"Liuoksen pitoisuus on 2 mg/ml. Potilaalle on määrätty 500 µg. Kuinka monta millilitraa annat?","steps":[{"a":500,"au":"µg","op":"div1000","b":1,"bu":"","result":0.5,"ru":"mg"},{"a":0.5,"au":"mg","op":"div","b":2,"bu":"mg/ml","result":0.25,"ru":"ml"}],"answer":"Annos on 0,25 ml.","tip":"Mikrogrammat muutetaan milligrammoiksi jakamalla 1000:lla."},{"cat":"Liuosannoslasku","title":"Liuosannos 5 · vuorokausiannos kerta-annokseksi","task":"Lääkettä on määrätty 900 mg/vrk kolmeen yhtä suureen annokseen. Liuoksen pitoisuus on 100 mg/ml. Kuinka monta millilitraa annat kerralla?","steps":[{"a":900,"au":"mg/vrk","op":"div","b":3,"bu":"annosta/vrk","result":300,"ru":"mg/kerta"},{"a":300,"au":"mg","op":"div","b":100,"bu":"mg/ml","result":3,"ru":"ml/kerta"}],"answer":"Kerta-annos on 3 ml.","tip":"Ensin vuorokausiannos jaetaan antokertoihin. Vasta sitten muutetaan millilitroiksi."},{"cat":"Liuosannoslasku","title":"Liuosannos 6 · paljonko vaikuttavaa ainetta annettiin?","task":"Potilaalle annettiin 3 ml lääkeliuosta, jonka pitoisuus on 25 mg/ml. Kuinka monta milligrammaa vaikuttavaa ainetta hän sai?","steps":[{"a":3,"au":"ml","op":"mul","b":25,"bu":"mg/ml","result":75,"ru":"mg"}],"answer":"Potilas sai 75 mg vaikuttavaa ainetta.","tip":"Nyt kysytään päinvastaista asiaa kuin tavallisessa annoslaskussa: millilitroista pitää päästä milligrammoihin."},{"cat":"Liuosannoslasku","title":"Liuosannos 7 · koko pullon vaikuttava aine","task":"Pullossa on 30 ml liuosta, jonka pitoisuus on 10 mg/ml. Kuinka paljon vaikuttavaa ainetta koko pullossa on?","steps":[{"a":30,"au":"ml","op":"mul","b":10,"bu":"mg/ml","result":300,"ru":"mg"}],"answer":"Koko pullossa on 300 mg vaikuttavaa ainetta.","tip":"Pitoisuus kertoo määrän yhtä millilitraa kohti. Koko pullon määrä saadaan kertomalla."},{"cat":"Liuosannoslasku","title":"Liuosannos 8 · millilitrat tipoiksi","task":"Potilaan annos on 0,8 ml lääkettä. Oleta 1 ml = 20 gtt. Kuinka monta tippaa annos on?","steps":[{"a":0.8,"au":"ml","op":"mul","b":20,"bu":"gtt/ml","result":16,"ru":"gtt"}],"answer":"Annos on 16 tippaa.","tip":"Millilitrat muutetaan tipoiksi kertomalla 20:llä."},{"cat":"Liuosannoslasku","title":"Liuosannos 9 · tipat millilitroiksi","task":"Potilaalle on määrätty 10 tippaa lääkettä. Oleta 1 ml = 20 gtt. Kuinka monta millilitraa annos on?","steps":[{"a":10,"au":"gtt","op":"div","b":20,"bu":"gtt/ml","result":0.5,"ru":"ml"}],"answer":"Annos on 0,5 ml.","tip":"Tipat muutetaan millilitroiksi jakamalla 20:llä."},{"cat":"Liuosannoslasku","title":"Liuosannos 10 · tipat → ml → mg","task":"Silmätippoja annetaan 4 tippaa. Liuoksen pitoisuus on 5 mg/ml ja oletus 1 ml = 20 gtt. Kuinka monta milligrammaa vaikuttavaa ainetta annoksessa on?","steps":[{"a":4,"au":"gtt","op":"div","b":20,"bu":"gtt/ml","result":0.2,"ru":"ml"},{"a":0.2,"au":"ml","op":"mul","b":5,"bu":"mg/ml","result":1,"ru":"mg"}],"answer":"Annoksessa on 1 mg vaikuttavaa ainetta.","tip":"Muuta ensin tipat millilitroiksi. Sen jälkeen pitoisuus kertoo vaikuttavan aineen määrän."},{"cat":"Liuosannoslasku","title":"Liuosannos 11 · prosenttipitoisuus","task":"Lääkeliuoksen pitoisuus on 2 %. Potilaalle on määrätty 30 mg. Käytä lääkelaskennan yhteyttä 1 % = 10 mg/ml. Kuinka monta millilitraa annat?","steps":[{"a":2,"au":"%","op":"mul","b":10,"bu":"mg/ml per %","result":20,"ru":"mg/ml"},{"a":30,"au":"mg","op":"div","b":20,"bu":"mg/ml","result":1.5,"ru":"ml"}],"answer":"Annos on 1,5 ml.","tip":"Prosenttipitoisuus muutetaan ensin muotoon mg/ml."},{"cat":"Liuosannoslasku","title":"Liuosannos 12 · mmol","task":"Potilaalle on määrätty natriumkloridia 20 mmol. Konsentraatin pitoisuus on 4 mmol/ml. Kuinka monta millilitraa lisäät?","steps":[{"a":20,"au":"mmol","op":"div","b":4,"bu":"mmol/ml","result":5,"ru":"ml"}],"answer":"Lisätään 5 ml konsentraattia.","tip":"Tässä yksikkö on mmol, mutta ajatus on sama kuin mg/ml-annoslaskussa."},{"cat":"Liuosannoslasku","title":"Liuosannos 13 · kansainväliset yksiköt","task":"Potilaalle on määrätty hepariinia 3 000 IU. Liuoksen pitoisuus on 5 000 IU/ml. Kuinka monta millilitraa annat?","steps":[{"a":3000,"au":"IU","op":"div","b":5000,"bu":"IU/ml","result":0.6,"ru":"ml"}],"answer":"Annos on 0,6 ml.","tip":"Kun IU-yksiköt ovat samat, ratkaisu tehdään pitoisuuden avulla aivan kuten milligrammoilla."},{"cat":"Liuosannoslasku","title":"Liuosannos 14 · vuorokauden kokonaismäärä","task":"Potilas saa 2 ml lääkettä neljä kertaa vuorokaudessa. Pitoisuus on 15 mg/ml. Kuinka monta milligrammaa vaikuttavaa ainetta hän saa vuorokaudessa?","steps":[{"a":2,"au":"ml/kerta","op":"mul","b":4,"bu":"krt/vrk","result":8,"ru":"ml/vrk"},{"a":8,"au":"ml/vrk","op":"mul","b":15,"bu":"mg/ml","result":120,"ru":"mg/vrk"}],"answer":"Potilas saa 120 mg vaikuttavaa ainetta vuorokaudessa.","tip":"Ensin selvitä vuorokauden millilitrat, sitten vaikuttavan aineen määrä."},{"cat":"Liuosannoslasku","title":"Liuosannos 15 · paljonko pulloon jää?","task":"Pullossa on aluksi 100 ml lääkettä. Potilas käyttää 7,5 ml kolme kertaa vuorokaudessa kahden vuorokauden ajan. Kuinka paljon liuosta jää pulloon?","steps":[{"a":7.5,"au":"ml/kerta","op":"mul","b":3,"bu":"krt/vrk","result":22.5,"ru":"ml/vrk"},{"a":22.5,"au":"ml/vrk","op":"mul","b":2,"bu":"vrk","result":45,"ru":"ml käytetty"},{"a":100,"au":"ml alussa","op":"sub","b":45,"bu":"ml käytetty","result":55,"ru":"ml jäljellä"}],"answer":"Pulloon jää 55 ml.","tip":"Tässä tarvitaan sekä kertolaskua että vähennyslaskua."},{"cat":"Liuosannoslasku","title":"Liuosannos 16 · annos ja pullon riittävyys","task":"Oraaliliuoksessa on 100 mg / 5 ml. Potilaalle annetaan 25 mg kaksi kertaa vuorokaudessa. Pullossa on 60 ml. Laske kerta-annos millilitroina ja vuorokauden kulutus.","steps":[{"a":100,"au":"mg","op":"div","b":5,"bu":"ml","result":20,"ru":"mg/ml"},{"a":25,"au":"mg","op":"div","b":20,"bu":"mg/ml","result":1.25,"ru":"ml/kerta"},{"a":1.25,"au":"ml/kerta","op":"mul","b":2,"bu":"krt/vrk","result":2.5,"ru":"ml/vrk"}],"answer":"Kerta-annos on 1,25 ml ja vuorokaudessa kuluu 2,5 ml.","tip":"Pitoisuus on ilmoitettu viittä millilitraa kohti, joten selvitä ensin yhden millilitran sisältö."},{"cat":"Liuosannoslasku","title":"Liuosannos 17 · suihkeet molempiin sieraimiin","task":"Yksi nenäsumutteen suihke sisältää 50 µg vaikuttavaa ainetta. Potilas ottaa 2 suihketta kumpaankin sieraimeen. Kuinka monta mikrogrammaa vaikuttavaa ainetta yksi annostelukerta sisältää yhteensä?","steps":[{"a":2,"au":"suihketta/sierain","op":"mul","b":2,"bu":"sierainta","result":4,"ru":"suihketta"},{"a":4,"au":"suihketta","op":"mul","b":50,"bu":"µg/suihke","result":200,"ru":"µg"}],"answer":"Yksi annostelukerta sisältää 200 µg vaikuttavaa ainetta.","tip":"Huomaa ensin, että lääke annetaan kahteen sieraimeen."},{"cat":"Liuosannoslasku","title":"Liuosannos 18 · pakkaustiedosta pitoisuus","task":"Pakkauksessa on yhteensä 200 mg vaikuttavaa ainetta 10 ml:ssa. Potilaalle on määrätty 50 mg. Kuinka monta millilitraa annat?","steps":[{"a":200,"au":"mg","op":"div","b":10,"bu":"ml","result":20,"ru":"mg/ml"},{"a":50,"au":"mg","op":"div","b":20,"bu":"mg/ml","result":2.5,"ru":"ml"}],"answer":"Annos on 2,5 ml.","tip":"Kun vahvuus ilmoitetaan koko pakkauksen määränä, pitoisuus mg/ml on laskettava ensin."},{"cat":"Liuosannoslasku","title":"Liuosannos 19 · aamun ja illan annos","task":"Potilaalle on määrätty 80 mg lääkettä vuorokaudessa siten, että aamulla annetaan 30 mg ja loput illalla. Liuoksen pitoisuus on 10 mg/ml. Kuinka monta millilitraa annetaan illalla?","steps":[{"a":80,"au":"mg/vrk","op":"sub","b":30,"bu":"mg aamulla","result":50,"ru":"mg illalla"},{"a":50,"au":"mg","op":"div","b":10,"bu":"mg/ml","result":5,"ru":"ml"}],"answer":"Illalla annetaan 5 ml.","tip":"Kaikkia annoksia ei aina jaeta tasan. Selvitä ensin, paljonko vuorokausiannoksesta on jäljellä."},{"cat":"Liuosannoslasku","title":"Liuosannos 20 · yksikkömuunnos ja vuorokausiannos","task":"Liuoksen pitoisuus on 0,4 mg/ml. Potilaalle on määrätty 200 µg kerralla kaksi kertaa vuorokaudessa. Laske kerta-annos millilitroina ja vuorokauden kokonaismäärä millilitroina.","steps":[{"a":0.4,"au":"mg/ml","op":"mul1000","b":1,"bu":"","result":400,"ru":"µg/ml"},{"a":200,"au":"µg","op":"div","b":400,"bu":"µg/ml","result":0.5,"ru":"ml/kerta"},{"a":0.5,"au":"ml/kerta","op":"mul","b":2,"bu":"krt/vrk","result":1,"ru":"ml/vrk"}],"answer":"Kerta-annos on 0,5 ml ja vuorokauden kokonaismäärä 1 ml.","tip":"Yksikönmuunnos tehdään ennen varsinaista annoslaskua."},{"cat":"Tablettiannoslasku","title":"Tablettiannos 1","task":"Potilaalle on määrätty 7.5 mg. Yhdessä tabletissa on 15 mg. Kuinka monta tablettia annat?","steps":[{"a":7.5,"au":"mg","op":"div","b":15,"bu":"mg/tabl","result":0.5,"ru":"tabl"}],"answer":"Potilaalle annetaan 0.5 tablettia.","tip":"Tablettien lukumäärä voidaan ilmoittaa roomalaisilla numeroilla. Muunna pakkauskoko tarvittaessa ensin tavalliseksi luvuksi."},{"cat":"Tablettiannoslasku","title":"Tablettiannos 2","task":"Määrätty annos on 50 mg 1 kertaa vuorokaudessa. Tabletin vahvuus on 25 mg. Pakkauksessa on XXVIII tablettia. Laske kerta-annos ja lääkkeen riittävyys.","steps":[{"a":50,"au":"mg","op":"div","b":25,"bu":"mg/tabl","result":2.0,"ru":"tabl/kerta"},{"a":2.0,"au":"tabl/kerta","op":"mul","b":1,"bu":"krt/vrk","result":2.0,"ru":"tabl/vrk"},{"a":28,"au":"tabl (XXVIII)","op":"div","b":2.0,"bu":"tabl/vrk","result":14.0,"ru":"vrk","floor":true},{"a":14,"au":"vrk","op":"mul","b":2.0,"bu":"tabl/vrk","result":28.0,"ru":"tabl käytetty"},{"a":28,"au":"tabl (XXVIII)","op":"sub","b":28.0,"bu":"tabl","result":0.0,"ru":"tabl jäljellä"}],"answer":"Kerta-annos 2 tablettia. Pakkauskoko XXVIII = 28 tablettia. Lääkkeet riittävät 14 täydeksi vuorokaudeksi ja jäljelle jää 0 tablettia.","tip":"Tablettien lukumäärä voidaan ilmoittaa roomalaisilla numeroilla. Muunna pakkauskoko tarvittaessa ensin tavalliseksi luvuksi."},{"cat":"Tablettiannoslasku","title":"Tablettiannos 3","task":"Määrätty annos on 600 mg 2 kertaa vuorokaudessa. Tabletin vahvuus on 200 mg. Pakkauksessa on XXX tablettia. Laske kerta-annos ja lääkkeen riittävyys.","steps":[{"a":600,"au":"mg","op":"div","b":200,"bu":"mg/tabl","result":3.0,"ru":"tabl/kerta"},{"a":3.0,"au":"tabl/kerta","op":"mul","b":2,"bu":"krt/vrk","result":6.0,"ru":"tabl/vrk"},{"a":30,"au":"tabl (XXX)","op":"div","b":6.0,"bu":"tabl/vrk","result":5.0,"ru":"vrk","floor":true},{"a":5,"au":"vrk","op":"mul","b":6.0,"bu":"tabl/vrk","result":30.0,"ru":"tabl käytetty"},{"a":30,"au":"tabl (XXX)","op":"sub","b":30.0,"bu":"tabl","result":0.0,"ru":"tabl jäljellä"}],"answer":"Kerta-annos 3 tablettia. Pakkauskoko XXX = 30 tablettia. Lääkkeet riittävät 5 täydeksi vuorokaudeksi ja jäljelle jää 0 tablettia.","tip":"Tablettien lukumäärä voidaan ilmoittaa roomalaisilla numeroilla. Muunna pakkauskoko tarvittaessa ensin tavalliseksi luvuksi."},{"cat":"Tablettiannoslasku","title":"Tablettiannos 4","task":"Potilaalle on määrätty 250 mg. Yhdessä tabletissa on 500 mg. Kuinka monta tablettia annat?","steps":[{"a":250,"au":"mg","op":"div","b":500,"bu":"mg/tabl","result":0.5,"ru":"tabl"}],"answer":"Potilaalle annetaan 0.5 tablettia.","tip":"Tablettien lukumäärä voidaan ilmoittaa roomalaisilla numeroilla. Muunna pakkauskoko tarvittaessa ensin tavalliseksi luvuksi."},{"cat":"Tablettiannoslasku","title":"Tablettiannos 5","task":"Potilaalle on määrätty 48 mg. Yhdessä tabletissa on 16 mg. Kuinka monta tablettia annat?","steps":[{"a":48,"au":"mg","op":"div","b":16,"bu":"mg/tabl","result":3.0,"ru":"tabl"}],"answer":"Potilaalle annetaan 3 tablettia.","tip":"Tablettien lukumäärä voidaan ilmoittaa roomalaisilla numeroilla. Muunna pakkauskoko tarvittaessa ensin tavalliseksi luvuksi."},{"cat":"Tablettiannoslasku","title":"Tablettiannos 6","task":"Määrätty annos on 160 mg 3 kertaa vuorokaudessa. Tabletin vahvuus on 80 mg. Pakkauksessa on XL tablettia. Laske kerta-annos ja lääkkeen riittävyys.","steps":[{"a":160,"au":"mg","op":"div","b":80,"bu":"mg/tabl","result":2.0,"ru":"tabl/kerta"},{"a":2.0,"au":"tabl/kerta","op":"mul","b":3,"bu":"krt/vrk","result":6.0,"ru":"tabl/vrk"},{"a":40,"au":"tabl (XL)","op":"div","b":6.0,"bu":"tabl/vrk","result":6.666666666666667,"ru":"vrk","floor":true},{"a":6,"au":"vrk","op":"mul","b":6.0,"bu":"tabl/vrk","result":36.0,"ru":"tabl käytetty"},{"a":40,"au":"tabl (XL)","op":"sub","b":36.0,"bu":"tabl","result":4.0,"ru":"tabl jäljellä"}],"answer":"Kerta-annos 2 tablettia. Pakkauskoko XL = 40 tablettia. Lääkkeet riittävät 6 täydeksi vuorokaudeksi ja jäljelle jää 4 tablettia.","tip":"Tablettien lukumäärä voidaan ilmoittaa roomalaisilla numeroilla. Muunna pakkauskoko tarvittaessa ensin tavalliseksi luvuksi."},{"cat":"Tablettiannoslasku","title":"Tablettiannos 7","task":"Määrätty annos on 750 mg 2 kertaa vuorokaudessa. Tabletin vahvuus on 500 mg. Pakkauksessa on XCVIII tablettia. Laske kerta-annos ja lääkkeen riittävyys.","steps":[{"a":750,"au":"mg","op":"div","b":500,"bu":"mg/tabl","result":1.5,"ru":"tabl/kerta"},{"a":1.5,"au":"tabl/kerta","op":"mul","b":2,"bu":"krt/vrk","result":3.0,"ru":"tabl/vrk"},{"a":98,"au":"tabl (XCVIII)","op":"div","b":3.0,"bu":"tabl/vrk","result":32.666666666666664,"ru":"vrk","floor":true},{"a":32,"au":"vrk","op":"mul","b":3.0,"bu":"tabl/vrk","result":96.0,"ru":"tabl käytetty"},{"a":98,"au":"tabl (XCVIII)","op":"sub","b":96.0,"bu":"tabl","result":2.0,"ru":"tabl jäljellä"}],"answer":"Kerta-annos 1.5 tablettia. Pakkauskoko XCVIII = 98 tablettia. Lääkkeet riittävät 32 täydeksi vuorokaudeksi ja jäljelle jää 2 tablettia.","tip":"Tablettien lukumäärä voidaan ilmoittaa roomalaisilla numeroilla. Muunna pakkauskoko tarvittaessa ensin tavalliseksi luvuksi."},{"cat":"Tablettiannoslasku","title":"Tablettiannos 8","task":"Määrätty annos on 125 mg 1 kertaa vuorokaudessa. Tabletin vahvuus on 250 mg. Pakkauksessa on XXVIII tablettia. Laske kerta-annos ja lääkkeen riittävyys.","steps":[{"a":125,"au":"mg","op":"div","b":250,"bu":"mg/tabl","result":0.5,"ru":"tabl/kerta"},{"a":0.5,"au":"tabl/kerta","op":"mul","b":1,"bu":"krt/vrk","result":0.5,"ru":"tabl/vrk"},{"a":28,"au":"tabl (XXVIII)","op":"div","b":0.5,"bu":"tabl/vrk","result":56.0,"ru":"vrk","floor":true},{"a":56,"au":"vrk","op":"mul","b":0.5,"bu":"tabl/vrk","result":28.0,"ru":"tabl käytetty"},{"a":28,"au":"tabl (XXVIII)","op":"sub","b":28.0,"bu":"tabl","result":0.0,"ru":"tabl jäljellä"}],"answer":"Kerta-annos 0.5 tablettia. Pakkauskoko XXVIII = 28 tablettia. Lääkkeet riittävät 56 täydeksi vuorokaudeksi ja jäljelle jää 0 tablettia.","tip":"Tablettien lukumäärä voidaan ilmoittaa roomalaisilla numeroilla. Muunna pakkauskoko tarvittaessa ensin tavalliseksi luvuksi."},{"cat":"Tablettiannoslasku","title":"Tablettiannos 9","task":"Määrätty annos on 60 mg 2 kertaa vuorokaudessa. Tabletin vahvuus on 40 mg. Pakkauksessa on XLIII tablettia. Laske kerta-annos ja lääkkeen riittävyys.","steps":[{"a":60,"au":"mg","op":"div","b":40,"bu":"mg/tabl","result":1.5,"ru":"tabl/kerta"},{"a":1.5,"au":"tabl/kerta","op":"mul","b":2,"bu":"krt/vrk","result":3.0,"ru":"tabl/vrk"},{"a":43,"au":"tabl (XLIII)","op":"div","b":3.0,"bu":"tabl/vrk","result":14.333333333333334,"ru":"vrk","floor":true},{"a":14,"au":"vrk","op":"mul","b":3.0,"bu":"tabl/vrk","result":42.0,"ru":"tabl käytetty"},{"a":43,"au":"tabl (XLIII)","op":"sub","b":42.0,"bu":"tabl","result":1.0,"ru":"tabl jäljellä"}],"answer":"Kerta-annos 1.5 tablettia. Pakkauskoko XLIII = 43 tablettia. Lääkkeet riittävät 14 täydeksi vuorokaudeksi ja jäljelle jää 1 tablettia.","tip":"Tablettien lukumäärä voidaan ilmoittaa roomalaisilla numeroilla. Muunna pakkauskoko tarvittaessa ensin tavalliseksi luvuksi."},{"cat":"Tablettiannoslasku","title":"Tablettiannos 10","task":"Potilaalle on määrätty 300 mg. Yhdessä tabletissa on 200 mg. Kuinka monta tablettia annat?","steps":[{"a":300,"au":"mg","op":"div","b":200,"bu":"mg/tabl","result":1.5,"ru":"tabl"}],"answer":"Potilaalle annetaan 1.5 tablettia.","tip":"Tablettien lukumäärä voidaan ilmoittaa roomalaisilla numeroilla. Muunna pakkauskoko tarvittaessa ensin tavalliseksi luvuksi."},{"cat":"Tablettiannoslasku","title":"Tablettiannos 11","task":"Potilaalle on määrätty 20 mg. Yhdessä tabletissa on 10 mg. Kuinka monta tablettia annat?","steps":[{"a":20,"au":"mg","op":"div","b":10,"bu":"mg/tabl","result":2.0,"ru":"tabl"}],"answer":"Potilaalle annetaan 2 tablettia.","tip":"Tablettien lukumäärä voidaan ilmoittaa roomalaisilla numeroilla. Muunna pakkauskoko tarvittaessa ensin tavalliseksi luvuksi."},{"cat":"Tablettiannoslasku","title":"Tablettiannos 12","task":"Potilaalle on määrätty 37.5 mg. Yhdessä tabletissa on 25 mg. Kuinka monta tablettia annat?","steps":[{"a":37.5,"au":"mg","op":"div","b":25,"bu":"mg/tabl","result":1.5,"ru":"tabl"}],"answer":"Potilaalle annetaan 1.5 tablettia.","tip":"Tablettien lukumäärä voidaan ilmoittaa roomalaisilla numeroilla. Muunna pakkauskoko tarvittaessa ensin tavalliseksi luvuksi."},{"cat":"Tablettiannoslasku","title":"Tablettiannos 13","task":"Määrätty annos on 100 mg 3 kertaa vuorokaudessa. Tabletin vahvuus on 50 mg. Pakkauksessa on CCC tablettia. Laske kerta-annos ja lääkkeen riittävyys.","steps":[{"a":100,"au":"mg","op":"div","b":50,"bu":"mg/tabl","result":2.0,"ru":"tabl/kerta"},{"a":2.0,"au":"tabl/kerta","op":"mul","b":3,"bu":"krt/vrk","result":6.0,"ru":"tabl/vrk"},{"a":300,"au":"tabl (CCC)","op":"div","b":6.0,"bu":"tabl/vrk","result":50.0,"ru":"vrk","floor":true},{"a":50,"au":"vrk","op":"mul","b":6.0,"bu":"tabl/vrk","result":300.0,"ru":"tabl käytetty"},{"a":300,"au":"tabl (CCC)","op":"sub","b":300.0,"bu":"tabl","result":0.0,"ru":"tabl jäljellä"}],"answer":"Kerta-annos 2 tablettia. Pakkauskoko CCC = 300 tablettia. Lääkkeet riittävät 50 täydeksi vuorokaudeksi ja jäljelle jää 0 tablettia.","tip":"Tablettien lukumäärä voidaan ilmoittaa roomalaisilla numeroilla. Muunna pakkauskoko tarvittaessa ensin tavalliseksi luvuksi."},{"cat":"Tablettiannoslasku","title":"Tablettiannos 14","task":"Potilaalle on määrätty 1.5 mg. Yhdessä tabletissa on 0.5 mg. Kuinka monta tablettia annat?","steps":[{"a":1.5,"au":"mg","op":"div","b":0.5,"bu":"mg/tabl","result":3.0,"ru":"tabl"}],"answer":"Potilaalle annetaan 3 tablettia.","tip":"Tablettien lukumäärä voidaan ilmoittaa roomalaisilla numeroilla. Muunna pakkauskoko tarvittaessa ensin tavalliseksi luvuksi."},{"cat":"Tablettiannoslasku","title":"Tablettiannos 15","task":"Potilaalle on määrätty 45 mg. Yhdessä tabletissa on 15 mg. Kuinka monta tablettia annat?","steps":[{"a":45,"au":"mg","op":"div","b":15,"bu":"mg/tabl","result":3.0,"ru":"tabl"}],"answer":"Potilaalle annetaan 3 tablettia.","tip":"Tablettien lukumäärä voidaan ilmoittaa roomalaisilla numeroilla. Muunna pakkauskoko tarvittaessa ensin tavalliseksi luvuksi."},{"cat":"Tablettiannoslasku","title":"Tablettiannos 16","task":"Potilaalle on määrätty 75 mg. Yhdessä tabletissa on 25 mg. Kuinka monta tablettia annat?","steps":[{"a":75,"au":"mg","op":"div","b":25,"bu":"mg/tabl","result":3.0,"ru":"tabl"}],"answer":"Potilaalle annetaan 3 tablettia.","tip":"Tablettien lukumäärä voidaan ilmoittaa roomalaisilla numeroilla. Muunna pakkauskoko tarvittaessa ensin tavalliseksi luvuksi."},{"cat":"Tablettiannoslasku","title":"Tablettiannos 17","task":"Määrätty annos on 500 mg 2 kertaa vuorokaudessa. Tabletin vahvuus on 250 mg. Pakkauksessa on XXVIII tablettia. Laske kerta-annos ja lääkkeen riittävyys.","steps":[{"a":500,"au":"mg","op":"div","b":250,"bu":"mg/tabl","result":2.0,"ru":"tabl/kerta"},{"a":2.0,"au":"tabl/kerta","op":"mul","b":2,"bu":"krt/vrk","result":4.0,"ru":"tabl/vrk"},{"a":28,"au":"tabl (XXVIII)","op":"div","b":4.0,"bu":"tabl/vrk","result":7.0,"ru":"vrk","floor":true},{"a":7,"au":"vrk","op":"mul","b":4.0,"bu":"tabl/vrk","result":28.0,"ru":"tabl käytetty"},{"a":28,"au":"tabl (XXVIII)","op":"sub","b":28.0,"bu":"tabl","result":0.0,"ru":"tabl jäljellä"}],"answer":"Kerta-annos 2 tablettia. Pakkauskoko XXVIII = 28 tablettia. Lääkkeet riittävät 7 täydeksi vuorokaudeksi ja jäljelle jää 0 tablettia.","tip":"Tablettien lukumäärä voidaan ilmoittaa roomalaisilla numeroilla. Muunna pakkauskoko tarvittaessa ensin tavalliseksi luvuksi."},{"cat":"Tablettiannoslasku","title":"Tablettiannos 18","task":"Määrätty annos on 30 mg 2 kertaa vuorokaudessa. Tabletin vahvuus on 20 mg. Pakkauksessa on XCVIII tablettia. Laske kerta-annos ja lääkkeen riittävyys.","steps":[{"a":30,"au":"mg","op":"div","b":20,"bu":"mg/tabl","result":1.5,"ru":"tabl/kerta"},{"a":1.5,"au":"tabl/kerta","op":"mul","b":2,"bu":"krt/vrk","result":3.0,"ru":"tabl/vrk"},{"a":98,"au":"tabl (XCVIII)","op":"div","b":3.0,"bu":"tabl/vrk","result":32.666666666666664,"ru":"vrk","floor":true},{"a":32,"au":"vrk","op":"mul","b":3.0,"bu":"tabl/vrk","result":96.0,"ru":"tabl käytetty"},{"a":98,"au":"tabl (XCVIII)","op":"sub","b":96.0,"bu":"tabl","result":2.0,"ru":"tabl jäljellä"}],"answer":"Kerta-annos 1.5 tablettia. Pakkauskoko XCVIII = 98 tablettia. Lääkkeet riittävät 32 täydeksi vuorokaudeksi ja jäljelle jää 2 tablettia.","tip":"Tablettien lukumäärä voidaan ilmoittaa roomalaisilla numeroilla. Muunna pakkauskoko tarvittaessa ensin tavalliseksi luvuksi."},{"cat":"Tablettiannoslasku","title":"Tablettiannos 19","task":"Potilaalle on määrätty 12.5 mg. Yhdessä tabletissa on 25 mg. Kuinka monta tablettia annat?","steps":[{"a":12.5,"au":"mg","op":"div","b":25,"bu":"mg/tabl","result":0.5,"ru":"tabl"}],"answer":"Potilaalle annetaan 0.5 tablettia.","tip":"Tablettien lukumäärä voidaan ilmoittaa roomalaisilla numeroilla. Muunna pakkauskoko tarvittaessa ensin tavalliseksi luvuksi."},{"cat":"Tablettiannoslasku","title":"Tablettiannos 20","task":"Määrätty annos on 90 mg 1 kertaa vuorokaudessa. Tabletin vahvuus on 30 mg. Pakkauksessa on XL tablettia. Laske kerta-annos ja lääkkeen riittävyys.","steps":[{"a":90,"au":"mg","op":"div","b":30,"bu":"mg/tabl","result":3.0,"ru":"tabl/kerta"},{"a":3.0,"au":"tabl/kerta","op":"mul","b":1,"bu":"krt/vrk","result":3.0,"ru":"tabl/vrk"},{"a":40,"au":"tabl (XL)","op":"div","b":3.0,"bu":"tabl/vrk","result":13.333333333333334,"ru":"vrk","floor":true},{"a":13,"au":"vrk","op":"mul","b":3.0,"bu":"tabl/vrk","result":39.0,"ru":"tabl käytetty"},{"a":40,"au":"tabl (XL)","op":"sub","b":39.0,"bu":"tabl","result":1.0,"ru":"tabl jäljellä"}],"answer":"Kerta-annos 3 tablettia. Pakkauskoko XL = 40 tablettia. Lääkkeet riittävät 13 täydeksi vuorokaudeksi ja jäljelle jää 1 tablettia.","tip":"Tablettien lukumäärä voidaan ilmoittaa roomalaisilla numeroilla. Muunna pakkauskoko tarvittaessa ensin tavalliseksi luvuksi."},{"cat":"Liuoksen valmistus","title":"Liuoksen valmistus / laimennus 1","task":"Kuiva-ainepakkauksessa on 500 mg vaikuttavaa ainetta. Se liuotetaan ad 20 ml:aan. Laske valmiin liuoksen pitoisuus mg/ml ja prosentteina.","steps":[{"a":500,"au":"mg","op":"div","b":20,"bu":"ml","result":25.0,"ru":"mg/ml"},{"a":25.0,"au":"mg/ml","op":"div","b":10,"bu":"mg/ml per 1 %","result":2.5,"ru":"%"}],"answer":"Pitoisuus on 25 mg/ml eli 2.5 %.","tip":"Kuiva-aineessa selvitä ensin mg/ml. Laimennuksessa vaikuttavan aineen määrä säilyy, vaikka tilavuus muuttuu."},{"cat":"Liuoksen valmistus","title":"Liuoksen valmistus / laimennus 2","task":"Kuiva-ainepakkauksessa on 750 mg vaikuttavaa ainetta. Se liuotetaan ad 15 ml:aan. Laske valmiin liuoksen pitoisuus mg/ml ja prosentteina.","steps":[{"a":750,"au":"mg","op":"div","b":15,"bu":"ml","result":50.0,"ru":"mg/ml"},{"a":50.0,"au":"mg/ml","op":"div","b":10,"bu":"mg/ml per 1 %","result":5.0,"ru":"%"}],"answer":"Pitoisuus on 50 mg/ml eli 5 %.","tip":"Kuiva-aineessa selvitä ensin mg/ml. Laimennuksessa vaikuttavan aineen määrä säilyy, vaikka tilavuus muuttuu."},{"cat":"Liuoksen valmistus","title":"Liuoksen valmistus / laimennus 3","task":"Kuiva-ainepakkauksessa on 1000 mg vaikuttavaa ainetta. Se liuotetaan ad 4 ml:aan. Laske valmiin liuoksen pitoisuus mg/ml ja prosentteina.","steps":[{"a":1000,"au":"mg","op":"div","b":4,"bu":"ml","result":250.0,"ru":"mg/ml"},{"a":250.0,"au":"mg/ml","op":"div","b":10,"bu":"mg/ml per 1 %","result":25.0,"ru":"%"}],"answer":"Pitoisuus on 250 mg/ml eli 25 %.","tip":"Kuiva-aineessa selvitä ensin mg/ml. Laimennuksessa vaikuttavan aineen määrä säilyy, vaikka tilavuus muuttuu."},{"cat":"Liuoksen valmistus","title":"Liuoksen valmistus / laimennus 4","task":"Kuiva-ainepakkauksessa on 250 mg vaikuttavaa ainetta. Se liuotetaan ad 5 ml:aan. Laske valmiin liuoksen pitoisuus mg/ml ja prosentteina.","steps":[{"a":250,"au":"mg","op":"div","b":5,"bu":"ml","result":50.0,"ru":"mg/ml"},{"a":50.0,"au":"mg/ml","op":"div","b":10,"bu":"mg/ml per 1 %","result":5.0,"ru":"%"}],"answer":"Pitoisuus on 50 mg/ml eli 5 %.","tip":"Kuiva-aineessa selvitä ensin mg/ml. Laimennuksessa vaikuttavan aineen määrä säilyy, vaikka tilavuus muuttuu."},{"cat":"Liuoksen valmistus","title":"Liuoksen valmistus / laimennus 5","task":"Kuiva-ainepakkauksessa on 1500 mg vaikuttavaa ainetta. Se liuotetaan ad 15 ml:aan. Laske valmiin liuoksen pitoisuus mg/ml ja prosentteina.","steps":[{"a":1500,"au":"mg","op":"div","b":15,"bu":"ml","result":100.0,"ru":"mg/ml"},{"a":100.0,"au":"mg/ml","op":"div","b":10,"bu":"mg/ml per 1 %","result":10.0,"ru":"%"}],"answer":"Pitoisuus on 100 mg/ml eli 10 %.","tip":"Kuiva-aineessa selvitä ensin mg/ml. Laimennuksessa vaikuttavan aineen määrä säilyy, vaikka tilavuus muuttuu."},{"cat":"Liuoksen valmistus","title":"Liuoksen valmistus / laimennus 6","task":"Kuiva-ainepakkauksessa on 600 mg vaikuttavaa ainetta. Se liuotetaan ad 12 ml:aan. Laske valmiin liuoksen pitoisuus mg/ml ja prosentteina.","steps":[{"a":600,"au":"mg","op":"div","b":12,"bu":"ml","result":50.0,"ru":"mg/ml"},{"a":50.0,"au":"mg/ml","op":"div","b":10,"bu":"mg/ml per 1 %","result":5.0,"ru":"%"}],"answer":"Pitoisuus on 50 mg/ml eli 5 %.","tip":"Kuiva-aineessa selvitä ensin mg/ml. Laimennuksessa vaikuttavan aineen määrä säilyy, vaikka tilavuus muuttuu."},{"cat":"Liuoksen valmistus","title":"Liuoksen valmistus / laimennus 7","task":"Kuiva-ainepakkauksessa on 2000 mg vaikuttavaa ainetta. Se liuotetaan ad 20 ml:aan. Laske valmiin liuoksen pitoisuus mg/ml ja prosentteina.","steps":[{"a":2000,"au":"mg","op":"div","b":20,"bu":"ml","result":100.0,"ru":"mg/ml"},{"a":100.0,"au":"mg/ml","op":"div","b":10,"bu":"mg/ml per 1 %","result":10.0,"ru":"%"}],"answer":"Pitoisuus on 100 mg/ml eli 10 %.","tip":"Kuiva-aineessa selvitä ensin mg/ml. Laimennuksessa vaikuttavan aineen määrä säilyy, vaikka tilavuus muuttuu."},{"cat":"Liuoksen valmistus","title":"Liuoksen valmistus / laimennus 8","task":"Kuiva-ainepakkauksessa on 300 mg vaikuttavaa ainetta. Se liuotetaan ad 6 ml:aan. Laske valmiin liuoksen pitoisuus mg/ml ja prosentteina.","steps":[{"a":300,"au":"mg","op":"div","b":6,"bu":"ml","result":50.0,"ru":"mg/ml"},{"a":50.0,"au":"mg/ml","op":"div","b":10,"bu":"mg/ml per 1 %","result":5.0,"ru":"%"}],"answer":"Pitoisuus on 50 mg/ml eli 5 %.","tip":"Kuiva-aineessa selvitä ensin mg/ml. Laimennuksessa vaikuttavan aineen määrä säilyy, vaikka tilavuus muuttuu."},{"cat":"Liuoksen valmistus","title":"Liuoksen valmistus / laimennus 9","task":"Kuiva-ainepakkauksessa on 800 mg vaikuttavaa ainetta. Se liuotetaan ad 8 ml:aan. Laske valmiin liuoksen pitoisuus mg/ml ja prosentteina.","steps":[{"a":800,"au":"mg","op":"div","b":8,"bu":"ml","result":100.0,"ru":"mg/ml"},{"a":100.0,"au":"mg/ml","op":"div","b":10,"bu":"mg/ml per 1 %","result":10.0,"ru":"%"}],"answer":"Pitoisuus on 100 mg/ml eli 10 %.","tip":"Kuiva-aineessa selvitä ensin mg/ml. Laimennuksessa vaikuttavan aineen määrä säilyy, vaikka tilavuus muuttuu."},{"cat":"Liuoksen valmistus","title":"Liuoksen valmistus / laimennus 10","task":"Kuiva-ainepakkauksessa on 1200 mg vaikuttavaa ainetta. Se liuotetaan ad 24 ml:aan. Laske valmiin liuoksen pitoisuus mg/ml ja prosentteina.","steps":[{"a":1200,"au":"mg","op":"div","b":24,"bu":"ml","result":50.0,"ru":"mg/ml"},{"a":50.0,"au":"mg/ml","op":"div","b":10,"bu":"mg/ml per 1 %","result":5.0,"ru":"%"}],"answer":"Pitoisuus on 50 mg/ml eli 5 %.","tip":"Kuiva-aineessa selvitä ensin mg/ml. Laimennuksessa vaikuttavan aineen määrä säilyy, vaikka tilavuus muuttuu."},{"cat":"Liuoksen valmistus","title":"Liuoksen valmistus / laimennus 11","task":"Sinulla on 150 ml 10-prosenttista liuosta. Haluat laimentaa sen 2-prosenttiseksi. Laske lopputilavuus ja lisättävän laimentimen määrä.","steps":[{"a":150,"au":"ml","op":"mul","b":10,"bu":"%","result":1500,"ru":"ml·%"},{"a":1500,"au":"ml·%","op":"div","b":2,"bu":"%","result":750.0,"ru":"ml lopputilavuus"},{"a":750.0,"au":"ml","op":"sub","b":150,"bu":"ml lähtöliuosta","result":600.0,"ru":"ml laimenninta"}],"answer":"Lopputilavuus on 750 ml. Laimenninta lisätään 600 ml (ad 750 ml).","tip":"Kuiva-aineessa selvitä ensin mg/ml. Laimennuksessa vaikuttavan aineen määrä säilyy, vaikka tilavuus muuttuu."},{"cat":"Liuoksen valmistus","title":"Liuoksen valmistus / laimennus 12","task":"Sinulla on 100 ml 5-prosenttista liuosta. Haluat laimentaa sen 2-prosenttiseksi. Laske lopputilavuus ja lisättävän laimentimen määrä.","steps":[{"a":100,"au":"ml","op":"mul","b":5,"bu":"%","result":500,"ru":"ml·%"},{"a":500,"au":"ml·%","op":"div","b":2,"bu":"%","result":250.0,"ru":"ml lopputilavuus"},{"a":250.0,"au":"ml","op":"sub","b":100,"bu":"ml lähtöliuosta","result":150.0,"ru":"ml laimenninta"}],"answer":"Lopputilavuus on 250 ml. Laimenninta lisätään 150 ml (ad 250 ml).","tip":"Kuiva-aineessa selvitä ensin mg/ml. Laimennuksessa vaikuttavan aineen määrä säilyy, vaikka tilavuus muuttuu."},{"cat":"Liuoksen valmistus","title":"Liuoksen valmistus / laimennus 13","task":"Sinulla on 40 ml 2.5-prosenttista liuosta. Haluat laimentaa sen 1-prosenttiseksi. Laske lopputilavuus ja lisättävän laimentimen määrä.","steps":[{"a":40,"au":"ml","op":"mul","b":2.5,"bu":"%","result":100.0,"ru":"ml·%"},{"a":100.0,"au":"ml·%","op":"div","b":1,"bu":"%","result":100.0,"ru":"ml lopputilavuus"},{"a":100.0,"au":"ml","op":"sub","b":40,"bu":"ml lähtöliuosta","result":60.0,"ru":"ml laimenninta"}],"answer":"Lopputilavuus on 100 ml. Laimenninta lisätään 60 ml (ad 100 ml).","tip":"Kuiva-aineessa selvitä ensin mg/ml. Laimennuksessa vaikuttavan aineen määrä säilyy, vaikka tilavuus muuttuu."},{"cat":"Liuoksen valmistus","title":"Liuoksen valmistus / laimennus 14","task":"Sinulla on 50 ml 4-prosenttista liuosta. Haluat laimentaa sen 1-prosenttiseksi. Laske lopputilavuus ja lisättävän laimentimen määrä.","steps":[{"a":50,"au":"ml","op":"mul","b":4,"bu":"%","result":200,"ru":"ml·%"},{"a":200,"au":"ml·%","op":"div","b":1,"bu":"%","result":200.0,"ru":"ml lopputilavuus"},{"a":200.0,"au":"ml","op":"sub","b":50,"bu":"ml lähtöliuosta","result":150.0,"ru":"ml laimenninta"}],"answer":"Lopputilavuus on 200 ml. Laimenninta lisätään 150 ml (ad 200 ml).","tip":"Kuiva-aineessa selvitä ensin mg/ml. Laimennuksessa vaikuttavan aineen määrä säilyy, vaikka tilavuus muuttuu."},{"cat":"Liuoksen valmistus","title":"Liuoksen valmistus / laimennus 15","task":"Sinulla on 25 ml 20-prosenttista liuosta. Haluat laimentaa sen 4-prosenttiseksi. Laske lopputilavuus ja lisättävän laimentimen määrä.","steps":[{"a":25,"au":"ml","op":"mul","b":20,"bu":"%","result":500,"ru":"ml·%"},{"a":500,"au":"ml·%","op":"div","b":4,"bu":"%","result":125.0,"ru":"ml lopputilavuus"},{"a":125.0,"au":"ml","op":"sub","b":25,"bu":"ml lähtöliuosta","result":100.0,"ru":"ml laimenninta"}],"answer":"Lopputilavuus on 125 ml. Laimenninta lisätään 100 ml (ad 125 ml).","tip":"Kuiva-aineessa selvitä ensin mg/ml. Laimennuksessa vaikuttavan aineen määrä säilyy, vaikka tilavuus muuttuu."},{"cat":"Liuoksen valmistus","title":"Liuoksen valmistus / laimennus 16","task":"Sinulla on 20 ml 1-prosenttista liuosta. Haluat laimentaa sen 0.2-prosenttiseksi. Laske lopputilavuus ja lisättävän laimentimen määrä.","steps":[{"a":20,"au":"ml","op":"mul","b":1,"bu":"%","result":20,"ru":"ml·%"},{"a":20,"au":"ml·%","op":"div","b":0.2,"bu":"%","result":100.0,"ru":"ml lopputilavuus"},{"a":100.0,"au":"ml","op":"sub","b":20,"bu":"ml lähtöliuosta","result":80.0,"ru":"ml laimenninta"}],"answer":"Lopputilavuus on 100 ml. Laimenninta lisätään 80 ml (ad 100 ml).","tip":"Kuiva-aineessa selvitä ensin mg/ml. Laimennuksessa vaikuttavan aineen määrä säilyy, vaikka tilavuus muuttuu."},{"cat":"Liuoksen valmistus","title":"Liuoksen valmistus / laimennus 17","task":"Sinulla on 30 ml 8-prosenttista liuosta. Haluat laimentaa sen 2-prosenttiseksi. Laske lopputilavuus ja lisättävän laimentimen määrä.","steps":[{"a":30,"au":"ml","op":"mul","b":8,"bu":"%","result":240,"ru":"ml·%"},{"a":240,"au":"ml·%","op":"div","b":2,"bu":"%","result":120.0,"ru":"ml lopputilavuus"},{"a":120.0,"au":"ml","op":"sub","b":30,"bu":"ml lähtöliuosta","result":90.0,"ru":"ml laimenninta"}],"answer":"Lopputilavuus on 120 ml. Laimenninta lisätään 90 ml (ad 120 ml).","tip":"Kuiva-aineessa selvitä ensin mg/ml. Laimennuksessa vaikuttavan aineen määrä säilyy, vaikka tilavuus muuttuu."},{"cat":"Liuoksen valmistus","title":"Liuoksen valmistus / laimennus 18","task":"Sinulla on 25 ml 12-prosenttista liuosta. Haluat laimentaa sen 3-prosenttiseksi. Laske lopputilavuus ja lisättävän laimentimen määrä.","steps":[{"a":25,"au":"ml","op":"mul","b":12,"bu":"%","result":300,"ru":"ml·%"},{"a":300,"au":"ml·%","op":"div","b":3,"bu":"%","result":100.0,"ru":"ml lopputilavuus"},{"a":100.0,"au":"ml","op":"sub","b":25,"bu":"ml lähtöliuosta","result":75.0,"ru":"ml laimenninta"}],"answer":"Lopputilavuus on 100 ml. Laimenninta lisätään 75 ml (ad 100 ml).","tip":"Kuiva-aineessa selvitä ensin mg/ml. Laimennuksessa vaikuttavan aineen määrä säilyy, vaikka tilavuus muuttuu."},{"cat":"Liuoksen valmistus","title":"Liuoksen valmistus / laimennus 19","task":"Sinulla on 40 ml 6-prosenttista liuosta. Haluat laimentaa sen 1.5-prosenttiseksi. Laske lopputilavuus ja lisättävän laimentimen määrä.","steps":[{"a":40,"au":"ml","op":"mul","b":6,"bu":"%","result":240,"ru":"ml·%"},{"a":240,"au":"ml·%","op":"div","b":1.5,"bu":"%","result":160.0,"ru":"ml lopputilavuus"},{"a":160.0,"au":"ml","op":"sub","b":40,"bu":"ml lähtöliuosta","result":120.0,"ru":"ml laimenninta"}],"answer":"Lopputilavuus on 160 ml. Laimenninta lisätään 120 ml (ad 160 ml).","tip":"Kuiva-aineessa selvitä ensin mg/ml. Laimennuksessa vaikuttavan aineen määrä säilyy, vaikka tilavuus muuttuu."},{"cat":"Liuoksen valmistus","title":"Liuoksen valmistus / laimennus 20","task":"Sinulla on 10 ml 25-prosenttista liuosta. Haluat laimentaa sen 5-prosenttiseksi. Laske lopputilavuus ja lisättävän laimentimen määrä.","steps":[{"a":10,"au":"ml","op":"mul","b":25,"bu":"%","result":250,"ru":"ml·%"},{"a":250,"au":"ml·%","op":"div","b":5,"bu":"%","result":50.0,"ru":"ml lopputilavuus"},{"a":50.0,"au":"ml","op":"sub","b":10,"bu":"ml lähtöliuosta","result":40.0,"ru":"ml laimenninta"}],"answer":"Lopputilavuus on 50 ml. Laimenninta lisätään 40 ml (ad 50 ml).","tip":"Kuiva-aineessa selvitä ensin mg/ml. Laimennuksessa vaikuttavan aineen määrä säilyy, vaikka tilavuus muuttuu."},{"cat":"Tiputuslasku","title":"Tiputuslasku 1","task":"100 ml infuusioliuosta annetaan 15 minuutissa. Laske antonopeus ml/h ja gtt/min. Käytä 1 ml = 20 gtt.","steps":[{"a":100,"au":"ml","op":"mul","b":60,"bu":"min/h","result":6000,"ru":"ml·min/h"},{"a":6000,"au":"ml·min/h","op":"div","b":15,"bu":"min","result":400.0,"ru":"ml/h"},{"a":100,"au":"ml","op":"mul","b":20,"bu":"gtt/ml","result":2000,"ru":"gtt"},{"a":2000,"au":"gtt","op":"div","b":15,"bu":"min","result":133.33333333333334,"ru":"gtt/min","round":true}],"answer":"Antonopeus on 400 ml/h ja noin 133 gtt/min.","tip":"Muista 1 h = 60 min ja kirjan oletus 1 ml = 20 gtt, ellei tehtävässä ilmoiteta muuta."},{"cat":"Tiputuslasku","title":"Tiputuslasku 2","task":"250 ml infuusioliuosta annetaan 60 minuutissa. Laske antonopeus ml/h ja gtt/min. Käytä 1 ml = 20 gtt.","steps":[{"a":250,"au":"ml","op":"mul","b":60,"bu":"min/h","result":15000,"ru":"ml·min/h"},{"a":15000,"au":"ml·min/h","op":"div","b":60,"bu":"min","result":250.0,"ru":"ml/h"},{"a":250,"au":"ml","op":"mul","b":20,"bu":"gtt/ml","result":5000,"ru":"gtt"},{"a":5000,"au":"gtt","op":"div","b":60,"bu":"min","result":83.33333333333333,"ru":"gtt/min","round":true}],"answer":"Antonopeus on 250 ml/h ja noin 83 gtt/min.","tip":"Muista 1 h = 60 min ja kirjan oletus 1 ml = 20 gtt, ellei tehtävässä ilmoiteta muuta."},{"cat":"Tiputuslasku","title":"Tiputuslasku 3","task":"2053 ml infuusioliuosta annetaan 1440 minuutissa. Laske antonopeus ml/h ja gtt/min. Käytä 1 ml = 20 gtt.","steps":[{"a":2053,"au":"ml","op":"mul","b":60,"bu":"min/h","result":123180,"ru":"ml·min/h"},{"a":123180,"au":"ml·min/h","op":"div","b":1440,"bu":"min","result":85.54166666666667,"ru":"ml/h"},{"a":2053,"au":"ml","op":"mul","b":20,"bu":"gtt/ml","result":41060,"ru":"gtt"},{"a":41060,"au":"gtt","op":"div","b":1440,"bu":"min","result":28.51388888888889,"ru":"gtt/min","round":true}],"answer":"Antonopeus on 85.5417 ml/h ja noin 29 gtt/min.","tip":"Muista 1 h = 60 min ja kirjan oletus 1 ml = 20 gtt, ellei tehtävässä ilmoiteta muuta."},{"cat":"Tiputuslasku","title":"Tiputuslasku 4","task":"2000 ml infuusioliuosta annetaan 1440 minuutissa. Laske antonopeus ml/h ja gtt/min. Käytä 1 ml = 20 gtt.","steps":[{"a":2000,"au":"ml","op":"mul","b":60,"bu":"min/h","result":120000,"ru":"ml·min/h"},{"a":120000,"au":"ml·min/h","op":"div","b":1440,"bu":"min","result":83.33333333333333,"ru":"ml/h"},{"a":2000,"au":"ml","op":"mul","b":20,"bu":"gtt/ml","result":40000,"ru":"gtt"},{"a":40000,"au":"gtt","op":"div","b":1440,"bu":"min","result":27.77777777777778,"ru":"gtt/min","round":true}],"answer":"Antonopeus on 83.3333 ml/h ja noin 28 gtt/min.","tip":"Muista 1 h = 60 min ja kirjan oletus 1 ml = 20 gtt, ellei tehtävässä ilmoiteta muuta."},{"cat":"Tiputuslasku","title":"Tiputuslasku 5","task":"100 ml infuusioliuosta annetaan 30 minuutissa. Laske antonopeus ml/h ja gtt/min. Käytä 1 ml = 20 gtt.","steps":[{"a":100,"au":"ml","op":"mul","b":60,"bu":"min/h","result":6000,"ru":"ml·min/h"},{"a":6000,"au":"ml·min/h","op":"div","b":30,"bu":"min","result":200.0,"ru":"ml/h"},{"a":100,"au":"ml","op":"mul","b":20,"bu":"gtt/ml","result":2000,"ru":"gtt"},{"a":2000,"au":"gtt","op":"div","b":30,"bu":"min","result":66.66666666666667,"ru":"gtt/min","round":true}],"answer":"Antonopeus on 200 ml/h ja noin 67 gtt/min.","tip":"Muista 1 h = 60 min ja kirjan oletus 1 ml = 20 gtt, ellei tehtävässä ilmoiteta muuta."},{"cat":"Tiputuslasku","title":"Tiputuslasku 6","task":"50 ml infuusioliuosta annetaan 30 minuutissa. Laske antonopeus ml/h ja gtt/min. Käytä 1 ml = 20 gtt.","steps":[{"a":50,"au":"ml","op":"mul","b":60,"bu":"min/h","result":3000,"ru":"ml·min/h"},{"a":3000,"au":"ml·min/h","op":"div","b":30,"bu":"min","result":100.0,"ru":"ml/h"},{"a":50,"au":"ml","op":"mul","b":20,"bu":"gtt/ml","result":1000,"ru":"gtt"},{"a":1000,"au":"gtt","op":"div","b":30,"bu":"min","result":33.333333333333336,"ru":"gtt/min","round":true}],"answer":"Antonopeus on 100 ml/h ja noin 33 gtt/min.","tip":"Muista 1 h = 60 min ja kirjan oletus 1 ml = 20 gtt, ellei tehtävässä ilmoiteta muuta."},{"cat":"Tiputuslasku","title":"Tiputuslasku 7","task":"500 ml infuusioliuosta annetaan 240 minuutissa. Laske antonopeus ml/h ja gtt/min. Käytä 1 ml = 20 gtt.","steps":[{"a":500,"au":"ml","op":"mul","b":60,"bu":"min/h","result":30000,"ru":"ml·min/h"},{"a":30000,"au":"ml·min/h","op":"div","b":240,"bu":"min","result":125.0,"ru":"ml/h"},{"a":500,"au":"ml","op":"mul","b":20,"bu":"gtt/ml","result":10000,"ru":"gtt"},{"a":10000,"au":"gtt","op":"div","b":240,"bu":"min","result":41.666666666666664,"ru":"gtt/min","round":true}],"answer":"Antonopeus on 125 ml/h ja noin 42 gtt/min.","tip":"Muista 1 h = 60 min ja kirjan oletus 1 ml = 20 gtt, ellei tehtävässä ilmoiteta muuta."},{"cat":"Tiputuslasku","title":"Tiputuslasku 8","task":"800 ml infuusioliuosta annetaan 300 minuutissa. Laske antonopeus ml/h ja gtt/min. Käytä 1 ml = 20 gtt.","steps":[{"a":800,"au":"ml","op":"mul","b":60,"bu":"min/h","result":48000,"ru":"ml·min/h"},{"a":48000,"au":"ml·min/h","op":"div","b":300,"bu":"min","result":160.0,"ru":"ml/h"},{"a":800,"au":"ml","op":"mul","b":20,"bu":"gtt/ml","result":16000,"ru":"gtt"},{"a":16000,"au":"gtt","op":"div","b":300,"bu":"min","result":53.333333333333336,"ru":"gtt/min","round":true}],"answer":"Antonopeus on 160 ml/h ja noin 53 gtt/min.","tip":"Muista 1 h = 60 min ja kirjan oletus 1 ml = 20 gtt, ellei tehtävässä ilmoiteta muuta."},{"cat":"Tiputuslasku","title":"Tiputuslasku 9","task":"1000 ml infuusioliuosta annetaan 480 minuutissa. Laske antonopeus ml/h ja gtt/min. Käytä 1 ml = 20 gtt.","steps":[{"a":1000,"au":"ml","op":"mul","b":60,"bu":"min/h","result":60000,"ru":"ml·min/h"},{"a":60000,"au":"ml·min/h","op":"div","b":480,"bu":"min","result":125.0,"ru":"ml/h"},{"a":1000,"au":"ml","op":"mul","b":20,"bu":"gtt/ml","result":20000,"ru":"gtt"},{"a":20000,"au":"gtt","op":"div","b":480,"bu":"min","result":41.666666666666664,"ru":"gtt/min","round":true}],"answer":"Antonopeus on 125 ml/h ja noin 42 gtt/min.","tip":"Muista 1 h = 60 min ja kirjan oletus 1 ml = 20 gtt, ellei tehtävässä ilmoiteta muuta."},{"cat":"Tiputuslasku","title":"Tiputuslasku 10","task":"250 ml infuusioliuosta annetaan 90 minuutissa. Laske antonopeus ml/h ja gtt/min. Käytä 1 ml = 20 gtt.","steps":[{"a":250,"au":"ml","op":"mul","b":60,"bu":"min/h","result":15000,"ru":"ml·min/h"},{"a":15000,"au":"ml·min/h","op":"div","b":90,"bu":"min","result":166.66666666666666,"ru":"ml/h"},{"a":250,"au":"ml","op":"mul","b":20,"bu":"gtt/ml","result":5000,"ru":"gtt"},{"a":5000,"au":"gtt","op":"div","b":90,"bu":"min","result":55.55555555555556,"ru":"gtt/min","round":true}],"answer":"Antonopeus on 166.667 ml/h ja noin 56 gtt/min.","tip":"Muista 1 h = 60 min ja kirjan oletus 1 ml = 20 gtt, ellei tehtävässä ilmoiteta muuta."},{"cat":"Tiputuslasku","title":"Tiputuslasku 11","task":"150 ml infuusioliuosta annetaan 45 minuutissa. Laske antonopeus ml/h ja gtt/min. Käytä 1 ml = 20 gtt.","steps":[{"a":150,"au":"ml","op":"mul","b":60,"bu":"min/h","result":9000,"ru":"ml·min/h"},{"a":9000,"au":"ml·min/h","op":"div","b":45,"bu":"min","result":200.0,"ru":"ml/h"},{"a":150,"au":"ml","op":"mul","b":20,"bu":"gtt/ml","result":3000,"ru":"gtt"},{"a":3000,"au":"gtt","op":"div","b":45,"bu":"min","result":66.66666666666667,"ru":"gtt/min","round":true}],"answer":"Antonopeus on 200 ml/h ja noin 67 gtt/min.","tip":"Muista 1 h = 60 min ja kirjan oletus 1 ml = 20 gtt, ellei tehtävässä ilmoiteta muuta."},{"cat":"Tiputuslasku","title":"Tiputuslasku 12","task":"120 ml infuusioliuosta annetaan 60 minuutissa. Laske antonopeus ml/h ja gtt/min. Käytä 1 ml = 20 gtt.","steps":[{"a":120,"au":"ml","op":"mul","b":60,"bu":"min/h","result":7200,"ru":"ml·min/h"},{"a":7200,"au":"ml·min/h","op":"div","b":60,"bu":"min","result":120.0,"ru":"ml/h"},{"a":120,"au":"ml","op":"mul","b":20,"bu":"gtt/ml","result":2400,"ru":"gtt"},{"a":2400,"au":"gtt","op":"div","b":60,"bu":"min","result":40.0,"ru":"gtt/min","round":true}],"answer":"Antonopeus on 120 ml/h ja noin 40 gtt/min.","tip":"Muista 1 h = 60 min ja kirjan oletus 1 ml = 20 gtt, ellei tehtävässä ilmoiteta muuta."},{"cat":"Tiputuslasku","title":"Tiputuslasku 13","task":"1000 ml infuusioliuosta annetaan 720 minuutissa. Laske antonopeus ml/h ja gtt/min. Käytä 1 ml = 20 gtt.","steps":[{"a":1000,"au":"ml","op":"mul","b":60,"bu":"min/h","result":60000,"ru":"ml·min/h"},{"a":60000,"au":"ml·min/h","op":"div","b":720,"bu":"min","result":83.33333333333333,"ru":"ml/h"},{"a":1000,"au":"ml","op":"mul","b":20,"bu":"gtt/ml","result":20000,"ru":"gtt"},{"a":20000,"au":"gtt","op":"div","b":720,"bu":"min","result":27.77777777777778,"ru":"gtt/min","round":true}],"answer":"Antonopeus on 83.3333 ml/h ja noin 28 gtt/min.","tip":"Muista 1 h = 60 min ja kirjan oletus 1 ml = 20 gtt, ellei tehtävässä ilmoiteta muuta."},{"cat":"Tiputuslasku","title":"Tiputuslasku 14","task":"600 ml infuusioliuosta annetaan 360 minuutissa. Laske antonopeus ml/h ja gtt/min. Käytä 1 ml = 20 gtt.","steps":[{"a":600,"au":"ml","op":"mul","b":60,"bu":"min/h","result":36000,"ru":"ml·min/h"},{"a":36000,"au":"ml·min/h","op":"div","b":360,"bu":"min","result":100.0,"ru":"ml/h"},{"a":600,"au":"ml","op":"mul","b":20,"bu":"gtt/ml","result":12000,"ru":"gtt"},{"a":12000,"au":"gtt","op":"div","b":360,"bu":"min","result":33.333333333333336,"ru":"gtt/min","round":true}],"answer":"Antonopeus on 100 ml/h ja noin 33 gtt/min.","tip":"Muista 1 h = 60 min ja kirjan oletus 1 ml = 20 gtt, ellei tehtävässä ilmoiteta muuta."},{"cat":"Tiputuslasku","title":"Tiputuslasku 15","task":"300 ml infuusioliuosta annetaan 120 minuutissa. Laske antonopeus ml/h ja gtt/min. Käytä 1 ml = 20 gtt.","steps":[{"a":300,"au":"ml","op":"mul","b":60,"bu":"min/h","result":18000,"ru":"ml·min/h"},{"a":18000,"au":"ml·min/h","op":"div","b":120,"bu":"min","result":150.0,"ru":"ml/h"},{"a":300,"au":"ml","op":"mul","b":20,"bu":"gtt/ml","result":6000,"ru":"gtt"},{"a":6000,"au":"gtt","op":"div","b":120,"bu":"min","result":50.0,"ru":"gtt/min","round":true}],"answer":"Antonopeus on 150 ml/h ja noin 50 gtt/min.","tip":"Muista 1 h = 60 min ja kirjan oletus 1 ml = 20 gtt, ellei tehtävässä ilmoiteta muuta."},{"cat":"Tiputuslasku","title":"Tiputuslasku 16","task":"75 ml infuusioliuosta annetaan 30 minuutissa. Laske antonopeus ml/h ja gtt/min. Käytä 1 ml = 20 gtt.","steps":[{"a":75,"au":"ml","op":"mul","b":60,"bu":"min/h","result":4500,"ru":"ml·min/h"},{"a":4500,"au":"ml·min/h","op":"div","b":30,"bu":"min","result":150.0,"ru":"ml/h"},{"a":75,"au":"ml","op":"mul","b":20,"bu":"gtt/ml","result":1500,"ru":"gtt"},{"a":1500,"au":"gtt","op":"div","b":30,"bu":"min","result":50.0,"ru":"gtt/min","round":true}],"answer":"Antonopeus on 150 ml/h ja noin 50 gtt/min.","tip":"Muista 1 h = 60 min ja kirjan oletus 1 ml = 20 gtt, ellei tehtävässä ilmoiteta muuta."},{"cat":"Tiputuslasku","title":"Tiputuslasku 17","task":"200 ml infuusioliuosta annetaan 45 minuutissa. Laske antonopeus ml/h ja gtt/min. Käytä 1 ml = 20 gtt.","steps":[{"a":200,"au":"ml","op":"mul","b":60,"bu":"min/h","result":12000,"ru":"ml·min/h"},{"a":12000,"au":"ml·min/h","op":"div","b":45,"bu":"min","result":266.6666666666667,"ru":"ml/h"},{"a":200,"au":"ml","op":"mul","b":20,"bu":"gtt/ml","result":4000,"ru":"gtt"},{"a":4000,"au":"gtt","op":"div","b":45,"bu":"min","result":88.88888888888889,"ru":"gtt/min","round":true}],"answer":"Antonopeus on 266.667 ml/h ja noin 89 gtt/min.","tip":"Muista 1 h = 60 min ja kirjan oletus 1 ml = 20 gtt, ellei tehtävässä ilmoiteta muuta."},{"cat":"Tiputuslasku","title":"Tiputuslasku 18","task":"500 ml infuusioliuosta annetaan 180 minuutissa. Laske antonopeus ml/h ja gtt/min. Käytä 1 ml = 20 gtt.","steps":[{"a":500,"au":"ml","op":"mul","b":60,"bu":"min/h","result":30000,"ru":"ml·min/h"},{"a":30000,"au":"ml·min/h","op":"div","b":180,"bu":"min","result":166.66666666666666,"ru":"ml/h"},{"a":500,"au":"ml","op":"mul","b":20,"bu":"gtt/ml","result":10000,"ru":"gtt"},{"a":10000,"au":"gtt","op":"div","b":180,"bu":"min","result":55.55555555555556,"ru":"gtt/min","round":true}],"answer":"Antonopeus on 166.667 ml/h ja noin 56 gtt/min.","tip":"Muista 1 h = 60 min ja kirjan oletus 1 ml = 20 gtt, ellei tehtävässä ilmoiteta muuta."},{"cat":"Tiputuslasku","title":"Tiputuslasku 19","task":"100 ml infuusioliuosta annetaan 20 minuutissa. Laske antonopeus ml/h ja gtt/min. Käytä 1 ml = 20 gtt.","steps":[{"a":100,"au":"ml","op":"mul","b":60,"bu":"min/h","result":6000,"ru":"ml·min/h"},{"a":6000,"au":"ml·min/h","op":"div","b":20,"bu":"min","result":300.0,"ru":"ml/h"},{"a":100,"au":"ml","op":"mul","b":20,"bu":"gtt/ml","result":2000,"ru":"gtt"},{"a":2000,"au":"gtt","op":"div","b":20,"bu":"min","result":100.0,"ru":"gtt/min","round":true}],"answer":"Antonopeus on 300 ml/h ja noin 100 gtt/min.","tip":"Muista 1 h = 60 min ja kirjan oletus 1 ml = 20 gtt, ellei tehtävässä ilmoiteta muuta."},{"cat":"Tiputuslasku","title":"Tiputuslasku 20","task":"750 ml infuusioliuosta annetaan 360 minuutissa. Laske antonopeus ml/h ja gtt/min. Käytä 1 ml = 20 gtt.","steps":[{"a":750,"au":"ml","op":"mul","b":60,"bu":"min/h","result":45000,"ru":"ml·min/h"},{"a":45000,"au":"ml·min/h","op":"div","b":360,"bu":"min","result":125.0,"ru":"ml/h"},{"a":750,"au":"ml","op":"mul","b":20,"bu":"gtt/ml","result":15000,"ru":"gtt"},{"a":15000,"au":"gtt","op":"div","b":360,"bu":"min","result":41.666666666666664,"ru":"gtt/min","round":true}],"answer":"Antonopeus on 125 ml/h ja noin 42 gtt/min.","tip":"Muista 1 h = 60 min ja kirjan oletus 1 ml = 20 gtt, ellei tehtävässä ilmoiteta muuta."},{"cat":"Annostus painon mukaan","title":"Painon mukaan 1","task":"Potilas painaa 20 kg. Lääkeannos on 5 mg/kg ja käytettävissä olevan lääkkeen pitoisuus on 25 mg/ml. Kuinka monta millilitraa annat?","steps":[{"a":20,"au":"kg","op":"mul","b":5,"bu":"mg/kg","result":100,"ru":"mg"},{"a":100,"au":"mg","op":"div","b":25,"bu":"mg/ml","result":4.0,"ru":"ml"}],"answer":"Vaikuttavaa ainetta tarvitaan 100 mg; annos on 4 ml.","tip":"Ensimmäinen kysymys: paljonko vaikuttavaa ainetta juuri tämän painoinen potilas tarvitsee? Sen jälkeen muuta määrä millilitroiksi."},{"cat":"Annostus painon mukaan","title":"Painon mukaan 2","task":"Potilas painaa 16.5 kg. Lääkeannos on 10 mg/kg ja käytettävissä olevan lääkkeen pitoisuus on 25 mg/ml. Kuinka monta millilitraa annat?","steps":[{"a":16.5,"au":"kg","op":"mul","b":10,"bu":"mg/kg","result":165.0,"ru":"mg"},{"a":165.0,"au":"mg","op":"div","b":25,"bu":"mg/ml","result":6.6,"ru":"ml"}],"answer":"Vaikuttavaa ainetta tarvitaan 165 mg; annos on 6.6 ml.","tip":"Ensimmäinen kysymys: paljonko vaikuttavaa ainetta juuri tämän painoinen potilas tarvitsee? Sen jälkeen muuta määrä millilitroiksi."},{"cat":"Annostus painon mukaan","title":"Painon mukaan 3","task":"Potilas painaa 5 kg. Lääkeannos on 0.05 mg/kg ja käytettävissä olevan lääkkeen pitoisuus on 2 mg/ml. Kuinka monta millilitraa annat?","steps":[{"a":5,"au":"kg","op":"mul","b":0.05,"bu":"mg/kg","result":0.25,"ru":"mg"},{"a":0.25,"au":"mg","op":"div","b":2,"bu":"mg/ml","result":0.125,"ru":"ml"}],"answer":"Vaikuttavaa ainetta tarvitaan 0.25 mg; annos on 0.125 ml.","tip":"Ensimmäinen kysymys: paljonko vaikuttavaa ainetta juuri tämän painoinen potilas tarvitsee? Sen jälkeen muuta määrä millilitroiksi."},{"cat":"Annostus painon mukaan","title":"Painon mukaan 4","task":"Potilas painaa 2 kg. Lääkeannos on 4 mg/kg ja käytettävissä olevan lääkkeen pitoisuus on 20 mg/ml. Kuinka monta millilitraa annat?","steps":[{"a":2,"au":"kg","op":"mul","b":4,"bu":"mg/kg","result":8,"ru":"mg"},{"a":8,"au":"mg","op":"div","b":20,"bu":"mg/ml","result":0.4,"ru":"ml"}],"answer":"Vaikuttavaa ainetta tarvitaan 8 mg; annos on 0.4 ml.","tip":"Ensimmäinen kysymys: paljonko vaikuttavaa ainetta juuri tämän painoinen potilas tarvitsee? Sen jälkeen muuta määrä millilitroiksi."},{"cat":"Annostus painon mukaan","title":"Painon mukaan 5","task":"Potilas painaa 65 kg. Lääkeannos on 0.6 mg/kg ja käytettävissä olevan lääkkeen pitoisuus on 10 mg/ml. Kuinka monta millilitraa annat?","steps":[{"a":65,"au":"kg","op":"mul","b":0.6,"bu":"mg/kg","result":39.0,"ru":"mg"},{"a":39.0,"au":"mg","op":"div","b":10,"bu":"mg/ml","result":3.9,"ru":"ml"}],"answer":"Vaikuttavaa ainetta tarvitaan 39 mg; annos on 3.9 ml.","tip":"Ensimmäinen kysymys: paljonko vaikuttavaa ainetta juuri tämän painoinen potilas tarvitsee? Sen jälkeen muuta määrä millilitroiksi."},{"cat":"Annostus painon mukaan","title":"Painon mukaan 6","task":"Potilas painaa 20 kg. Lääkeannos on 2 µg/kg ja käytettävissä olevan lääkkeen pitoisuus on 50 µg/ml. Kuinka monta millilitraa annat?","steps":[{"a":20,"au":"kg","op":"mul","b":2,"bu":"µg/kg","result":40,"ru":"µg"},{"a":40,"au":"µg","op":"div","b":50,"bu":"µg/ml","result":0.8,"ru":"ml"}],"answer":"Vaikuttavaa ainetta tarvitaan 40 µg; annos on 0.8 ml.","tip":"Ensimmäinen kysymys: paljonko vaikuttavaa ainetta juuri tämän painoinen potilas tarvitsee? Sen jälkeen muuta määrä millilitroiksi."},{"cat":"Annostus painon mukaan","title":"Painon mukaan 7","task":"Potilas painaa 85 kg. Lääkeannos on 0.2 mg/kg ja käytettävissä olevan lääkkeen pitoisuus on 2 mg/ml. Kuinka monta millilitraa annat?","steps":[{"a":85,"au":"kg","op":"mul","b":0.2,"bu":"mg/kg","result":17.0,"ru":"mg"},{"a":17.0,"au":"mg","op":"div","b":2,"bu":"mg/ml","result":8.5,"ru":"ml"}],"answer":"Vaikuttavaa ainetta tarvitaan 17 mg; annos on 8.5 ml.","tip":"Ensimmäinen kysymys: paljonko vaikuttavaa ainetta juuri tämän painoinen potilas tarvitsee? Sen jälkeen muuta määrä millilitroiksi."},{"cat":"Annostus painon mukaan","title":"Painon mukaan 8","task":"Potilas painaa 75 kg. Lääkeannos on 0.9 mg/kg ja käytettävissä olevan lääkkeen pitoisuus on 1 mg/ml. Kuinka monta millilitraa annat?","steps":[{"a":75,"au":"kg","op":"mul","b":0.9,"bu":"mg/kg","result":67.5,"ru":"mg"},{"a":67.5,"au":"mg","op":"div","b":1,"bu":"mg/ml","result":67.5,"ru":"ml"}],"answer":"Vaikuttavaa ainetta tarvitaan 67.5 mg; annos on 67.5 ml.","tip":"Ensimmäinen kysymys: paljonko vaikuttavaa ainetta juuri tämän painoinen potilas tarvitsee? Sen jälkeen muuta määrä millilitroiksi."},{"cat":"Annostus painon mukaan","title":"Painon mukaan 9","task":"Potilas painaa 80 kg. Lääkeannos on 3 mg/kg ja käytettävissä olevan lääkkeen pitoisuus on 20 mg/ml. Kuinka monta millilitraa annat?","steps":[{"a":80,"au":"kg","op":"mul","b":3,"bu":"mg/kg","result":240,"ru":"mg"},{"a":240,"au":"mg","op":"div","b":20,"bu":"mg/ml","result":12.0,"ru":"ml"}],"answer":"Vaikuttavaa ainetta tarvitaan 240 mg; annos on 12 ml.","tip":"Ensimmäinen kysymys: paljonko vaikuttavaa ainetta juuri tämän painoinen potilas tarvitsee? Sen jälkeen muuta määrä millilitroiksi."},{"cat":"Annostus painon mukaan","title":"Painon mukaan 10","task":"Potilas painaa 7.8 kg. Lääkeannos on 4 mg/kg ja käytettävissä olevan lääkkeen pitoisuus on 10 mg/ml. Kuinka monta millilitraa annat?","steps":[{"a":7.8,"au":"kg","op":"mul","b":4,"bu":"mg/kg","result":31.2,"ru":"mg"},{"a":31.2,"au":"mg","op":"div","b":10,"bu":"mg/ml","result":3.12,"ru":"ml"}],"answer":"Vaikuttavaa ainetta tarvitaan 31.2 mg; annos on 3.12 ml.","tip":"Ensimmäinen kysymys: paljonko vaikuttavaa ainetta juuri tämän painoinen potilas tarvitsee? Sen jälkeen muuta määrä millilitroiksi."},{"cat":"Annostus painon mukaan","title":"Painon mukaan 11","task":"Potilas painaa 4 kg. Lääkeannos on 10 mg/kg ja käytettävissä olevan lääkkeen pitoisuus on 60 mg/ml. Kuinka monta millilitraa annat?","steps":[{"a":4,"au":"kg","op":"mul","b":10,"bu":"mg/kg","result":40,"ru":"mg"},{"a":40,"au":"mg","op":"div","b":60,"bu":"mg/ml","result":0.6666666666666666,"ru":"ml"}],"answer":"Vaikuttavaa ainetta tarvitaan 40 mg; annos on 0.666667 ml.","tip":"Ensimmäinen kysymys: paljonko vaikuttavaa ainetta juuri tämän painoinen potilas tarvitsee? Sen jälkeen muuta määrä millilitroiksi."},{"cat":"Annostus painon mukaan","title":"Painon mukaan 12","task":"Potilas painaa 12 kg. Lääkeannos on 0.1 mg/kg ja käytettävissä olevan lääkkeen pitoisuus on 1 mg/ml. Kuinka monta millilitraa annat?","steps":[{"a":12,"au":"kg","op":"mul","b":0.1,"bu":"mg/kg","result":1.2000000000000002,"ru":"mg"},{"a":1.2000000000000002,"au":"mg","op":"div","b":1,"bu":"mg/ml","result":1.2000000000000002,"ru":"ml"}],"answer":"Vaikuttavaa ainetta tarvitaan 1.2 mg; annos on 1.2 ml.","tip":"Ensimmäinen kysymys: paljonko vaikuttavaa ainetta juuri tämän painoinen potilas tarvitsee? Sen jälkeen muuta määrä millilitroiksi."},{"cat":"Annostus painon mukaan","title":"Painon mukaan 13","task":"Potilas painaa 2.8 kg. Lääkeannos on 0.1 µg/kg ja käytettävissä olevan lääkkeen pitoisuus on 5 µg/ml. Kuinka monta millilitraa annat?","steps":[{"a":2.8,"au":"kg","op":"mul","b":0.1,"bu":"µg/kg","result":0.27999999999999997,"ru":"µg"},{"a":0.27999999999999997,"au":"µg","op":"div","b":5,"bu":"µg/ml","result":0.055999999999999994,"ru":"ml"}],"answer":"Vaikuttavaa ainetta tarvitaan 0.28 µg; annos on 0.056 ml.","tip":"Ensimmäinen kysymys: paljonko vaikuttavaa ainetta juuri tämän painoinen potilas tarvitsee? Sen jälkeen muuta määrä millilitroiksi."},{"cat":"Annostus painon mukaan","title":"Painon mukaan 14","task":"Potilas painaa 45 kg. Lääkeannos on 2 mg/kg ja käytettävissä olevan lääkkeen pitoisuus on 200 mg/ml. Kuinka monta millilitraa annat?","steps":[{"a":45,"au":"kg","op":"mul","b":2,"bu":"mg/kg","result":90,"ru":"mg"},{"a":90,"au":"mg","op":"div","b":200,"bu":"mg/ml","result":0.45,"ru":"ml"}],"answer":"Vaikuttavaa ainetta tarvitaan 90 mg; annos on 0.45 ml.","tip":"Ensimmäinen kysymys: paljonko vaikuttavaa ainetta juuri tämän painoinen potilas tarvitsee? Sen jälkeen muuta määrä millilitroiksi."},{"cat":"Annostus painon mukaan","title":"Painon mukaan 15","task":"Potilas painaa 42 kg. Nestettä määrätään 14.5 ml/kg/vrk. Kuinka monta millilitraa vuorokaudessa annetaan?","steps":[{"a":42,"au":"kg","op":"mul","b":14.5,"bu":"ml/kg/vrk","result":609.0,"ru":"ml/vrk"}],"answer":"Vuorokausiannos on 609 ml.","tip":"Ensimmäinen kysymys: paljonko vaikuttavaa ainetta juuri tämän painoinen potilas tarvitsee? Sen jälkeen muuta määrä millilitroiksi."},{"cat":"Annostus painon mukaan","title":"Painon mukaan 16","task":"Potilas painaa 18 kg. Lääkeannos on 40 mg/kg ja käytettävissä olevan lääkkeen pitoisuus on 50 mg/ml. Kuinka monta millilitraa annat?","steps":[{"a":18,"au":"kg","op":"mul","b":40,"bu":"mg/kg","result":720,"ru":"mg"},{"a":720,"au":"mg","op":"div","b":50,"bu":"mg/ml","result":14.4,"ru":"ml"}],"answer":"Vaikuttavaa ainetta tarvitaan 720 mg; annos on 14.4 ml.","tip":"Ensimmäinen kysymys: paljonko vaikuttavaa ainetta juuri tämän painoinen potilas tarvitsee? Sen jälkeen muuta määrä millilitroiksi."},{"cat":"Annostus painon mukaan","title":"Painon mukaan 17","task":"Potilas painaa 60 kg. Lääkeannos on 150 µg/kg ja käytettävissä olevan lääkkeen pitoisuus on 10 µg/ml. Kuinka monta millilitraa annat?","steps":[{"a":60,"au":"kg","op":"mul","b":150,"bu":"µg/kg","result":9000,"ru":"µg"},{"a":9000,"au":"µg","op":"div","b":10,"bu":"µg/ml","result":900.0,"ru":"ml"}],"answer":"Vaikuttavaa ainetta tarvitaan 9000 µg; annos on 900 ml.","tip":"Ensimmäinen kysymys: paljonko vaikuttavaa ainetta juuri tämän painoinen potilas tarvitsee? Sen jälkeen muuta määrä millilitroiksi."},{"cat":"Annostus painon mukaan","title":"Painon mukaan 18","task":"Potilas painaa 95 kg. Lääkeannos on 2 µg/kg ja käytettävissä olevan lääkkeen pitoisuus on 2 µg/ml. Kuinka monta millilitraa annat?","steps":[{"a":95,"au":"kg","op":"mul","b":2,"bu":"µg/kg","result":190,"ru":"µg"},{"a":190,"au":"µg","op":"div","b":2,"bu":"µg/ml","result":95.0,"ru":"ml"}],"answer":"Vaikuttavaa ainetta tarvitaan 190 µg; annos on 95 ml.","tip":"Ensimmäinen kysymys: paljonko vaikuttavaa ainetta juuri tämän painoinen potilas tarvitsee? Sen jälkeen muuta määrä millilitroiksi."},{"cat":"Annostus painon mukaan","title":"Painon mukaan 19","task":"Potilas painaa 3.8 kg. Lääkeannos on 7.5 mg/kg ja käytettävissä olevan lääkkeen pitoisuus on 10 mg/ml. Kuinka monta millilitraa annat?","steps":[{"a":3.8,"au":"kg","op":"mul","b":7.5,"bu":"mg/kg","result":28.5,"ru":"mg"},{"a":28.5,"au":"mg","op":"div","b":10,"bu":"mg/ml","result":2.85,"ru":"ml"}],"answer":"Vaikuttavaa ainetta tarvitaan 28.5 mg; annos on 2.85 ml.","tip":"Ensimmäinen kysymys: paljonko vaikuttavaa ainetta juuri tämän painoinen potilas tarvitsee? Sen jälkeen muuta määrä millilitroiksi."},{"cat":"Annostus painon mukaan","title":"Painon mukaan 20","task":"Potilas painaa 50 kg. Lääkeannos on 0.25 mg/kg ja käytettävissä olevan lääkkeen pitoisuus on 5 mg/ml. Kuinka monta millilitraa annat?","steps":[{"a":50,"au":"kg","op":"mul","b":0.25,"bu":"mg/kg","result":12.5,"ru":"mg"},{"a":12.5,"au":"mg","op":"div","b":5,"bu":"mg/ml","result":2.5,"ru":"ml"}],"answer":"Vaikuttavaa ainetta tarvitaan 12.5 mg; annos on 2.5 ml.","tip":"Ensimmäinen kysymys: paljonko vaikuttavaa ainetta juuri tämän painoinen potilas tarvitsee? Sen jälkeen muuta määrä millilitroiksi."}];
+const cats=["Liuosannoslasku", "Tablettiannoslasku", "Liuoksen valmistus", "Tiputuslasku", "Annostus painon mukaan"];
+const OPS={mul:{s:"×",f:(a,b)=>a*b},div:{s:"÷",f:(a,b)=>a/b},add:{s:"+",f:(a,b)=>a+b},sub:{s:"−",f:(a,b)=>a-b},mul1000:{s:"×1000",f:(a)=>a*1000},div1000:{s:"÷1000",f:(a)=>a/1000}};
+let cat=cats[0], pos=0;
+const $=x=>document.getElementById(x);
+function list(){return all.filter(x=>x.cat===cat)}
+function fmt(n){if(!Number.isFinite(n))return "–"; return (Math.round(n*100)/100).toString().replace(".",",")}
+function renderCats(){$("cats").innerHTML=cats.map(c=>`<button class="cat ${c===cat?"active":""}" data-c="${c}">${c}</button>`).join("");document.querySelectorAll(".cat").forEach(b=>b.onclick=()=>{cat=b.dataset.c;pos=0;renderCats();render()})}
+function render(){
+ const a=list()[pos]; $("title").textContent=a.title;$("badge").textContent=a.cat;$("task").textContent=a.task;$("tip").textContent="Vihje: "+a.tip;$("count").textContent=`${pos+1} / 20 · yhteensä 100`;
+ $("answer").classList.remove("show");$("answerText").textContent=a.answer;
+ $("steps").innerHTML=a.steps.map((s,i)=>`<div class="step"><div class="stepname">Vaihe ${i+1}</div><div class="calc"><div class="num">${fmt(s.a)}<span class="unit">${s.au}</span></div><select data-i="${i}"><option value="">?</option>${Object.entries(OPS).map(([k,v])=>`<option value="${k}">${v.s}</option>`).join("")}</select><div class="num">${fmt(s.b)}<span class="unit">${s.bu}</span></div><span class="eq">=</span><div class="res" id="r${i}">?</div></div><div class="fb" id="f${i}"></div><div class="triangleBox" id="t${i}"></div></div>`).join("");
+ document.querySelectorAll("select").forEach(s=>s.onchange=check);$("prev").disabled=pos===0;$("next").disabled=pos===19;
+}
+
+function triangleHTML(s){
+  if(!["mul","div"].includes(s.op)) return "";
+  let top,left,right, topu,leftu,rightu, relation;
+  if(s.op==="div"){
+    // a ÷ b = result  =>  a = b × result
+    top=s.a; topu=s.au;
+    left=s.b; leftu=s.bu;
+    right=s.result; rightu=s.ru;
+    relation=`${fmt(s.a)} ${s.au} = ${fmt(s.b)} ${s.bu} × ${fmt(s.result)} ${s.ru}`;
+  }else{
+    // a × b = result  =>  result = a × b
+    top=s.result; topu=s.ru;
+    left=s.a; leftu=s.au;
+    right=s.b; rightu=s.bu;
+    relation=`${fmt(s.result)} ${s.ru} = ${fmt(s.a)} ${s.au} × ${fmt(s.b)} ${s.bu}`;
+  }
+  return `<div class="triangleTitle">Sama ratkaisu kolmiona</div>
+  <div class="triangleWrap">
+    <div class="triangle">
+      <svg viewBox="0 0 142 124" aria-hidden="true">
+        <path d="M71 5 L136 116 L6 116 Z" fill="#ffffff" stroke="#6f8eaa" stroke-width="3"/>
+        <line x1="38" y1="61" x2="104" y2="61" stroke="#6f8eaa" stroke-width="2.5"/>
+        <line x1="71" y1="61" x2="71" y2="116" stroke="#6f8eaa" stroke-width="2.5"/>
+      </svg>
+      <div class="triText triTop">${fmt(top)}<small>${topu}</small></div>
+      <div class="triText triLeft">${fmt(left)}<small>${leftu}</small></div>
+      <div class="triText triRight">${fmt(right)}<small>${rightu}</small></div>
+    </div>
+    <div class="triangleHelp">
+      <b>Kolmion sääntö:</b> yläosa = alaosan luvut kerrottuna keskenään.
+      Jos etsit jompaakumpaa alaosan arvoa, jaa yläosa toisella alaosan arvolla.<br>
+      Tässä: <b>${relation}</b>
+    </div>
+  </div>`;
+}
+
+function check(){
+ const a=list()[pos];let good=true;
+ a.steps.forEach((s,i)=>{const v=document.querySelector(`select[data-i="${i}"]`).value,r=$("r"+i),f=$("f"+i);if(!v){good=false;r.textContent="?";r.className="res";f.textContent="";const tb=$("t"+i);tb.innerHTML="";tb.classList.remove("show");return}
+ const got=OPS[v].f(s.a,s.b); const ok=v===s.op;
+ if(ok){let shown=s.floor?Math.floor(s.result):(s.round?Math.round(s.result):s.result);r.innerHTML=`${fmt(shown)}<span class="unit">${s.ru}</span>`;r.className="res ok";f.textContent="✓ Oikea laskutoimitus";f.className="fb oktxt";const tb=$("t"+i);const th=triangleHTML(s);tb.innerHTML=th;tb.classList.toggle("show",!!th)}
+ else{good=false;r.textContent=fmt(got);r.className="res bad";f.textContent="Ei vielä – tarkista yksiköt ja suhde.";f.className="fb badtxt";const tb=$("t"+i);tb.innerHTML="";tb.classList.remove("show")}
+ });$("answer").classList.toggle("show",good)
+}
+$("prev").onclick=()=>{if(pos>0){pos--;render()}};$("next").onclick=()=>{if(pos<19){pos++;render()}};
+$("reset").onclick=render;$("random").onclick=()=>{cat=cats[Math.floor(Math.random()*cats.length)];pos=Math.floor(Math.random()*20);renderCats();render()};
+renderCats();render();
+function focusTask(){
+  setTimeout(()=>document.querySelector(".card")?.scrollIntoView({behavior:"smooth",block:"start"}),40);
+}
+const oldPrev=$("prev").onclick, oldNext=$("next").onclick;
+$("prev").onclick=()=>{if(pos>0){pos--;render();focusTask()}};
+$("next").onclick=()=>{if(pos<19){pos++;render();focusTask()}};
+
+</script></body></html>
